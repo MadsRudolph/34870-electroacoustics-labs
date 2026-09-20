@@ -16,3 +16,7 @@ __pycache__/
 
 # individual quiz material stays out of the shared repo
 Lab */quiz/
+
+# course BEM package (106 MB of pre-computed matrices, from BEM_FreeField.zip on DTU Learn)
+Lab B/bem/package/
+Lab B/bem/*.log
