@@ -25,6 +25,7 @@ ROT = {"R0": lambda x, y: (x, y), "R90": lambda x, y: (-y, x), "R180": lambda x,
 # name of a source on the wire it feeds and let neighbours' labels run into each other.
 WIN = {("res", "R90"): ["WINDOW 0 0 56 VBottom 2", "WINDOW 3 32 56 VTop 2"],
        ("ind", "R90"): ["WINDOW 0 5 56 VBottom 2", "WINDOW 3 32 56 VTop 2"],
+       ("cap", "R90"): ["WINDOW 0 0 32 VBottom 2", "WINDOW 3 32 32 VTop 2"],
        ("voltage", "R270"): ["WINDOW 0 32 56 VTop 2", "WINDOW 3 -32 56 VBottom 2"],
        ("cap", "R0"): ["WINDOW 0 40 18 Left 2", "WINDOW 3 40 52 Left 2"],
        ("voltage", "R0"): ["WINDOW 0 -40 40 Right 2", "WINDOW 3 -40 72 Right 2"],
@@ -83,7 +84,7 @@ class Sch:
     def hser(self, kind, xl, y, name, value, spiceline=None, win=None):
         """horizontal element starting at (xl, y); returns the x of its right end"""
         length = 64 if kind == "cap" else 80
-        self.sym(kind, "R90", xl + length + 16, y - 16, name, value, spiceline=spiceline, win=win)
+        self.sym(kind, "R90", xl + length + (0 if kind == "cap" else 16), y - 16, name, value, spiceline=spiceline, win=win)   # cap pins sit at 0/64, R and L at 16/96
         return xl + length
 
     def link(self, xl, y, lname, lval, rname, rval):
