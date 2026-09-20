@@ -1,0 +1,9 @@
+.include Part1_DualDiaphragm_Stiff.cir
+.control
+set wr_singlescale
+set wr_vecnames
+run
+wrdata Part1_DualDiaphragm_Stiff_ac.txt v(/u_vc) v(/u_d)
+quit
+.endc
+.end

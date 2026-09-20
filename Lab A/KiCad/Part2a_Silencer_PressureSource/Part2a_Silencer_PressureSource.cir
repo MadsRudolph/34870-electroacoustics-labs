@@ -1,0 +1,19 @@
+.title KiCad schematic
+.ac dec 2000 10 1000
+C2 /p2 GND 112.492p
+Vs3 /p2 Net-_R3-Pad1_ DC 0 
+R1 Net-_R1-Pad1_ Net-_L1-Pad1_ 25000
+L1 Net-_L1-Pad1_ /p2 2347.54
+Vs1 /p_in Net-_R1-Pad1_ DC 0 
+R3 Net-_R3-Pad1_ Net-_L3-Pad1_ 25000
+L3 Net-_L3-Pad1_ /p4 7512.11
+V1 /p_in GND DC 0 AC 1  
+C4 /p4 GND 719.948p
+L7 Net-_L7-Pad1_ GND 3756.06
+Vs7 /p6 Net-_R7-Pad1_ DC 0 
+C6 /p6 GND 303.728p
+R7 Net-_R7-Pad1_ Net-_L7-Pad1_ 25000
+Vs5 /p4 Net-_R5-Pad1_ DC 0 
+R5 Net-_R5-Pad1_ Net-_L5-Pad1_ 25000
+L5 Net-_L5-Pad1_ /p6 9390.14
+.end

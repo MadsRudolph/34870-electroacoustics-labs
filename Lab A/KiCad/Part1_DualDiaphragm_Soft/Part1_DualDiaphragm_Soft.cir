@@ -1,0 +1,12 @@
+.title KiCad schematic
+.ac dec 200 10 10k
+I1 GND /u_vc DC 0 AC 1  
+C1 /u_vc GND 6m
+R2 /u_vc /u_d 200m
+C2 /u_d GND 5m
+L2 /u_vc /u_d 3u
+L3 /u_d GND 2.7m
+R1 /u_vc GND 2
+L1 /u_vc GND 1.3m
+R3 /u_d GND 4.545
+.end

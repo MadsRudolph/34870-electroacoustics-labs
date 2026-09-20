@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.raw
+*.net
+*.log
+*.aux
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.kicad_prl
+*-backups/
+.history/
+*.zip

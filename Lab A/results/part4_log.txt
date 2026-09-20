@@ -1,0 +1,58 @@
+[Part4_Coil_Electromechanical] check(): []
+   GND: [('C1', '2'), ('C2', '2'), ('E1', '2'), ('E1', '4'), ('G1', '1'), ('L3', '2'), ('R3', '2'), ('V1', '2')]
+   u_1: [('C2', '1'), ('L2', '2'), ('L3', '1'), ('R2', '2'), ('R3', '1')]
+   e_in: [('V1', '1'), ('Vs1', '1')]
+   e_a: [('G1', '3'), ('R1', '1'), ('Vs1', '2')]
+   e_b: [('G1', '4'), ('L1', '1'), ('R1', '2')]
+   u_c: [('C1', '1'), ('E1', '3'), ('G1', '2'), ('L2', '1'), ('R2', '1')]
+   e_c: [('E1', '1'), ('L1', '2')]
+    ok    density    0.38 parts/cm² (want 0.05-0.8; low = parts scattered across empty sheet)
+
+## Sign check (peak |u_c| in m/s per V)
+  Bl = +1.5 (as drawn)    : max|u_c| = 6.5217e-01 at 4.9 Hz; |Z_E| at that f = 22.628 ohm; DC current 1.915 A
+  Bl = 0 (no back-EMF)    : max|u_c| = 2.9514e+01 at 4.9 Hz; |Z_E| at that f = 0.500 ohm; DC current 2.000 A
+  Bl = -1.5 (flipped)     : max|u_c| = 8.8923e-01 at 724.4 Hz; |Z_E| at that f = 1.466 ohm; DC current 1.922 A
+
+## Element values
+| R1 (Rc) | 0.5 | ohm | coil resistance (given) |
+| L1 (Le) | 1e-05 | H | coil inductance (given) |
+| E1 gain (back-EMF) | 1.5 | V/(m/s) = T m | back-EMF v = Bl u_c |
+| G1 gain (force) | 3 | A/V | f = Bl i = (Bl/Rc) V(Rc), 1 A = 1 N |
+| C1 (M_mc) | 0.005 | F (= kg) | coil mass M_mc, capacitor to ground |
+| L2 (C_ms) | 1e-05 | H (= m/N) | coil-to-mass spring compliance C_ms |
+| R2 (1/R_ms) | 1 | ohm (= m/(N s)) | 1/R_ms, damper coil-to-mass |
+| C2 (M_m1) | 0.1 | F (= kg) | large mass M_m1 |
+| L3 (C_ms2) | 0.01 | H (= m/N) | suspension compliance C_ms2 to ground |
+| R3 (1/R_ms2) | 10 | ohm | 1/R_ms2, damper to ground |
+
+## Hand estimates
+  coil on C_ms against a fixed M_m1:  f = 1/(2 pi sqrt(M_mc C_ms))          = 711.8 Hz
+  same with the reduced mass 4.762 g:  f = 729.3 Hz
+  both masses on C_ms2:  f = 1/(2 pi sqrt((M_mc+M_m1) C_ms2))               = 4.91 Hz
+  M_m1 alone on C_ms2:   f = 5.03 Hz
+  M_m1 on C_ms with the coil held (anti-resonance seen from the coil): f = 1/(2 pi sqrt(M_m1 C_ms)) = 159.2 Hz
+  M_m1 on C_ms||C_ms2 (series compliance) : 159.2 Hz
+  electrical damping (Bl)^2/Rc = 4.50 Ns/m ; electrical corner Rc/(2 pi Le) = 7958 Hz
+
+## a) velocities (per volt)
+  u_c: 1 Hz 1.884e-01, 10 kHz 6.018e-03
+     peak     4.90 Hz  6.5217e-01 m/s
+     peak   732.82 Hz  5.3664e-01 m/s
+     dip    158.49 Hz  4.3373e-04 m/s
+  u_1: 1 Hz 1.883e-01, 10 kHz 1.801e-06
+     peak     4.90 Hz  6.5213e-01 m/s
+     peak   716.14 Hz  2.7189e-02 m/s
+     dip    436.52 Hz  1.5755e-02 m/s
+  |u_1/u_c| at 1 Hz 0.999, 5 Hz 1.000, 100 Hz 1.650, 700 Hz 0.055, 10 kHz 2.992e-04
+
+## b) Z_M = Bl*I(Vs1)/V(u_c)  [N s/m]
+  1 Hz 1.524e+01, 10 kHz 3.126e+02 (w M_mc = 314.2)
+  resonance (min)          4.90 Hz  1.0165e-01
+  resonance (min)        732.82 Hz  1.1258e+00
+  anti-resonance (max)   158.49 Hz  6.9121e+03
+
+## c) Z_E = 1/I(Vs1)  [ohm]
+  1 Hz 0.5223, 10 kHz 0.7974 (|Rc+jwLe| = 0.8030)
+  peak     4.90 Hz  22.6275 ohm   (motional 22.1275)
+  peak   732.82 Hz  2.4828 ohm   (motional 1.9828)
+  dip   1396.37 Hz  0.5025 ohm

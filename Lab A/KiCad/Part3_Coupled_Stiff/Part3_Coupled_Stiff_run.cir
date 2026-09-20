@@ -1,0 +1,9 @@
+.include Part3_Coupled_Stiff.cir
+.control
+set wr_singlescale
+set wr_vecnames
+run
+wrdata Part3_Coupled_Stiff_ac.txt v(/u_vc) v(/u_d) v(/p_i) v(/p_o)
+quit
+.endc
+.end

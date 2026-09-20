@@ -1,0 +1,24 @@
+.title KiCad schematic
+.ac dec 200 10 10k
+R2 /u_vc /u_d 200m
+G1 /u_vc GND /p_i GND 6m
+C2 /u_d GND 5m
+L2 /u_vc /u_d 3u
+L3 /u_d GND 2.7m
+G3 /u_d GND /p_o GND 21m
+R3 /u_d GND 4.545
+L1 /u_vc GND 1.3m
+R1 /u_vc GND 2
+I1 GND /u_vc DC 0 AC 1  
+C1 /u_vc GND 6m
+G2 GND /p_i /u_vc GND 6m
+R5 Net-_C3-Pad1_ GND 59.67k
+L4 /p_i GND 14.59
+R4 /p_i Net-_C3-Pad1_ 135.3k
+C3 Net-_C3-Pad1_ GND 1.775n
+G4 GND /p_o /u_d GND 21m
+R7 Net-_C4-Pad1_ GND 17.05k
+C4 Net-_C4-Pad1_ GND 11.62n
+L5 /p_o GND 7.799
+R6 /p_o Net-_C4-Pad1_ 38.66k
+.end

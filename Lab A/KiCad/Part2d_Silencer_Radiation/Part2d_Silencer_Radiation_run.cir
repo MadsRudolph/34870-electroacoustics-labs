@@ -1,0 +1,11 @@
+* batch driver for Part2d_Silencer_Radiation.cir
+.include Part2d_Silencer_Radiation.cir
+.control
+run
+
+set wr_vecnames
+set wr_singlescale
+wrdata Part2d_Silencer_Radiation_ac.txt i(vs1) i(vs3) i(vs5) i(vs7) v(/p2) v(/p4) v(/p6) v(/p_out)
+quit
+.endc
+.end

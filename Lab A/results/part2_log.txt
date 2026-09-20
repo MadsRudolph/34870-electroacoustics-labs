@@ -1,0 +1,143 @@
+[Part2a_Silencer_PressureSource] check(): []
+   Net-0: [('L3', '1'), ('R3', '2')]
+   p4: [('C4', '1'), ('L3', '2'), ('Vs5', '1')]
+   Net-2: [('R5', '1'), ('Vs5', '2')]
+   Net-3: [('L5', '1'), ('R5', '2')]
+   GND: [('C2', '2'), ('C4', '2'), ('C6', '2'), ('L7', '2'), ('V1', '2')]
+   p6: [('C6', '1'), ('L5', '2'), ('Vs7', '1')]
+   Net-6: [('R7', '1'), ('Vs7', '2')]
+   Net-7: [('L7', '1'), ('R7', '2')]
+   p_in: [('V1', '1'), ('Vs1', '1')]
+   Net-9: [('R1', '1'), ('Vs1', '2')]
+   Net-10: [('L1', '1'), ('R1', '2')]
+   p2: [('C2', '1'), ('L1', '2'), ('Vs3', '1')]
+   Net-12: [('R3', '1'), ('Vs3', '2')]
+    ok    density    0.67 parts/cm² (want 0.05-0.8; low = parts scattered across empty sheet)
+[Part2b_Silencer_VolumeVelocitySource] check(): []
+   Net-0: [('L3', '1'), ('R3', '2')]
+   p4: [('C4', '1'), ('L3', '2'), ('Vs5', '1')]
+   Net-2: [('R5', '1'), ('Vs5', '2')]
+   Net-3: [('L5', '1'), ('R5', '2')]
+   GND: [('C2', '2'), ('C4', '2'), ('C6', '2'), ('I1', '2'), ('L7', '2'), ('R0', '2')]
+   p6: [('C6', '1'), ('L5', '2'), ('Vs7', '1')]
+   Net-6: [('R7', '1'), ('Vs7', '2')]
+   Net-7: [('L7', '1'), ('R7', '2')]
+   p_in: [('I1', '1'), ('R0', '1'), ('Vs1', '1')]
+   Net-9: [('R1', '1'), ('Vs1', '2')]
+   Net-10: [('L1', '1'), ('R1', '2')]
+   p2: [('C2', '1'), ('L1', '2'), ('Vs3', '1')]
+   Net-12: [('R3', '1'), ('Vs3', '2')]
+    ok    density    0.40 parts/cm² (want 0.05-0.8; low = parts scattered across empty sheet)
+[Part2d_Silencer_Radiation] check(): []
+   Net-0: [('L3', '1'), ('R3', '2')]
+   p4: [('C4', '1'), ('L3', '2'), ('Vs5', '1')]
+   Net-2: [('R5', '1'), ('Vs5', '2')]
+   Net-3: [('L5', '1'), ('R5', '2')]
+   GND: [('C2', '2'), ('C4', '2'), ('C6', '2'), ('C9', '2'), ('I1', '2'), ('L9', '2'), ('R0', '2'), ('R8', '2')]
+   p6: [('C6', '1'), ('L5', '2'), ('Vs7', '1')]
+   Net-6: [('R7', '1'), ('Vs7', '2')]
+   Net-7: [('L7', '1'), ('R7', '2')]
+   p_out: [('L7', '2'), ('L9', '1'), ('R9', '1')]
+   Net-9: [('C9', '1'), ('R8', '1'), ('R9', '2')]
+   p_in: [('I1', '1'), ('R0', '1'), ('Vs1', '1')]
+   Net-11: [('R1', '1'), ('Vs1', '2')]
+   Net-12: [('L1', '1'), ('R1', '2')]
+   p2: [('C2', '1'), ('L1', '2'), ('Vs3', '1')]
+   Net-14: [('R3', '1'), ('Vs3', '2')]
+    ok    density    0.41 parts/cm² (want 0.05-0.8; low = parts scattered across empty sheet)
+
+## Element values
+| element | value | unit | how |
+|---|---|---|---|
+| M_A1 | 2348 | kg/m^4 | rho*l/S, l=25.00 mm, S=1.2566e-05 m^2 |
+| R_A1 | 2.5e+04 | Pa s/m^3 | given viscous loss |
+| M_A3 | 7512 | kg/m^4 | rho*l/S, l=80.00 mm, S=1.2566e-05 m^2 |
+| R_A3 | 2.5e+04 | Pa s/m^3 | given viscous loss |
+| M_A5 | 9390 | kg/m^4 | rho*l/S, l=100.00 mm, S=1.2566e-05 m^2 |
+| R_A5 | 2.5e+04 | Pa s/m^3 | given viscous loss |
+| M_A7 | 3641 | kg/m^4 | rho*l/S, l=38.77 mm, S=1.2566e-05 m^2 |
+| R_A7 | 2.5e+04 | Pa s/m^3 | given viscous loss |
+| C_A2 | 1.125e-10 | m^5/N | V/(rho c^2), V=15.71 cm^3 |
+| C_A4 | 7.199e-10 | m^5/N | V/(rho c^2), V=100.53 cm^3 |
+| C_A6 | 3.037e-10 | m^5/N | V/(rho c^2), V=42.41 cm^3 |
+| M_A1rad | 115.2 | kg/m^4 | 0.6133 rho/(pi a) |
+| C_A1rad | 3.11e-13 | m^5/N | 0.55 pi^2 a^3/(rho c^2) |
+| R_A1rad | 1.63e+07 | Pa s/m^3 | 0.5045 rho c/(pi a^2) |
+| R_A2rad | 3.23e+07 | Pa s/m^3 | rho c/(pi a^2) |
+| M_A7 (no radiation net) | 3756 | kg/m^4 | full 40 mm |
+
+## Nearest-neighbour LC estimates f = 1/(2 pi sqrt(M C))
+  M_A1 with C_A2: 309.7 Hz
+  M_A3 with C_A2: 173.1 Hz
+  M_A3 with C_A4: 68.4 Hz
+  M_A5 with C_A4: 61.2 Hz
+  M_A5 with C_A6: 94.2 Hz
+  M_A7 with C_A6: 149.0 Hz
+  C_A2 with M_A1||M_A3 (1789): 354.8 Hz
+  C_A4 with M_A3||M_A5 (4173): 91.8 Hz
+  C_A6 with M_A5||M_A7 (2683): 176.3 Hz
+  all masses in series (23006) with all compliances (1.136e-09): 31.1 Hz
+
+## a) pressure source: |U_out/p_in|
+  at 10 Hz : -123.0 dB  (1/sum R_A = -100.0 dB)
+  peak     77.1 Hz    -98.9 dB
+  peak    179.9 Hz   -112.3 dB
+  peak    356.5 Hz   -141.6 dB
+  at 1 kHz: -253.9 dB
+
+## b) volume-velocity source: |U_out/U_in|
+  at 10 Hz : 0.45 dB
+  peak     47.1 Hz     38.6 dB
+  peak    175.6 Hz     40.9 dB
+  peak    190.8 Hz     41.1 dB
+  dip     183.7 Hz     20.1 dB
+  at 1 kHz: -111.4 dB
+  transmission loss TL = -20log|U_out/U_in|:
+        20 Hz  TL =   -1.9 dB
+        50 Hz  TL =  -19.3 dB
+       100 Hz  TL =    4.7 dB
+       150 Hz  TL =   -0.5 dB
+       200 Hz  TL =   -6.1 dB
+       300 Hz  TL =   40.9 dB
+       500 Hz  TL =   73.4 dB
+       700 Hz  TL =   92.2 dB
+      1000 Hz  TL =  111.4 dB
+
+## input impedance |Z_in| (open outlet)
+  at 10 Hz: 1.495e+06, at 1 kHz: 1.329e+07
+  Z_in minimum (series resonance)    77.1 Hz  7.734e+04
+  Z_in minimum (series resonance)   180.1 Hz  5.444e+06
+  Z_in minimum (series resonance)   356.5 Hz  2.767e+04
+  Z_in maximum (anti-resonance)      47.1 Hz  3.333e+08
+  Z_in maximum (anti-resonance)     175.6 Hz  4.325e+08
+  Z_in maximum (anti-resonance)     190.8 Hz  1.410e+09
+
+## c) pipe volume velocities (U source)
+  pipe 3: at 1 kHz -30.2 dB; peaks: 47 Hz/21.0 dB, 176 Hz/34.6 dB, 191 Hz/45.6 dB
+  pipe 5: at 1 kHz -78.6 dB; peaks: 47 Hz/37.7 dB, 176 Hz/32.7 dB, 191 Hz/37.2 dB
+  pipe 7: at 1 kHz -111.4 dB; peaks: 47 Hz/38.6 dB, 176 Hz/40.9 dB, 191 Hz/41.1 dB
+
+## d) near-field pressure at the opening (U_in = 1 m^3/s)
+  |p_open| at 10 Hz 77.6 dB, 100 Hz 92.5 dB, 1 kHz 5.7 dB
+  |Z_rad| at 1 kHz 7.237e+05 vs wM_A1 7.237e+05; Re(Z_rad) 1.078e+04, Im 7.236e+05
+  ka at 1 kHz = 0.0365
+  effect of the radiation load on U_out vs open end (dB): 50 Hz: -0.00, 100 Hz: -0.00, 300 Hz: -0.00, 1000 Hz: +0.00
+  U_out (radiation) peak    47.1 Hz    38.6 dB
+  U_out (radiation) peak   175.6 Hz    40.8 dB
+  U_out (radiation) peak   190.8 Hz    41.0 dB
+
+## e) pressure at 10 m (U_in = 1 m^3/s)
+      20 Hz  SPL   97.4 dB   (unsilenced   95.4 dB)
+      50 Hz  SPL  122.6 dB   (unsilenced  103.4 dB)
+     100 Hz  SPL  104.7 dB   (unsilenced  109.4 dB)
+     200 Hz  SPL  121.5 dB   (unsilenced  115.4 dB)
+     500 Hz  SPL   50.0 dB   (unsilenced  123.4 dB)
+    1000 Hz  SPL   17.9 dB   (unsilenced  129.4 dB)
+  lumped-element limit l < lambda/10:
+    pipe 1 l=25 mm -> f < 1376 Hz
+    pipe 3 l=80 mm -> f < 430 Hz
+    pipe 5 l=100 mm -> f < 344 Hz
+    pipe 7 l=40 mm -> f < 860 Hz
+    chamber 2 l=50 mm -> f < 688 Hz; first length mode c/(2l) = 3440 Hz; radius 10 mm -> ka=1 at 5475 Hz
+    chamber 4 l=80 mm -> f < 430 Hz; first length mode c/(2l) = 2150 Hz; radius 20 mm -> ka=1 at 2737 Hz
+    chamber 6 l=60 mm -> f < 573 Hz; first length mode c/(2l) = 2867 Hz; radius 15 mm -> ka=1 at 3650 Hz

@@ -1,0 +1,11 @@
+* batch driver for Part4_Coil_Electromechanical.cir
+.include Part4_Coil_Electromechanical.cir
+.control
+run
+
+set wr_vecnames
+set wr_singlescale
+wrdata Part4_Coil_Electromechanical_ac.txt v(/u_c) v(/u_1) i(vs1) v(/e_c)
+quit
+.endc
+.end

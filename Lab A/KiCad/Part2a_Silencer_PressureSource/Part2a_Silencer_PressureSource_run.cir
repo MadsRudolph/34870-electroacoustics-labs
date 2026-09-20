@@ -1,0 +1,11 @@
+* batch driver for Part2a_Silencer_PressureSource.cir
+.include Part2a_Silencer_PressureSource.cir
+.control
+run
+
+set wr_vecnames
+set wr_singlescale
+wrdata Part2a_Silencer_PressureSource_ac.txt i(vs1) i(vs3) i(vs5) i(vs7) v(/p2) v(/p4) v(/p6)
+quit
+.endc
+.end
