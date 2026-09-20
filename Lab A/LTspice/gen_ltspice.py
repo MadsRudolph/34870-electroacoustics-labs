@@ -21,10 +21,21 @@ PINS = {"res": [(16, 16), (16, 96)], "ind": [(16, 16), (16, 96)], "cap": [(16, 0
         "voltage": [(0, 16), (0, 96)], "current": [(0, 0), (0, 80)], "f": [(0, 0), (0, 80)],
         "g": [(0, 96), (0, 16), (-48, 32), (-48, 80)], "e": [(0, 16), (0, 96), (-48, 32), (-48, 80)]}
 ROT = {"R0": lambda x, y: (x, y), "R90": lambda x, y: (-y, x), "R180": lambda x, y: (-x, -y), "R270": lambda x, y: (y, -x)}
+# label positions (WINDOW lines, in the symbol's own frame). LTspice's defaults put the
+# name of a source on the wire it feeds and let neighbours' labels run into each other.
 WIN = {("res", "R90"): ["WINDOW 0 0 56 VBottom 2", "WINDOW 3 32 56 VTop 2"],
        ("ind", "R90"): ["WINDOW 0 5 56 VBottom 2", "WINDOW 3 32 56 VTop 2"],
-       ("voltage", "R270"): ["WINDOW 0 32 56 VTop 2", "WINDOW 3 -32 56 VBottom 2"]}
-
+       ("voltage", "R270"): ["WINDOW 0 32 56 VTop 2", "WINDOW 3 -32 56 VBottom 2"],
+       ("cap", "R0"): ["WINDOW 0 40 18 Left 2", "WINDOW 3 40 52 Left 2"],
+       ("voltage", "R0"): ["WINDOW 0 -40 40 Right 2", "WINDOW 3 -40 72 Right 2"],
+       ("current", "R180"): ["WINDOW 0 40 56 Left 2", "WINDOW 3 40 24 Left 2"],
+       ("f", "R180"): ["WINDOW 0 40 56 Left 2", "WINDOW 3 40 24 Left 2"],
+       ("g", "R0"): ["WINDOW 0 40 40 Left 2", "WINDOW 3 40 72 Left 2"],
+       ("e", "R0"): ["WINDOW 0 40 40 Left 2", "WINDOW 3 40 72 Left 2"],
+       ("g", "R180"): ["WINDOW 0 40 56 Left 2", "WINDOW 3 40 24 Left 2"]}
+WIN_ABOVE = ["WINDOW 0 -30 56 VBottom 2", "WINDOW 3 -2 56 VBottom 2"]     # horizontal element: both labels above
+WIN_BELOW = ["WINDOW 0 38 56 VTop 2", "WINDOW 3 66 56 VTop 2"]            # horizontal element: both labels below
+PITCH = 224                                                               # spacing of shunt branches on a rail
 
 class Sch:
     def __init__(self):
@@ -40,8 +51,8 @@ class Sch:
     def gnd(self, x, y):
         self.flag(x, y, "0")
 
-    def sym(self, kind, rot, ox, oy, name, value, value2=None, spiceline=None):
-        lines = [f"SYMBOL {kind} {ox} {oy} {rot}"] + WIN.get((kind, rot), [])
+    def sym(self, kind, rot, ox, oy, name, value, value2=None, spiceline=None, win=None):
+        lines = [f"SYMBOL {kind} {ox} {oy} {rot}"] + (win or WIN.get((kind, rot), []))
         lines.append(f"SYMATTR InstName {name}")
         lines.append(f"SYMATTR Value {value}")
         if value2:
@@ -69,11 +80,33 @@ class Sch:
         oy = y - 16 if kind in ("res", "ind") else y
         return self.sym(kind, "R0", x - 16, oy, name, value, spiceline=spiceline)[1]
 
-    def hser(self, kind, xl, y, name, value, spiceline=None):
+    def hser(self, kind, xl, y, name, value, spiceline=None, win=None):
         """horizontal element starting at (xl, y); returns the x of its right end"""
         length = 64 if kind == "cap" else 80
-        self.sym(kind, "R90", xl + length + 16, y - 16, name, value, spiceline=spiceline)
+        self.sym(kind, "R90", xl + length + 16, y - 16, name, value, spiceline=spiceline, win=win)
         return xl + length
+
+    def link(self, xl, y, lname, lval, rname, rval):
+        """spring || damper between two velocity nodes: L on the rail (labels below),
+        1/R on a branch above it (labels above). Returns the x of the right end."""
+        xr = self.hser("ind", xl, y, lname, lval, "Rser=1u", win=WIN_BELOW)
+        self.hser("res", xl, y - 112, rname, rval, win=WIN_ABOVE)
+        self.wire(xl, y, xl, y - 112); self.wire(xr, y, xr, y - 112)
+        return xr
+
+    def radnet(self, x, y, r2, r1, c1):
+        """R2 from the rail down to a tee, then R1 and C1 side by side to ground. Each arg = (name, value)."""
+        mid = self.vert("res", x, y, *r2)
+        self.wire(mid[0], mid[1], mid[0], mid[1] + 16)
+        self.wire(mid[0] - 128, mid[1] + 16, mid[0] + 128, mid[1] + 16)
+        self.vshunt("res", mid[0] - 128, mid[1] + 16, *r1)
+        self.vshunt("cap", mid[0] + 128, mid[1] + 16, *c1)
+
+    def shunts(self, x, y, items):
+        """a row of grounded branches on the rail, PITCH apart. items = (kind, name, value[, spiceline])"""
+        for i, it in enumerate(items):
+            self.vshunt(it[0], x + i * PITCH, y, it[1], it[2], it[3] if len(it) > 3 else None)
+        return x + (len(items) - 1) * PITCH
 
     def vsense(self, xl, y, name):
         """0 V source, + on the left so I(name) is the flow left -> right"""
@@ -82,26 +115,34 @@ class Sch:
 
     def isrc(self, x, y, name, ac="AC 1"):
         """current source injecting into the node (x, y) from ground"""
-        self.sym("current", "R180", x, y + 80, name, "0", value2=ac)
+        self.sym("current", "R180", x, y + 80, name, ac)
         self.gnd(x, y + 80)
 
     def vsrc(self, x, y, name, ac="AC 1"):
-        pins = self.sym("voltage", "R0", x, y - 16, name, "0", value2=ac)
+        pins = self.sym("voltage", "R0", x, y - 16, name, ac)
         self.gnd(*pins[1])
 
     def g_inject(self, x, y, name, gain, ctrl):
         """VCCS pushing gain*V(ctrl) INTO the node (x, y)"""
         pins = self.sym("g", "R0", x, y - 16, name, gain)
-        self.gnd(*pins[0]); self.flag(*pins[2], ctrl); self.gnd(*pins[3])
+        self.gnd(*pins[0]); self.gnd(*pins[3])
+        cx, cy = pins[2]                       # short lead so the control label clears the symbol
+        self.wire(cx, cy, cx - 64, cy); self.flag(cx - 64, cy, ctrl)
 
     def g_draw(self, x, y, name, gain, ctrl):
         """VCCS drawing gain*V(ctrl) OUT of the node (x, y) to ground (reaction force)"""
         pins = self.sym("g", "R180", x, y + 96, name, gain)
-        self.gnd(*pins[1]); self.flag(*pins[2], ctrl); self.gnd(*pins[3])
+        self.gnd(*pins[1]); self.gnd(*pins[3])
+        cx, cy = pins[2]
+        self.wire(cx, cy, cx + 64, cy); self.flag(cx + 64, cy, ctrl)
 
     def e_src(self, x, y, name, gain, ctrl):
         pins = self.sym("e", "R0", x, y - 16, name, gain)
-        self.gnd(*pins[1]); self.flag(*pins[2], ctrl); self.gnd(*pins[3])
+        self.gnd(*pins[1]); self.gnd(*pins[3])
+        cx, cy = pins[2]                       # lead the control pin away from the rail so its label is readable
+        self.wire(cx, cy, cx - 64, cy); self.wire(cx - 64, cy, cx - 64, cy + 48)
+        self.wire(cx - 64, cy + 48, cx - 128, cy + 48)
+        self.flag(cx - 128, cy + 48, ctrl)
 
     def f_inject(self, x, y, name, vsense, gain):
         self.sym("f", "R180", x, y + 80, name, f"{vsense} {gain}")
@@ -138,43 +179,38 @@ NOLOSS = "Rser=0"
 
 
 # =====================================================================  Part 1 / 3
-def mech(s, ox, oy, sfx, link, with_g=False, S=("60e-4", "210e-4")):
+def mech(s, ox, oy, sfx, link, with_g=False):
     """dual-diaphragm mechanical network, mobility analogy. link = 'st' | 'so'."""
-    gap = 144 if with_g else 0
     s.isrc(ox, oy, f"I_F{sfx}")
-    xl = ox + 416 + gap                                  # left end of the link
+    s.flag(ox + 80, oy, f"u_vc{sfx}")
+    x = s.shunts(ox + 176, oy, [("cap", f"C_Mmvc{sfx}", "{Mmvc}"), ("ind", f"L_Cmsp{sfx}", "{Cmsp}", NOLOSS),
+                                ("res", f"R_Rmsp{sfx}", "{1/Rmsp}")])
+    if with_g:
+        x += 304
+        s.g_draw(x, oy, f"G_mi{sfx}", "{Si}", f"p_i{sfx}")
+        xl = x + 240
+    else:
+        xl = x + 240
     s.wire(ox, oy, xl, oy)
-    s.flag(ox + 48, oy, f"u_vc{sfx}")
-    s.vshunt("cap", ox + 112, oy, f"C_Mmvc{sfx}", "{Mmvc}")
-    s.vshunt("ind", ox + 224, oy, f"L_Cmsp{sfx}", "{Cmsp}", NOLOSS)
-    s.vshunt("res", ox + 336, oy, f"R_Rmsp{sfx}", "{1/Rmsp}")
+    xr = s.link(xl, oy, f"L_Cmd{sfx}", "{Cmd_%s}" % link, f"R_Rmd{sfx}", "{1/Rmd_%s}" % link)
+    s.flag(xr + 80, oy, f"u_d{sfx}")
+    end = s.shunts(xr + 176, oy, [("cap", f"C_Mmd{sfx}", "{Mmd}"), ("ind", f"L_Cmsr{sfx}", "{Cmsr}", NOLOSS),
+                                  ("res", f"R_Rmsr{sfx}", "{1/Rmsr}")])
     if with_g:
-        s.g_draw(ox + 464, oy, f"G_mi{sfx}", "{Si}", f"p_i{sfx}")
-    xr = s.hser("ind", xl, oy, f"L_Cmd{sfx}", "{Cmd_%s}" % link, "Rser=1u")
-    s.hser("res", xl, oy - 96, f"R_Rmd{sfx}", "{1/Rmd_%s}" % link)
-    s.wire(xl, oy, xl, oy - 96); s.wire(xr, oy, xr, oy - 96)
-    end = xr + 320 + gap
-    s.wire(xr, oy, end, oy)
-    s.flag(xr + 48, oy, f"u_d{sfx}")
-    s.vshunt("cap", xr + 96, oy, f"C_Mmd{sfx}", "{Mmd}")
-    s.vshunt("ind", xr + 208, oy, f"L_Cmsr{sfx}", "{Cmsr}", NOLOSS)
-    s.vshunt("res", xr + 320, oy, f"R_Rmsr{sfx}", "{1/Rmsr}")
-    if with_g:
+        end += 304
         s.g_draw(end, oy, f"G_mo{sfx}", "{So}", f"p_o{sfx}")
+    s.wire(xr, oy, end, oy)
     return end
 
 
 def acoustic(s, ax, ay, tag, sfx, ctrl, Sname):
     """radiation impedance of a baffled piston, BOTH faces in series (every Z x2)"""
-    s.g_inject(ax + 64, ay, f"G_a{tag}{sfx}", "{%s}" % Sname, ctrl)
-    s.wire(ax + 64, ay, ax + 352, ay)
-    s.flag(ax + 112, ay, f"p_{tag}{sfx}")
-    s.vshunt("ind", ax + 208, ay, f"L_2MA1{tag}{sfx}", "{2*MA1%s}" % tag, NOLOSS)
-    mid = s.vert("res", ax + 352, ay, f"R_2RA2{tag}{sfx}", "{2*RA2%s}" % tag)
-    s.wire(mid[0], mid[1], mid[0], mid[1] + 16)
-    s.wire(mid[0] - 64, mid[1] + 16, mid[0] + 64, mid[1] + 16)
-    s.vshunt("res", mid[0] - 64, mid[1] + 16, f"R_2RA1{tag}{sfx}", "{2*RA1%s}" % tag)
-    s.vshunt("cap", mid[0] + 64, mid[1] + 16, f"C_CA1h{tag}{sfx}", "{CA1%s/2}" % tag)
+    s.g_inject(ax + 128, ay, f"G_a{tag}{sfx}", "{%s}" % Sname, ctrl)
+    s.wire(ax + 128, ay, ax + 128 + 2 * PITCH + 32, ay)
+    s.flag(ax + 224, ay, f"p_{tag}{sfx}")
+    s.vshunt("ind", ax + 128 + PITCH, ay, f"L_2MA1{tag}{sfx}", "{2*MA1%s}" % tag, NOLOSS)
+    s.radnet(ax + 128 + 2 * PITCH + 32, ay, (f"R_2RA2{tag}{sfx}", "{2*RA2%s}" % tag),
+             (f"R_2RA1{tag}{sfx}", "{2*RA1%s}" % tag), (f"C_CA1h{tag}{sfx}", "{CA1%s/2}" % tag))
 
 
 P1_PARAMS = (".param Mmvc=6m Cmsp=1.3m Rmsp=0.5 Mmd=5m Cmsr=2.7m Rmsr=0.22\n"
@@ -183,15 +219,15 @@ P1_PARAMS = (".param Mmvc=6m Cmsp=1.3m Rmsp=0.5 Mmd=5m Cmsr=2.7m Rmsr=0.22\n"
 
 def part1():
     s = Sch()
-    s.text(0, -220, "Lab A part 1 - dual-diaphragm loudspeaker, MOBILITY analogy: node voltage = velocity [m/s], current = force [N]")
-    s.text(0, -188, "mass -> C to ground, compliance -> L, damper R_M -> resistor 1/R_M.  I = 1 A means F = 1 N")
-    s.text(0, -140, "STIFF link: Cmd = 1e-10 m/N, Rmd = 5000 Ns/m")
+    s.text(0, -320, "Lab A part 1 - dual-diaphragm loudspeaker, MOBILITY analogy: node voltage = velocity [m/s], current = force [N]")
+    s.text(0, -288, "mass -> C to ground, compliance -> L, damper R_M -> resistor 1/R_M.  I = 1 A means F = 1 N")
+    s.text(0, -224, "STIFF link: Cmd = 1e-10 m/N, Rmd = 5000 Ns/m")
     mech(s, 0, 0, "_st", "st")
-    s.text(0, 260, "SOFT link: Cmd = 3e-6 m/N, Rmd = 5 Ns/m")
-    mech(s, 0, 400, "_so", "so")
-    s.text(0, 600, P1_PARAMS, directive=True)
-    s.text(0, 670, ".ac dec 200 10 10k", directive=True)
-    s.text(0, 720, "1a: plot V(u_vc_st) V(u_d_st) V(u_vc_so) V(u_d_so).   1b: Z_M = F/u = 1/V(u_vc_st) and 1/V(u_vc_so)  (Add Traces, type the expression)")
+    s.text(0, 256, "SOFT link: Cmd = 3e-6 m/N, Rmd = 5 Ns/m")
+    mech(s, 0, 480, "_so", "so")
+    s.text(0, 720, P1_PARAMS, directive=True)
+    s.text(0, 800, ".ac dec 200 10 10k", directive=True)
+    s.text(0, 864, "1a: plot V(u_vc_st) V(u_d_st) V(u_vc_so) V(u_d_so).   1b: Z_M = F/u = 1/V(u_vc_st) and 1/V(u_vc_so)  (Add Traces, type the expression)")
     s.dump(HERE / "Part1_DualDiaphragm.asc")
     plt(HERE / "Part1_DualDiaphragm.plt",
         [(["V(u_vc_st)", "V(u_d_st)", "V(u_vc_so)", "V(u_d_so)"], (1e-5, 10)),
@@ -208,18 +244,20 @@ def rad_params():
 
 def part3(link, title):
     s = Sch()
-    s.text(0, -220, f"Lab A part 3 - {title} link, WITH the air load: baffled-piston radiation impedance on BOTH faces of each cone")
-    s.text(0, -188, "coupling per cone: G_a injects U = S*u into the acoustic node, G_m draws the reaction force f = S*p from the velocity node")
-    end = mech(s, 0, 0, "", link, with_g=True)
-    s.text(0, 230, "acoustic side, IMPEDANCE analogy: node voltage = pressure [Pa] (sum of both faces), current = volume velocity [m3/s]")
-    acoustic(s, 0, 380, "i", "", "u_vc", "Si")
-    acoustic(s, 720, 380, "o", "", "u_d", "So")
-    s.text(0, 700, "reference: the same speaker WITHOUT air (part 1), for the overlay")
-    mech(s, 0, 840, "_ref", link)
-    s.text(0, 1040, P1_PARAMS + "\n.param Si=60e-4 So=210e-4\n" + rad_params(), directive=True)
-    s.text(0, 1180, ".ac dec 200 10 10k", directive=True)
-    s.text(0, 1230, "3a: V(u_vc) V(u_d) vs V(u_vc_ref) V(u_d_ref);  Z_M = 1/V(u_vc).   3b: front pressure = V(p_i)/2 and V(p_o)/2;")
-    s.text(0, 1262, "far field 1 m, half space: 2*pi*frequency*1.18*(60e-4*V(u_vc)+210e-4*V(u_d))/(2*pi*1)")
+    s.text(0, -320, f"Lab A part 3 - {title} link, WITH the air load: baffled-piston radiation impedance on BOTH faces of each cone")
+    s.text(0, -288, "coupling per cone: G_a injects U = S*u into the acoustic node, G_m draws the reaction force f = S*p from the velocity node")
+    mech(s, 0, 0, "", link, with_g=True)
+    s.text(0, 256, "acoustic side, IMPEDANCE analogy: node voltage = pressure [Pa] (sum of both faces), current = volume velocity [m3/s]")
+    s.text(0, 320, "inner cone (S = 60 cm2)")
+    acoustic(s, 0, 416, "i", "", "u_vc", "Si")
+    s.text(1056, 320, "outer cone (S = 210 cm2)")
+    acoustic(s, 1056, 416, "o", "", "u_d", "So")
+    s.text(0, 800, "reference: the same speaker WITHOUT air (part 1), for the overlay")
+    mech(s, 0, 1040, "_ref", link)
+    s.text(0, 1280, P1_PARAMS + "\n.param Si=60e-4 So=210e-4\n" + rad_params(), directive=True)
+    s.text(0, 1440, ".ac dec 200 10 10k", directive=True)
+    s.text(0, 1504, "3a: V(u_vc) V(u_d) vs V(u_vc_ref) V(u_d_ref);  Z_M = 1/V(u_vc).   3b: front pressure = V(p_i)/2 and V(p_o)/2;")
+    s.text(0, 1536, "far field 1 m, half space: 2*pi*frequency*1.18*(60e-4*V(u_vc)+210e-4*V(u_d))/(2*pi*1)")
     name = f"Part3_Coupled_{title}"
     s.dump(HERE / f"{name}.asc")
     plt(HERE / f"{name}.plt",
@@ -235,46 +273,44 @@ def part2(kind):
     V = {2: math.pi * 0.010**2 * 0.050, 4: math.pi * 0.020**2 * 0.080, 6: math.pi * 0.015**2 * 0.060}
     s = Sch()
     title = {"p": "2a - driven by a PRESSURE source (1 Pa)", "U": "2b/2c - driven by a VOLUME-VELOCITY source (1 m3/s)", "rad": "2d/2e - volume-velocity source, tube-end RADIATION impedance at the outlet"}[kind]
-    s.text(0, -200, f"Lab A part {title}")
-    s.text(0, -168, "IMPEDANCE analogy: node voltage = pressure [Pa], current = volume velocity [m3/s]. Narrow pipes = R_A + M_A in series, chambers = C_A to GROUND")
-    s.text(0, -136, "Vs1..Vs7 are 0 V sense sources: I(Vs7) is the volume velocity in the outlet pipe")
+    s.text(0, -224, f"Lab A part {title}")
+    s.text(0, -192, "IMPEDANCE analogy: node voltage = pressure [Pa], current = volume velocity [m3/s]. Narrow pipes = R_A + M_A in series, chambers = C_A to GROUND")
+    s.text(0, -160, "Vs1..Vs7 are 0 V sense sources: I(Vs7) is the volume velocity in the outlet pipe")
     oy = 0
     if kind == "p":
         s.vsrc(0, oy, "V_pin")
     else:
         s.isrc(0, oy, "I_Uin")
-    s.flag(0, oy, "p_in")
+    s.flag(64, oy, "p_in")
     x = 0
-    s.wire(x, oy, x + 48, oy); x += 48
+    s.wire(x, oy, x + 144, oy); x += 144
     for k in (1, 3, 5, 7):
-        x2 = s.vsense(x, oy, f"Vs{k}"); s.wire(x2, oy, x2 + 16, oy)
-        x3 = s.hser("res", x2 + 16, oy, f"R_RA{k}", "{RA}"); s.wire(x3, oy, x3 + 16, oy)
-        x4 = s.hser("ind", x3 + 16, oy, f"L_MA{k}", "{MA%d}" % k, NOLOSS)
-        node = x4 + 48
-        s.wire(x4, oy, node + (48 if k < 7 else 0), oy)
+        x2 = s.vsense(x, oy, f"Vs{k}"); s.wire(x2, oy, x2 + 48, oy)
+        x3 = s.hser("res", x2 + 48, oy, f"R_RA{k}", "{RA}"); s.wire(x3, oy, x3 + 48, oy)
+        x4 = s.hser("ind", x3 + 48, oy, f"L_MA{k}", "{MA%d}" % k, NOLOSS)
+        node = x4 + 80
         if k < 7:
+            s.wire(x4, oy, node + 192, oy)
             s.vshunt("cap", node, oy, f"C_CA{k+1}", "{CA%d}" % (k + 1))
-            s.flag(node, oy - 0, f"p{k+1}")
-            x = node + 48
+            s.flag(node + 64, oy, f"p{k+1}")
+            x = node + 192
         else:
             s.flag(node, oy, "p_out")
             if kind == "rad":
-                s.wire(node, oy, node + 208, oy)
-                s.vshunt("ind", node + 64, oy, "L_MArad", "{MArad}", NOLOSS)
-                mid = s.vert("res", node + 208, oy, "R_RA2rad", "{RA2rad}")
-                s.wire(mid[0], mid[1], mid[0], mid[1] + 16)
-                s.wire(mid[0] - 64, mid[1] + 16, mid[0] + 64, mid[1] + 16)
-                s.vshunt("res", mid[0] - 64, mid[1] + 16, "R_RA1rad", "{RA1rad}")
-                s.vshunt("cap", mid[0] + 64, mid[1] + 16, "C_CArad", "{CArad}")
+                s.wire(x4, oy, node + 96 + PITCH + 32, oy)
+                s.vshunt("ind", node + 96, oy, "L_MArad", "{MArad}", NOLOSS)
+                s.radnet(node + 96 + PITCH + 32, oy, ("R_RA2rad", "{RA2rad}"), ("R_RA1rad", "{RA1rad}"), ("C_CArad", "{CArad}"))
             else:
-                s.wire(node, oy, node, oy + 48); s.gnd(node, oy + 48)
+                s.wire(x4, oy, node, oy)
+                s.wire(node, oy, node, oy + 64); s.gnd(node, oy + 64)
     p = [".param RA=25k " + " ".join(f"MA{k}={RHO*L[k]/S:.5g}" for k in (1, 3, 5, 7)),
          ".param " + " ".join(f"CA{k}={V[k]/(RHO*C0**2):.5g}" for k in (2, 4, 6))]
     if kind == "rad":
         p.append(f".param MArad={0.6133*RHO/(math.pi*a):.5g} CArad={0.55*math.pi**2*a**3/(RHO*C0**2):.5g} RA1rad={0.5045*RHO*C0/S:.6g} RA2rad={RHO*C0/S:.6g}")
-    s.text(0, 240, "\n".join(p), directive=True)
-    s.text(0, 240 + 40 * len(p), ".ac dec 2000 10 1k", directive=True)   # the ladder has Q > 100: a coarse sweep clips the peaks
-    y = 300 + 40 * len(p)
+    ty = 400 if kind == "rad" else 208
+    s.text(0, ty, "\n".join(p), directive=True)
+    s.text(0, ty + 40 * len(p) + 16, ".ac dec 2000 10 1k", directive=True)   # the ladder has Q > 100: a coarse sweep clips the peaks
+    y = ty + 40 * len(p) + 80
     if kind == "p":
         s.text(0, y, "2a: plot I(Vs7) in dB - peaks -98.8/-112.1/-141.6 dB at 77/180/356 Hz = the MINIMA of Z_in. Z_in = V(p_in)/I(Vs1)")
         name = "Part2a_Silencer_PressureSource"; panes = [(["I(Vs7)"], (1e-14, 1e-4)), (["V(p_in)/I(Vs1)"], (1e4, 1e9))]
@@ -292,31 +328,27 @@ def part2(kind):
 # =====================================================================  Part 4
 def part4():
     s = Sch()
-    s.text(0, -220, "Lab A part 4 - voice coil driving two masses. Electrical loop (left) + mechanical MOBILITY network (right)")
-    s.text(0, -188, "coupling: E_emf = Bl*u_c opposes the drive (back-EMF), F_Bl injects the Lorentz force f = Bl*i = 1.5*I(Vs1) into node u_c")
+    s.text(0, -288, "Lab A part 4 - voice coil driving two masses. Electrical loop (left) + mechanical MOBILITY network (right)")
+    s.text(0, -256, "coupling: E_emf = Bl*u_c opposes the drive (back-EMF), F_Bl injects the Lorentz force f = Bl*i = 1.5*I(Vs1) into node u_c")
     oy = 0
     s.vsrc(0, oy, "V1")
-    s.flag(0, oy, "vin")
-    s.wire(0, oy, 48, oy)
-    x = s.vsense(48, oy, "Vs1"); s.wire(x, oy, x + 16, oy)
-    x = s.hser("res", x + 16, oy, "R_Rc", "{Rc}"); s.wire(x, oy, x + 16, oy)
-    x = s.hser("ind", x + 16, oy, "L_Le", "{Le}", NOLOSS)
-    s.wire(x, oy, x + 96, oy)
-    s.e_src(x + 96, oy, "E_emf", "{Bl}", "u_c")
-    mx = x + 96 + 240
+    s.flag(64, oy, "vin")
+    s.wire(0, oy, 144, oy)
+    x = s.vsense(144, oy, "Vs1"); s.wire(x, oy, x + 48, oy)
+    x = s.hser("res", x + 48, oy, "R_Rc", "{Rc}"); s.wire(x, oy, x + 48, oy)
+    x = s.hser("ind", x + 48, oy, "L_Le", "{Le}", NOLOSS)
+    s.wire(x, oy, x + 208, oy)
+    s.e_src(x + 208, oy, "E_emf", "{Bl}", "u_c")
+    mx = x + 208 + 400
     s.f_inject(mx, oy, "F_Bl", "Vs1", "{Bl}")
-    s.wire(mx, oy, mx + 224, oy)
-    s.flag(mx + 48, oy, "u_c")
-    s.vshunt("cap", mx + 128, oy, "C_Mmc", "{Mmc}")
-    xl = mx + 224
-    xr = s.hser("ind", xl, oy, "L_Cms", "{Cms}", "Rser=1u")
-    s.hser("res", xl, oy - 96, "R_Rms", "{1/Rms}")
-    s.wire(xl, oy, xl, oy - 96); s.wire(xr, oy, xr, oy - 96)
-    s.wire(xr, oy, xr + 320, oy)
-    s.flag(xr + 48, oy, "u_1")
-    s.vshunt("cap", xr + 96, oy, "C_Mm1", "{Mm1}")
-    s.vshunt("ind", xr + 208, oy, "L_Cms2", "{Cms2}", NOLOSS)
-    s.vshunt("res", xr + 320, oy, "R_Rms2", "{1/Rms2}")
+    s.flag(mx + 80, oy, "u_c")
+    s.vshunt("cap", mx + 176, oy, "C_Mmc", "{Mmc}")
+    xl = mx + 176 + 240
+    s.wire(mx, oy, xl, oy)
+    xr = s.link(xl, oy, "L_Cms", "{Cms}", "R_Rms", "{1/Rms}")
+    s.flag(xr + 80, oy, "u_1")
+    end = s.shunts(xr + 176, oy, [("cap", "C_Mm1", "{Mm1}"), ("ind", "L_Cms2", "{Cms2}", NOLOSS), ("res", "R_Rms2", "{1/Rms2}")])
+    s.wire(xr, oy, end, oy)
     s.text(0, 240, ".param Rc=0.5 Le=10u Bl=1.5 Mmc=5m Cms=1e-5 Rms=1 Mm1=100m Cms2=1e-2 Rms2=0.1", directive=True)
     s.text(0, 280, ".ac dec 200 1 10k", directive=True)
     s.text(0, 330, "4a: V(u_c) V(u_1) [m/s per V].  4b: Z_M = Bl*i/u_c = 1.5*I(Vs1)/V(u_c).  4c: Z_E = V(vin)/I(Vs1)")
