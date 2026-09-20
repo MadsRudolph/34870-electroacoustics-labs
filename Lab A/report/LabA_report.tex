@@ -66,17 +66,17 @@ spring--damper pair an inductor--resistor pair between the nodes they join.
 
 \begin{figure}[H]\centering
 \begin{circuitikz}[american,scale=0.9,every node/.style={transform shape}]
-\draw (0,0) node[ground]{} to[isource, l=$F$] (0,3) -- (1.5,3) node[circ]{} node[above]{$u_{vc}$};
-\draw (1.5,3) to[C, l_=$M_{mvc}$] (1.5,0) node[ground]{};
-\draw (3,3) to[L, l_=$C_{msp}$] (3,0) node[ground]{};
-\draw (4.5,3) to[R, l_=$1/R_{msp}$] (4.5,0) node[ground]{};
-\draw (1.5,3) -- (4.5,3);
-\draw (4.5,3) -- (5.5,3) to[L, l=$C_{md}$] (8,3) -- (9,3) node[circ]{} node[above]{$u_d$};
-\draw (5.5,3) -- (5.5,4.4) to[R, l=$1/R_{md}$] (8,4.4) -- (8,3);
-\draw (9,3) to[C, l_=$M_{md}$] (9,0) node[ground]{};
-\draw (10.5,3) to[L, l_=$C_{msr}$] (10.5,0) node[ground]{};
-\draw (12,3) to[R, l_=$1/R_{msr}$] (12,0) node[ground]{};
-\draw (9,3) -- (12,3);
+\draw (0,0) node[ground]{} to[isource, l=$F$] (0,3) -- (2,3) node[circ]{} node[above]{$u_{vc}$};
+\draw (2,3) to[C, l=$M_{mvc}$] (2,0) node[ground]{};
+\draw (4,3) to[L, l=$C_{msp}$] (4,0) node[ground]{};
+\draw (6,3) to[R, l=$1/R_{msp}$] (6,0) node[ground]{};
+\draw (2,3) -- (6,3);
+\draw (6,3) -- (8,3) to[L, l_=$C_{md}$] (10.5,3) -- (11.5,3) node[circ]{} node[above]{$u_d$};
+\draw (8,3) -- (8,4.4) to[R, l=$1/R_{md}$] (10.5,4.4) -- (10.5,3);
+\draw (11.5,3) to[C, l=$M_{md}$] (11.5,0) node[ground]{};
+\draw (13.5,3) to[L, l=$C_{msr}$] (13.5,0) node[ground]{};
+\draw (15.5,3) to[R, l=$1/R_{msr}$] (15.5,0) node[ground]{};
+\draw (11.5,3) -- (15.5,3);
 \end{circuitikz}
 \caption{Part 1 mobility-analogy circuit. Node voltages are the velocities $u_{vc}$ and $u_d$; the current
 delivered by the source is the force $F$ (\SI{1}{\newton} AC).}
@@ -448,14 +448,14 @@ resistance (high $ka$) for both sides. $ka = 1$ at \SI{1253}{\hertz} (inner) and
 \begin{figure}[H]\centering
 \begin{circuitikz}[american,scale=0.85,every node/.style={transform shape}]
 % mechanical node
-\draw (0,0) node[ground]{} to[isource, l=$F$] (0,3) -- (1.5,3) node[circ]{} node[above]{$u$};
-\draw (1.5,3) to[generic, l_=$Y_M$ (Part 1)] (1.5,0) node[ground]{};
+\draw (0,0) node[ground]{} to[isource, l=$F$] (0,3) -- (2,3) node[circ]{} node[above]{$u$};
+\draw (2,3) to[generic, l=$Y_M$ (Part 1)] (2,0) node[ground]{};
 % force sink
-\draw (3.5,3) to[cI, l_=$S\,p$, invert] (3.5,0) node[ground]{};
-\draw (1.5,3) -- (3.5,3);
+\draw (5.5,3) to[cI, l=$S\,p$] (5.5,0) node[ground]{};
+\draw (2,3) -- (5.5,3);
 % acoustic side
-\draw (6.5,0) node[ground]{} to[cI, l=$S\,u$] (6.5,3) -- (8,3) node[circ]{} node[above]{$p$};
-\draw (8,3) to[generic, l_=$2\Zrad$] (8,0) node[ground]{};
+\draw (9.5,0) node[ground]{} to[cI, l=$S\,u$] (9.5,3) -- (11.5,3) node[circ]{} node[above]{$p$};
+\draw (11.5,3) to[generic, l=$2\Zrad$] (11.5,0) node[ground]{};
 \end{circuitikz}
 \caption{Coupling block used for each diaphragm in Part 3 (mobility on the left, acoustic impedance analogy
 on the right). The left controlled source senses $p$ and draws the reaction force, the right one senses $u$ and injects the volume velocity. The pressure on \emph{one} side of the diaphragm is $p/2$.}
@@ -592,17 +592,17 @@ electrical loop. $M_{mc}$ is joined to $M_{m1}$ by $C_{ms}\parallel R_{ms}$, and
 $C_{ms2}\parallel R_{ms2}$.
 
 \begin{figure}[H]\centering
-\begin{circuitikz}[american,scale=0.85,every node/.style={transform shape}]
+\begin{circuitikz}[american,scale=0.78,every node/.style={transform shape}]
 \draw (0,0) node[ground]{} to[V, l=$v$] (0,3) to[R, l=$R_c$, i=$i$] (2.5,3) to[L, l=$L_e$] (4.5,3)
    to[cV, l=$Bl\,u_c$] (4.5,0) node[ground]{};
-\draw (7.5,0) node[ground]{} to[cI, l=$Bl\,i$] (7.5,3) -- (9,3) node[circ]{} node[above]{$u_c$};
-\draw (9,3) to[C, l_=$M_{mc}$] (9,0) node[ground]{};
-\draw (9,3) -- (10,3) to[L, l=$C_{ms}$] (12,3) -- (13,3) node[circ]{} node[above]{$u_1$};
-\draw (10,3) -- (10,4.4) to[R, l=$1/R_{ms}$] (12,4.4) -- (12,3);
-\draw (13,3) to[C, l_=$M_{m1}$] (13,0) node[ground]{};
-\draw (14.5,3) to[L, l_=$C_{ms2}$] (14.5,0) node[ground]{};
-\draw (16,3) to[R, l_=$1/R_{ms2}$] (16,0) node[ground]{};
-\draw (13,3) -- (16,3);
+\draw (7.7,0) node[ground]{} to[cI, l=$Bl\,i$] (7.7,3) -- (9.2,3) node[circ]{} node[above]{$u_c$};
+\draw (9.2,3) to[C, l=$M_{mc}$] (9.2,0) node[ground]{};
+\draw (9.2,3) -- (11,3) to[L, l_=$C_{ms}$] (13,3) -- (14,3) node[circ]{} node[above]{$u_1$};
+\draw (11,3) -- (11,4.4) to[R, l=$1/R_{ms}$] (13,4.4) -- (13,3);
+\draw (14,3) to[C, l=$M_{m1}$] (14,0) node[ground]{};
+\draw (16,3) to[L, l=$C_{ms2}$] (16,0) node[ground]{};
+\draw (18,3) to[R, l=$1/R_{ms2}$] (18,0) node[ground]{};
+\draw (14,3) -- (18,3);
 \end{circuitikz}
 \caption{Part 4: electrical loop (left) coupled to the mobility circuit (right) by the gyrator pair
 $f = Bl\,i$ (VCCS, sensing $i$ as the voltage across $R_c$) and $v = Bl\,u_c$ (VCVS).}
