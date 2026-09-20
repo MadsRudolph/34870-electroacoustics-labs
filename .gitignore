@@ -13,3 +13,6 @@ __pycache__/
 *-backups/
 .history/
 *.zip
+
+# individual quiz material stays out of the shared repo
+Lab */quiz/

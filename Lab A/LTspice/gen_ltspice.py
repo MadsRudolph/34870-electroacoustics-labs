@@ -226,12 +226,12 @@ def part1():
     s.text(0, 256, "SOFT link: Cmd = 3e-6 m/N, Rmd = 5 Ns/m")
     mech(s, 0, 480, "_so", "so")
     s.text(0, 720, P1_PARAMS, directive=True)
-    s.text(0, 800, ".ac dec 200 10 10k", directive=True)
+    s.text(0, 800, ".ac dec 200 20 20k", directive=True)      # the quiz asks for 20 Hz - 20 kHz
     s.text(0, 864, "1a: plot V(u_vc_st) V(u_d_st) V(u_vc_so) V(u_d_so).   1b: Z_M = F/u = 1/V(u_vc_st) and 1/V(u_vc_so)  (Add Traces, type the expression)")
     s.dump(HERE / "Part1_DualDiaphragm.asc")
     plt(HERE / "Part1_DualDiaphragm.plt",
         [(["V(u_vc_st)", "V(u_d_st)", "V(u_vc_so)", "V(u_d_so)"], (1e-5, 10)),
-         (["1/V(u_vc_st)", "1/V(u_vc_so)"], (0.1, 1000))], (10, 10000))
+         (["1/V(u_vc_st)", "1/V(u_vc_so)"], (0.1, 1000))], (20, 20000))
 
 
 def rad_params():
@@ -255,7 +255,7 @@ def part3(link, title):
     s.text(0, 800, "reference: the same speaker WITHOUT air (part 1), for the overlay")
     mech(s, 0, 1040, "_ref", link)
     s.text(0, 1280, P1_PARAMS + "\n.param Si=60e-4 So=210e-4\n" + rad_params(), directive=True)
-    s.text(0, 1440, ".ac dec 200 10 10k", directive=True)
+    s.text(0, 1440, ".ac dec 200 20 20k", directive=True)     # same range as part 1 (the quiz asks for 20 Hz - 20 kHz)
     s.text(0, 1504, "3a: V(u_vc) V(u_d) vs V(u_vc_ref) V(u_d_ref);  Z_M = 1/V(u_vc).   3b: front pressure = V(p_i)/2 and V(p_o)/2;")
     s.text(0, 1536, "far field 1 m, half space: 2*pi*frequency*1.18*(60e-4*V(u_vc)+210e-4*V(u_d))/(2*pi*1)")
     name = f"Part3_Coupled_{title}"
@@ -263,7 +263,7 @@ def part3(link, title):
     plt(HERE / f"{name}.plt",
         [(["V(u_vc)", "V(u_d)", "V(u_vc_ref)", "V(u_d_ref)"], (1e-5, 10)),
          (["1/V(u_vc)", "1/V(u_vc_ref)"], (0.1, 1000)),
-         (["V(p_i)/2", "V(p_o)/2", "2*pi*frequency*1.18*(60e-4*V(u_vc)+210e-4*V(u_d))/(2*pi*1)"], (1e-2, 100))], (10, 10000))
+         (["V(p_i)/2", "V(p_o)/2", "2*pi*frequency*1.18*(60e-4*V(u_vc)+210e-4*V(u_d))/(2*pi*1)"], (1e-2, 100))], (20, 20000))
 
 
 # =====================================================================  Part 2
@@ -420,7 +420,7 @@ def verify():
         if link == "Soft":
             fr, a = feat(f, d["v(u_vc)"], 600, 1500, "min"); chk("dip with air Hz", fr, 1023); chk("|Z_M| max with air", 1 / a, 129, 0.08)
         else:
-            z = 1 / d["v(u_vc)"][-1]; chk("Re Z_M at 10 kHz", z.real, 22.8, 0.05)
+            i10k = min(range(len(f)), key=lambda i: abs(f[i].real - 1e4)); z = 1 / d["v(u_vc)"][i10k]; chk("Re Z_M at 10 kHz", z.real, 22.8, 0.05)
     d = run_ltspice(HERE / "Part2a_Silencer_PressureSource.asc"); f = d["frequency"]
     print("Part 2a"); fr, a = feat(f, d["i(vs7)"], 60, 100); chk("peak Hz", fr, 77.1); chk("peak dB", 20 * math.log10(a), -98.8, 0.01)
     fr, a = feat(f, d["i(vs7)"], 300, 400); chk("3rd peak Hz", fr, 356.5); chk("3rd peak dB", 20 * math.log10(a), -141.6, 0.01)
