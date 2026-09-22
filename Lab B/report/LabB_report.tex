@@ -1,31 +1,253 @@
-% 34870 Electroacoustics -- Lab B: Scaled microphone measurement (cylinder scattering)
-\documentclass[a4paper,11pt]{article}
-\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern,textcomp}
+\documentclass[a4paper,10pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,textcomp}
 \usepackage[margin=2.2cm]{geometry}
-\usepackage{amsmath,amssymb,siunitx,booktabs,graphicx,caption,subcaption,float,enumitem,xcolor,placeins}
-\usepackage[colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!60!black]{hyperref}
-\graphicspath{{../figures/}{Lab B/figures/}}  % local build runs in report/, Overleaf may run from the project root
-\title{34870 Electroacoustics\\ Lab B --- Scaled microphone measurement (cylinder scattering)}
-\author{Group members: \dots}
-\date{\today}
+\usepackage{amsmath,amssymb,siunitx,booktabs,graphicx,tabularx,array,enumitem,xcolor,fancyhdr}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\definecolor{draft}{RGB}{135,70,0}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\raggedright
+\setlength{\headheight}{14pt}
+\renewcommand{\arraystretch}{1.2}
+\renewcommand{\tabularxcolumn}[1]{>{\raggedright\arraybackslash}p{#1}}
+\setlist{nosep,leftmargin=*}
+\newcommand{\todo}[1]{\par\smallskip{\color{draft}\textbf{To complete:} #1}\par\smallskip}
+\newcommand{\blank}{\textcolor{draft}{\textit{[fill in]}}}
+\newcommand{\file}[1]{\nolinkurl{#1}}
+\newcommand{\slot}[2]{\begin{center}\fbox{\begin{minipage}[c][25mm][c]{0.91\linewidth}\centering
+\textbf{Figure to add}\\#1\\{\small\file{#2}}\end{minipage}}\end{center}}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{34870 Electroacoustics}
+\fancyhead[R]{Lab B --- report skeleton}
+\fancyfoot[L]{Group 10 \quad / \quad Measurements pending}
+\fancyfoot[R]{\thepage}
+\graphicspath{{../figures/}{Lab B/figures/}}
+\title{34870 Electroacoustics\\Lab B --- Microphone scattering}
+\author{Group 10: Louis Andrianne, Sophie Kimura, Mads Rudolph}
+\date{Laboratory date: 22 September 2026}
 \begin{document}
-\maketitle
+\begin{center}
+{\Large\bfseries Lab B --- Microphone scattering}\\[5pt]
+34870 Electroacoustics\\[4pt]
+Group 10: Louis Andrianne, Sophie Kimura, Mads Rudolph\\[4pt]
+Laboratory date: Tuesday 22 September 2026, 10:00--12:00 (building 354, rooms 028/025)
+\end{center}\medskip
+\thispagestyle{fancy}
+\textbf{Working draft.} This skeleton follows the official E26 lab brief. Replace the
+coloured prompts and figure boxes with your group's evidence. Given settings and theory
+are not measured results. Keep raw data unchanged and record which files were analysed.
 
-\section{Purpose}
-% What is measured and why (one paragraph). Brief: 34870\_Lab\_B\_CylinderScattering\_E2026.pdf (DTU Learn).
+\section{Purpose and theoretical basis}
+The experiment investigates how a microphone-shaped rigid body changes the pressure
+at its front face. A wooden, enlarged microphone model makes this scattering measurable
+using a small microphone. The angle-dependent response is compared with a boundary
+element method (BEM) calculation and with microphone handbook free-field corrections.
 
-\section{Theory}
+For a body radius $a$, the dimensionless frequency is
+\begin{equation}
+ka=\frac{2\pi f a}{c},\qquad a=\frac{D_{\mathrm{mock}}}{2}.
+\end{equation}
+Here $c$ is the sound speed. Similar geometries are compared at equal $ka$.
+The measured voltage ratio and the normalized scattering response are
+\begin{align}
+H_{\theta}(f)&=\frac{V_{\mathrm{mic},\theta}(f)}{V_{\mathrm{ref},\theta}(f)},&
+H_0^{\mathrm{ref}}(f)&=\frac{V_{\mathrm{mic,no\ mock}}(f)}{V_{\mathrm{ref,no\ mock}}(f)},\\
+H_{\mathrm{norm},\theta}(f)&=\frac{H_\theta(f)}{H_0^{\mathrm{ref}}(f)},&
+\Delta L_\theta(f)&=20\log_{10}|H_{\mathrm{norm},\theta}(f)|.
+\end{align}
+The subscript $0$ in $H_0^{\mathrm{ref}}$ denotes the reference run, not zero-degree
+incidence. Normalization removes the common measurement-chain response only when its
+settings and the loudspeaker and UMIK positions remain unchanged.
+\todo{Explain the low-$ka$ limit, the physical origin of the angle dependence, and the
+conditions under which the spherical loudspeaker wave approximates a plane wave.}
 
-\section{Setup and procedure}
-% Equipment list with type numbers, block diagram, settings.
-% Write values as number x unit (SI Brochure), e.g. \SI{94}{\decibel} re \SI{20}{\micro\pascal}.
+\section{Equipment and geometry}
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lX@{}}\toprule
+Item & Recorded identity or setting \\\midrule
+PC / internal sound card & Lab desktop, internal card (\texttt{Line In} reference, \file{Speakers} output): \blank \\
+UMIK MiniDSP / USB microphone & S/N (7080329, 7080332 or 7080335): \blank \\
+Loudspeaker / amplifier & Type and gain/volume: \blank \\
+Wooden microphone mock-up & Diameter $D_{\mathrm{mock}}$: \blank; length: \blank \\
+Mock-up back end & Round / flat: \blank \\
+Loudspeaker--UMIK distance & $r=$ \blank; driver alignment: \blank \\
+UMIK tip--front-face gap & \blank; centring and height: \blank \\
+Angle reference / temperature & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+\todo{Transfer actual geometry
+from \file{Lab B/data/labB_log.md}; do not replace it with BEM nominal dimensions.}
 
-\section{Results}
-% Every plot: distinguishable curves, labelled axes with units, relevant frequency and dynamic range.
+\newpage
+\section{Part 0: Anechoic chamber and free-field check}
+The brief specifies a chamber cutoff frequency of \SI{125}{\hertz}. The expected
+pressure magnitude of an approximately spherical wave varies as $1/r$, giving
+\begin{equation}
+\Delta L_{21}=20\log_{10}\!\left(\frac{|p(r_2)|}{|p(r_1)|}\right)
+\simeq20\log_{10}\!\left(\frac{r_1}{r_2}\right).
+\end{equation}
+\textbf{If performed:} carry out the distance check without the mock-up, before fixing
+the source and microphone positions for Part 1. If omitted, state this explicitly.
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXXX@{}}\toprule
+Run & Distance / m & Data file & Observed difference / dB \\\midrule
+Reference distance & \blank & \blank & Reference \\
+Second distance & \blank & \blank & \blank \\
+Third (optional) & \blank & \blank & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+\slot{Measured distance ratios and the $1/r$ prediction; mark \SI{125}{\hertz}.}{labB_free_field_check.png}
+\todo{State whether the distance test supports free-field conditions over the useful
+band. Discuss near-field behaviour, directivity and the chamber cutoff where relevant.}
 
-\section{Uncertainty}
-% GUM budget: inputs, standard uncertainties, sensitivity coefficients, combined standard uncertainty.
+\section{Part 1: Scattering measurement procedure}
+\begin{enumerate}
+\item Connect the UMIK before starting MATLAB and check the selected devices. Begin
+with low amplifier output and inspect the measurement spectra for noise and clipping.
+\item After any distance tests, fix the loudspeaker and upward-pointing UMIK. Measure
+and save a reference without the mock-up.
+\item Position the mock-up front-face centre almost touching the UMIK tip. Rotate only
+the mock-up and measure at least $0^\circ$, $45^\circ$ and $90^\circ$.
+\item Inspect and save every run. A repeated no-mock-up reference at the end is a useful
+additional drift check. Copy and verify the data before removing files from the lab PC.
+\end{enumerate}
+\textbf{Setup sketch to add:} sound-card output to line-in reference and amplifier;
+amplifier to loudspeaker; UMIK to PC through USB. Label the fixed positions, face gap
+and mock-up incidence angle. See the brief's Figure 1.
 
-\section{Discussion and conclusion}
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXlX@{}}\toprule
+Parameter & Prescribed value & Parameter & Prescribed value \\\midrule
+$f_1$ & \SI{50}{\hertz} & $f_2$ & \SI{10000}{\hertz} \\
+Tones/octave & 24 & Resolution & \SI{1}{\hertz} \\
+Averages $N_{\mathrm{av}}$ & 32 & UMIK incidence & $90^\circ$ \\\bottomrule
+\end{tabularx}\par\smallskip
+The UMIK incidence selects its correction and is \emph{not} the mock-up angle.
+\todo{Record the actual settings and any departures from the prescribed values.}
 
+\newpage
+\subsection{Measurement record and quality checks}
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXlX@{}}\toprule
+Condition & File / repeat used & Angle & Quality / notes \\\midrule
+No mock-up & \file{labB_nomockup.mat} & -- & \blank \\
+Mock-up & \file{labB_ang000.mat} & $0^\circ$ & \blank \\
+Mock-up & \file{labB_ang045.mat} & $45^\circ$ & \blank \\
+Mock-up & \file{labB_ang090.mat} & $90^\circ$ & \blank \\
+Extra angle & \blank & \blank & \blank \\
+End reference (if taken) & \file{labB_nomockup_end.mat} & -- & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+\textit{These are expected filenames, not confirmation that measurements exist.}
+\todo{Replace filenames if repeats were selected. Comment on the separation between
+tones and the background in the full spectra, clipping/distortion, and any repositioning.}
+
+\subsection{Normalized angle responses}
+Calculate \file{H = specn(:,2)./specn(:,1)} for every run, then divide by the no-mock-up
+reference on the same frequency grid. Plot $\Delta L_\theta$ with a logarithmic frequency
+axis. Retain the raw full spectra for noise and distortion checks.
+\slot{Normalized measured responses at $0^\circ$, $45^\circ$, $90^\circ$; add matching BEM curves.}{labB_measured_vs_bem.png}
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXXX@{}}\toprule
+Incidence & Low-frequency level / dB & Feature frequency / Hz & Feature level / dB \\\midrule
+$0^\circ$ & \blank & \blank & \blank \\
+$45^\circ$ & \blank & \blank & \blank \\
+$90^\circ$ & \blank & \blank & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+\todo{Identify the useful band and describe peaks/notches and angle dependence using
+actual values from your curves. Distinguish centre-point pressure from diaphragm-averaged pressure.}
+
+\subsection{Reference stability (additional quality check)}
+If the end reference exists, evaluate
+$\Delta L_{\mathrm{drift}}=20\log_{10}|H_{\mathrm{end}}/H_{\mathrm{start}}|$.
+Insert \file{labB_reference_drift.png} and report the band and size of any drift.
+\todo{State whether the reference remained stable enough for normalization; if no end
+reference was taken, describe that limitation instead of reporting zero drift.}
+
+\newpage
+\section{Part 2: BEM simulation and spatial effects}
+The supplied \file{CylinderPlaneWave} model assumes plane-wave incidence. Its frequency
+grid is \SIrange{50}{5382}{\hertz} in $1/12$-octave steps. \file{AngleS} is in radians;
+\file{CylEnd} selects a round or flat back end. Compare measurements and simulation
+only over their common, reliable band.
+
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lX@{}}\toprule
+Output / choice & Comparison to make \\\midrule
+\file{p_centre} & Pressure at the front-face centre; compare with normalized UMIK data. \\
+\file{p_FP} & Field point near the face; default is \SI{3}{\centi\metre} in front.
+Document the coordinates used and relate them to the measured tip gap. \\
+\file{p_avg} & Parabolically weighted face average; discuss a real diaphragm's spatial averaging. \\
+\file{Round} vs. \file{Flat} & Compare rear-end geometry while holding incidence fixed. \\\bottomrule
+\end{tabularx}\par\smallskip
+\slot{Centre, field point, weighted average and flat/round back at matched incidence.}{labB_bem_positions.png}
+\todo{An existing BEM prediction is in the figures folder. Verify its geometry, field-point
+coordinates and model settings before inserting it. Label it as simulation, not measurement.}
+
+\subsection{Agreement and limitations}
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXX@{}}\toprule
+Comparison & Observation / quantitative difference & Possible explanation \\\midrule
+Measured vs. face centre & \blank & \blank \\
+Measured vs. field point & \blank & \blank \\
+Centre vs. average & \blank & \blank \\
+Round vs. flat rear & \blank & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+\todo{Discuss finite source distance, tip position, supports and UMIK body scattering,
+geometry mismatch, and numerical resolution. Do not extrapolate the BEM result beyond
+its available frequency grid. State which pressure definition best represents the experiment.}
+
+\newpage
+\section{Part 2 continued: Scale to real microphones}
+For a geometrically similar microphone of diameter $D_{\mathrm{mic}}$, define
+\begin{equation}
+s=\frac{D_{\mathrm{mock}}}{D_{\mathrm{mic}}},\qquad
+f_{\mathrm{mic}}=s f_{\mathrm{mock}}.
+\end{equation}
+The smaller microphone shows corresponding features at \emph{higher} frequencies.
+Conversely, a microphone datasheet frequency maps to the mock-up axis as
+$f_{\mathrm{mock}}=f_{\mathrm{mic}}/s$. The normalized pressure level is unchanged
+under ideal geometric scaling with the same medium.
+
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXXX@{}}\toprule
+Nominal size & Diameter used / mm & Scale factor $s$ & Handbook type / grid condition \\\midrule
+$1''$ & \blank & \blank & \blank \\
+$1/2''$ & \blank & \blank & \blank \\
+$1/4''$ & \blank & \blank & \blank \\
+$1/8''$ & \blank & \blank & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+\todo{Use the measured mock-up diameter and state the physical diameter convention for
+each real microphone. Nominal inch size and actual body diameter need not be identical.}
+\slot{Scaled measured and BEM curves, compared with the handbook corrections.}{labB_scaled_to_microphones.png}
+\todo{For each size, compare levels and characteristic frequencies at matching incidence.
+Identify the handbook figure and whether the protection grid is fitted. The current
+processing figure contains scaled measurements; add scaled BEM/datasheet evidence as needed.}
+
+\section{Uncertainty and conclusion}
+\textbf{Sources to assess:} repeatability, angle reading, tip gap/centring, diameter,
+reference drift, noise, sound speed and deviations from plane-wave/rigid-body assumptions.
+For $s=D_{\mathrm{mock}}/D_{\mathrm{mic}}$, independent diameter uncertainties give
+\begin{equation}
+\frac{u(s)}{s}=\sqrt{\left(\frac{u(D_{\mathrm{mock}})}{D_{\mathrm{mock}}}\right)^2+
+\left(\frac{u(D_{\mathrm{mic}})}{D_{\mathrm{mic}}}\right)^2}.
+\end{equation}
+\todo{Rank the main limitations using your evidence. For any numerical uncertainty,
+state the input values, distributions and coverage; account for shared-reference
+correlation rather than assuming all normalized curves are independent.}
+\todo{Conclude with the measured angle dependence, BEM agreement and validity of the
+scaled comparison. Give the frequency band over which those conclusions are supported.}
+
+\section*{Sources and processing record}
+\small
+DTU 34870, \emph{Lab B -- Microphone scattering -- E26},
+\file{34870_Lab_B_CylinderScattering_E2026.pdf}: pp. 1--5 (procedure, equations and
+BEM), followed by the microphone handbook excerpts. Source: course vault / DTU Learn.
+
+Repository workflow: \file{Lab B/matlab/labB_devices.m} (device check),
+\file{Lab B/matlab/measure_labB.m}, \file{Lab B/bem/run_bem.m}, \file{Lab B/matlab/process_labB.m}.
+Update \file{D_mockup} before processing. The BEM package is obtained separately from DTU Learn.
+Course measurement files: the 21 September 2026 re-upload (\texttt{34870 - Lab B (2).zip}), which
+finds the internal sound card by the names \texttt{Line In} and \file{Speakers}.
+
+\textbf{Analysis version / selected repeats / deviations:} \blank
 \end{document}

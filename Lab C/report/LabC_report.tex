@@ -1,31 +1,345 @@
-% 34870 Electroacoustics -- Lab C: Microphone calibration (electrostatic actuator)
-\documentclass[a4paper,11pt]{article}
-\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern,textcomp}
+\documentclass[a4paper,10pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,textcomp}
 \usepackage[margin=2.2cm]{geometry}
-\usepackage{amsmath,amssymb,siunitx,booktabs,graphicx,caption,subcaption,float,enumitem,xcolor,placeins}
-\usepackage[colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!60!black]{hyperref}
-\graphicspath{{../figures/}{Lab C/figures/}}  % local build runs in report/, Overleaf may run from the project root
-\title{34870 Electroacoustics\\ Lab C --- Microphone calibration (electrostatic actuator)}
-\author{Group members: \dots}
-\date{\today}
+\usepackage{amsmath,amssymb,siunitx,booktabs,graphicx,tabularx,array,enumitem,xcolor,fancyhdr}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\definecolor{draft}{RGB}{135,70,0}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\raggedright
+\setlength{\headheight}{14pt}
+\renewcommand{\arraystretch}{1.2}
+\renewcommand{\tabularxcolumn}[1]{>{\raggedright\arraybackslash}p{#1}}
+\setlist{nosep,leftmargin=*}
+\newcommand{\todo}[1]{\par\smallskip{\color{draft}\textbf{To complete:} #1}\par\smallskip}
+\newcommand{\blank}{\textcolor{draft}{\textit{[fill in]}}}
+\newcommand{\file}[1]{\nolinkurl{#1}}
+\newcommand{\slot}[2]{\begin{center}\fbox{\begin{minipage}[c][25mm][c]{0.91\linewidth}\centering
+\textbf{Figure to add}\\#1\\{\small\file{#2}}\end{minipage}}\end{center}}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{34870 Electroacoustics}
+\fancyhead[R]{Lab C --- report skeleton}
+\fancyfoot[L]{Group 10 \quad / \quad Measurements pending}
+\fancyfoot[R]{\thepage}
+\graphicspath{{../figures/}{Lab C/figures/}}
+\title{34870 Electroacoustics\\Lab C --- Microphone calibration}
+\author{Group 10: Louis Andrianne, Sophie Kimura, Mads Rudolph}
+\date{Laboratory date: 29 September 2026}
 \begin{document}
-\maketitle
+\begin{center}
+{\Large\bfseries Lab C --- Microphone calibration}\\[5pt]
+34870 Electroacoustics\\[4pt]
+Group 10: Louis Andrianne, Sophie Kimura, Mads Rudolph\\[4pt]
+Laboratory date: Tuesday 29 September 2026, 10:30--12:30 (building 354, room 026)
+\end{center}\medskip
+\thispagestyle{fancy}
+\textbf{Working draft.} This skeleton follows the official E26 lab brief. Replace the
+coloured prompts and figure boxes with your group's evidence. Given settings and theory
+are not measured results. Keep raw data unchanged and record which files were analysed.
 
-\section{Purpose}
-% What is measured and why (one paragraph). Brief: 34870\_Lab\_C\_ActuatorCalibration\_E2026.pdf (DTU Learn).
+\section{Purpose and measurement model}
+The exercise combines single-frequency absolute sensitivity calibration with broadband
+electrostatic-actuator measurements of two condenser microphones. The corrected responses
+are used to estimate resonance frequency and damping and to fit a condenser-microphone
+model in LTspice. The metrological interpretation includes repeatability, reproducibility
+and uncertainty.
 
-\section{Theory}
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXX@{}}\toprule
+Microphone & Serial number in brief & Confirmed capsule / notes \\\midrule
+B\&K 4133 & 591628 & \blank \\
+B\&K 4134 & 1534527 & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+The actuator provides a response shape; the absolute scale is set using a calibrator or
+pistonphone measurement. Let
+\begin{equation}
+H_{21}(f)=\frac{V_2(f)}{V_1(f)},\qquad
+H_{pv}(f)=\frac{H_{21}(f)}{H_{21,\mathrm{ref}}(f)}.
+\end{equation}
+$H_{21,\mathrm{ref}}$ characterizes the acquisition/amplifier chain. The corrected actuator
+ratio $H_{pv}$ is not itself an absolute sensitivity in volts per pascal.
 
-\section{Setup and procedure}
-% Equipment list with type numbers, block diagram, settings.
-% Write values as number x unit (SI Brochure), e.g. \SI{94}{\decibel} re \SI{20}{\micro\pascal}.
+\section{Equipment and preparation (Part 0)}
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lX@{}}\toprule
+Equipment & Identity / actual setting \\\midrule
+PC / MATLAB / NI USB-4431 & \blank \\
+B\&K Nexus / microphone preamplifier & \blank \\
+GRAS 14AA / B\&K actuator & \blank \\
+GRAS 42AG calibrators (three units) & Serial numbers to record in Part 2 \\
+Pistonphone, if available & Type and serial: \blank \\
+Room temperature / static pressure & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+\textbf{Part 0 check:} connect AO0 to AI0 and AI1, then run
+\file{test_meas_mag_spec2}. Record whether acquisition works and identify any changes.
 
-\section{Results}
-% Every plot: distinguishable curves, labelled axes with units, relevant frequency and dynamic range.
+\textbf{Handling constraints from the brief.} Never touch the diaphragm. Keep the
+actuator supply off during positioning or capsule changes and on only while measuring.
+Disconnect the microphone cable from the Nexus before changing capsules. Switch the
+Nexus on before reconnecting the preamplifier, then verify its settings.
+\todo{Confirm the equipment identities and successful
+initial connection test. Add a labelled setup photo/sketch for each measurement configuration.}
 
-\section{Uncertainty}
-% GUM budget: inputs, standard uncertainties, sensitivity coefficients, combined standard uncertainty.
+\newpage
+\section{Part 1: Acquisition-system reference}
+Split AO0 to AI0 and the Nexus input using the specified cables; connect the Nexus
+output to AI1. This measures the chain needed to correct subsequent voltage ratios.
+
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXX@{}}\toprule
+Nexus setting & Specified value & Actual / checked \\\midrule
+Channel & 1 & \blank \\
+Output setting & \SI{10}{\milli\volt\per\pascal} & \blank \\
+Input sensitivity & \SI{10}{\milli\volt\per\pascal} & \blank \\
+Resulting gain $G_{\mathrm{Nex}}$ & 1 & \blank \\
+High-pass / low-pass & \SI{0.1}{\hertz} / \SI{100}{\kilo\hertz} & \blank \\
+Polarization voltage & \SI{200}{\volt} & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXlX@{}}\toprule
+Parameter & Brief value & Parameter & Brief value \\\midrule
+$f_1$ / $f_2$ & 20 / \SI{60000}{\hertz} & $A_{\max}$ & 1 \\
+Tones/octave & 6 & $N_{\mathrm{av}}$ & 4 \\
+Boost corner $f_b$ & \SI{1}{\hertz} & Resolution & \SI{1}{\hertz} \\\bottomrule
+\end{tabularx}\par\smallskip
+\textbf{Bandwidth check before interpreting plots.} The brief requests an upper
+frequency of \SI{60}{\kilo\hertz}, while the repository copy of
+\file{meas_mag_spec2.m} sets the sample rate to \SI{96}{\kilo\hertz}. The Nyquist
+limit is therefore \SI{48}{\kilo\hertz}. Check the actual routine and valid generated
+tones with the TA; do not treat frequencies at or above Nyquist as independently measured
+response points. Record the usable acquisition band and any changed settings.
+
+Calculate and save the complex \file{H_21_ref = specn(:,2)./specn(:,1)}.
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXXX@{}}\toprule
+Frequency & $|H_{21,\mathrm{ref}}|$ & Phase / degrees & Extraction / interpolation \\\midrule
+\SI{250}{\hertz} & \blank & \blank & \blank \\
+\SI{1000}{\hertz} & \blank & \blank & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+\slot{Reference spectra plus system-transfer magnitude and phase.}{labC_system_reference.png}
+\todo{State the saved reference file, actual frequency band and interpolation method.
+Explain why dividing by a complex reference corrects both magnitude and phase.}
+
+\newpage
+\section{Part 2: Single-frequency sensitivity calibration}
+Recheck the Nexus settings, slowly seat each capsule in the correct adaptor and leave
+the assembly undisturbed. Use the frequency and level on each device's sticker or
+certificate, rather than assuming a nominal level.
+\begin{align}
+p_{\mathrm{rms}}&=p_{\mathrm{ref}}10^{L_p/20},& p_{\mathrm{ref}}&=\SI{20}{\micro\pascal},\\
+M(f_c)&=\frac{\operatorname{Calibrate}(f_c,L_p,G_{\mathrm{Nex}})}
+{|H_{21,\mathrm{ref}}(f_c)|},&
+L_M&=20\log_{10}\!\left(\frac{M}{\SI{1}{\volt\per\pascal}}\right).
+\end{align}
+The course function already applies its supplied amplifier gain; do not correct that
+gain a second time. The wrapper logs corrected $M$ in V/Pa.
+
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXXXX@{}}\toprule
+Device & Serial no. & $f_c$/Hz & Certified $L_p$/dB & Corrections / uncertainty \\\midrule
+42AG unit 1 & \blank & \blank & \blank & \blank \\
+42AG unit 2 & \blank & \blank & \blank & \blank \\
+42AG unit 3 & \blank & \blank & \blank & \blank \\
+Pistonphone$^*$ & \blank & \blank & \blank & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+{\small $^*$Subject to availability. Record any pressure correction required by its certificate.}
+
+\subsection{Corrected sensitivity results}
+Calibrate both microphones with every available device. For a repeatability estimate,
+repeat each pairing under the same conditions; record whether the capsule was removed
+and reseated between runs. Add rows or use a separate raw-data table as needed.
+
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}llXXXX@{}}\toprule
+Mic. & Device & $n$ & Mean $M$ & Std. dev. $s_M$ & $L_M$ / dB \\
+& & & mV/Pa & mV/Pa & re 1 V/Pa \\\midrule
+4133 & 42AG 1 & \blank & \blank & \blank & \blank \\
+4133 & 42AG 2 & \blank & \blank & \blank & \blank \\
+4133 & 42AG 3 & \blank & \blank & \blank & \blank \\
+4133 & Pistonphone & \blank & \blank & \blank & \blank \\
+4134 & 42AG 1 & \blank & \blank & \blank & \blank \\
+4134 & 42AG 2 & \blank & \blank & \blank & \blank \\
+4134 & 42AG 3 & \blank & \blank & \blank & \blank \\
+4134 & Pistonphone & \blank & \blank & \blank & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+\todo{Populate from \file{labC_calibration_log.csv}. Group repeats by microphone,
+device, frequency and level. Do not silently combine results at different frequencies.}
+\todo{Compare repeated runs and different devices. Separate repeatability from changes
+in measurement conditions; explain why none of these estimates establishes an exact true value.}
+
+\newpage
+\section{Uncertainty of the single-frequency calibration}
+State the measurand, microphone, calibration frequency and environmental conditions.
+For an underlying voltage model write
+\begin{equation}
+M=\frac{V}{G\,|H_{21,\mathrm{ref}}|\,p_{\mathrm{ref}}10^{L_p/20}}.
+\end{equation}
+For example, $\partial M/\partial L_p=-(\ln 10/20)M$ when $L_p$ is expressed in dB.
+For general inputs $x_i$ and sensitivity coefficients $c_i=\partial M/\partial x_i$,
+\begin{equation}
+u_c^2(M)=\sum_i c_i^2u^2(x_i)+2\sum_{i<j}c_ic_j\operatorname{cov}(x_i,x_j).
+\end{equation}
+Omit covariance terms only with a justified independence assumption. Avoid counting the
+same DAQ/amplifier contribution again if it is already included in the measured reference.
+
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXXX@{}}\toprule
+Input / contribution & Evidence / distribution & Standard uncertainty & Contribution to $u(M)$ \\\midrule
+Repeated calibration & Same-condition repeats & $s_M/\sqrt{n}$ for mean & \blank \\
+Calibrator level & Certificate; convert stated $U/k$ & \blank & \blank \\
+Reference correction & Repeat/reference data & \blank & \blank \\
+Residual gain / voltage & Specification or verification & \blank & \blank \\
+Seating / environment & Experimental estimate & \blank & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+\todo{Fill separate budgets if the two capsules or calibration devices require them.
+Use actual certificates: no generic instrument accuracy is a substitute for evidence.
+Distinguish spread of individual readings from uncertainty of their mean.}
+
+\subsection{Report the selected calibration result}
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXX@{}}\toprule
+Quantity & B\&K 4133 & B\&K 4134 \\\midrule
+Selected calibration device & \blank & \blank \\
+Calibration frequency $f_c$ & \blank & \blank \\
+$M(f_c)$ / mV Pa$^{-1}$ & \blank & \blank \\
+$u_c(M)$ / mV Pa$^{-1}$ & \blank & \blank \\
+Expanded $U=k u_c$, stated $k$ & \blank & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+\todo{Justify the calibration result selected to scale the actuator measurement. Discuss
+its traceability and explain the chosen coverage factor. If evidence is missing, identify
+the missing contribution rather than inventing a numerical uncertainty.}
+
+\newpage
+\section{Part 3: Actuator response}
+\subsection{Setup and noise floor (Parts 3a--3b)}
+Split AO0 to AI0 and the GRAS 14AA input. The actuator excites the diaphragm; the
+microphone/preamplifier feeds the Nexus, whose output goes to AI1. Keep the room quiet
+and apply the handling precautions on page 1.
+
+With the actuator supply \emph{off}, use Part 1's settings except
+$f_b=\SI{200}{\hertz}$. Save noise measurements for $N_{\mathrm{av}}=4$ and 64.
+With the supply \emph{on}, acquire the microphone response with the specified settings,
+then repeat for the other capsule. Verify the valid bandwidth as in Part 1.
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXXX@{}}\toprule
+Condition & Capsule & Averages & Actual file / repeat \\\midrule
+Actuator off & \blank & 4 & \blank \\
+Actuator off & \blank & 64 & \blank \\
+Actuator on & 4133 & \blank & \blank \\
+Actuator on & 4134 & \blank & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+\slot{Noise at both averaging settings and actuator-on signal, same voltage convention.}{labC_noise_floor.png}
+For coherent averaging of uncorrelated noise, the expected amplitude-level change is
+$-10\log_{10}(64/4)\simeq-\SI{12.0}{\decibel}$. This is a prediction, not a measured reduction.
+\todo{Quantify the observed noise change and signal clearance over a stated band.
+Identify hum or correlated disturbances that do not follow the ideal averaging law.}
+
+\subsection{Correct and scale the responses (Part 3c)}
+Use complex division $H_{pv}=H_{21}/H_{21,\mathrm{ref}}$ on matching frequency grids.
+For a selected sensitivity magnitude $M(f_c)$, the broadband magnitude is
+\begin{equation}
+|M(f)|=M(f_c)\frac{|H_{pv}(f)|}{|H_{pv}(f_c)|}.
+\end{equation}
+Use the corrected phase with a documented reference/sign convention. A single-frequency
+magnitude calibration does not independently establish absolute phase.
+\todo{State the selected $f_c$, calibration value and interpolation. The current
+\file{process_labC.m} averages all calibration rows and scales a fitted low-frequency
+shape; verify or adapt this before claiming exact scaling at your selected $f_c$.}
+\todo{Compare the response shapes and identify the free-field and pressure-field
+microphones from the evidence. Explain the relation to the scattering correction in Lab B.}
+
+\newpage
+\section{Resonance frequency, Q and LTspice model}
+\subsection{Estimate resonance and damping}
+For a second-order low-pass approximation,
+\begin{equation}
+\frac{M(f)}{M_0}=\frac{1}{1-(f/f_s)^2+\mathrm{j}(f/f_s)/Q}.
+\end{equation}
+$f_s$ occurs at a $90^\circ$ phase lag relative to the low-frequency plateau, and
+$Q=|M(f_s)|/|M_0|$. $Q$ is a linear ratio, not a dB value. Use the course slide
+procedure first; a separate complex fit can be a cross-check.
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXXXX@{}}\toprule
+Capsule & Phase-reference band & $f_s$/Hz & $Q$ & Fit cross-check \\\midrule
+4133 & \blank & \blank & \blank & \blank \\
+4134 & \blank & \blank & \blank & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+\todo{Show the phase crossing and amplitude ratio. State interpolation, fitting range
+and uncertainty; avoid a reference band already affected by damping or low-frequency roll-off.}
+
+\subsection{Given model parameters}
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXlX@{}}\toprule
+Parameter & Brief value & Parameter & Brief value \\\midrule
+Gap $x_0$ & \SI{20.77}{\micro\metre} & Polarization $E$ & \SI{200}{\volt} \\
+Effective diameter & \SI{8.95}{\milli\metre} & Diaphragm mass $M_{MD}$ & \SI{1.5}{\milli\gram} \\
+Compliance $C_{MD}$ & \SI{0.02}{\milli\metre\per\newton} & Damping $R_{MD}$ & \SI{0}{\newton\second\per\metre} \\
+Back volume $V_B$ & \SI{126.4}{\milli\metre\cubed} & Air properties $\rho,c$ & State assumptions \\\bottomrule
+\end{tabularx}\par\smallskip
+The repository's model uses
+\begin{align}
+S_D&=\pi(D_{\mathrm{eff}}/2)^2,& C_{AB}&=\frac{V_B}{\rho c^2},&
+C_{MT}&=\left(C_{MD}^{-1}+S_D^2/C_{AB}\right)^{-1},\\
+M_{MT}&=\frac{1}{(2\pi f_s)^2 C_{MT}},&
+M_{AS}&=\frac{M_{MT}-M_{MD}}{S_D^2}-M_{A1},&
+R_{AS}&=\frac{1}{Q S_D^2}\sqrt{\frac{M_{MT}}{C_{MT}}}.
+\end{align}
+Here $M_{A1}$ is the front acoustic mass used by the chosen circuit; document that
+term and keep its definition consistent when extracting the backplate mass.
+\textbf{No free-field scattering source:} omit the $G_{pb}$ generator implementing
+$T(s)$ because the actuator measurement has no incident sound field.
+\todo{Insert the circuit with labelled acoustic, mechanical and electrical domains.
+The existing \file{LabC_CondenserMics.asc} is a starting point, not a fitted measurement result.}
+
+\newpage
+\subsection{Initial and fitted backplate parameters}
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXXXX@{}}\toprule
+Capsule & Initial $M_{AS}$ & Fitted $M_{AS}$ & Initial $R_{AS}$ & Fitted $R_{AS}$ \\
+& kg/m$^4$ & kg/m$^4$ & Pa s/m$^3$ & Pa s/m$^3$ \\\midrule
+4133 & \blank & \blank & \blank & \blank \\
+4134 & \blank & \blank & \blank & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+\todo{Explain any adjustment from the values inferred from $f_s$ and $Q$. Check signs,
+units and physical plausibility before interpreting an inferred mass or resistance.}
+
+\subsection{Measurement versus simulation}
+\slot{Both capsules: calibrated magnitude and corrected phase, overlaid with LTspice output.}{labC_ltspice_comparison.png}
+\todo{Generate/export actual LTspice traces and overlay them with the measurement.
+The existing \file{labC_responses_vs_model.png} is a second-order model comparison;
+it does not by itself document an LTspice run. State any amplitude normalization and
+any $180^\circ$ phase adjustment caused by the ground convention.}
+
+\par\smallskip
+\begin{tabularx}{\linewidth}{@{}lXX@{}}\toprule
+Check & 4133 & 4134 \\\midrule
+Frequency band compared & \blank & \blank \\
+Magnitude agreement / residual & \blank & \blank \\
+Phase agreement / residual & \blank & \blank \\
+Main remaining discrepancy & \blank & \blank \\\bottomrule
+\end{tabularx}\par\smallskip
+The brief's appendix notes that this approximate model may predict a low-frequency
+sensitivity below the nominal \SI{12.5}{\milli\volt\per\pascal}. Its effective acoustic
+and capacitor areas are not exactly the same. Do not force the model to the nominal
+sensitivity or capacitance while concealing the resulting model limitation.
 
 \section{Discussion and conclusion}
+\todo{Summarize the calibrated sensitivities with uncertainties, the evidence for each
+microphone's field type, the measured $f_s$ and $Q$, and the validity of the fitted model.
+Distinguish observed results, model predictions and unresolved limitations. Explain what
+the actuator can establish and why an acoustic calibration is still needed.}
 
+\section*{Sources and processing record}
+\small
+DTU 34870, \emph{Lab C -- Microphone calibration -- E26},
+\file{34870_Lab_C_ActuatorCalibration_E2026.pdf}, pp. 1--6; Lectures 4 and 6 for the
+resonance/Q method. Source: course vault / DTU Learn.
+
+Repository: \file{Lab C/matlab/measure_labC.m}, \file{calibrate_labC.m},
+\file{process_labC.m}, and \file{Lab C/ltspice/LabC_CondenserMics.asc}.
+
+\textbf{Reference/response repeats, calibration rows, processing and circuit versions:} \blank
 \end{document}
