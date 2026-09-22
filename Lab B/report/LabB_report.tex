@@ -16,12 +16,11 @@
 \newcommand{\todo}[1]{\par\smallskip{\color{draft}\textbf{To complete:} #1}\par\smallskip}
 \newcommand{\blank}{\textcolor{draft}{\textit{[fill in]}}}
 \newcommand{\file}[1]{\nolinkurl{#1}}
-\newcommand{\slot}[2]{\begin{center}\fbox{\begin{minipage}[c][25mm][c]{0.91\linewidth}\centering
-\textbf{Figure to add}\\#1\\{\small\file{#2}}\end{minipage}}\end{center}}
+\newcommand{\fig}[3][0.92]{\begin{center}\includegraphics[width=#1\linewidth]{#2}\\{\small #3}\end{center}}
 \pagestyle{fancy}\fancyhf{}
 \fancyhead[L]{34870 Electroacoustics}
-\fancyhead[R]{Lab B --- report skeleton}
-\fancyfoot[L]{Group 10 \quad / \quad Measurements pending}
+\fancyhead[R]{Lab B --- Microphone scattering}
+\fancyfoot[L]{Group 10 \quad / \quad measured 22 September 2026}
 \fancyfoot[R]{\thepage}
 \graphicspath{{../figures/}{Lab B/figures/}}
 \title{34870 Electroacoustics\\Lab B --- Microphone scattering}
@@ -35,9 +34,10 @@ Group 10: Louis Andrianne, Sophie Kimura, Mads Rudolph\\[4pt]
 Laboratory date: Tuesday 22 September 2026, 10:00--12:00 (building 354, rooms 028/025)
 \end{center}\medskip
 \thispagestyle{fancy}
-\textbf{Working draft.} This skeleton follows the official E26 lab brief. Replace the
-coloured prompts and figure boxes with your group's evidence. Given settings and theory
-are not measured results. Keep raw data unchanged and record which files were analysed.
+\textbf{Working draft.} Measurements taken and processed on 22 September 2026. The
+coloured prompts mark what the group still has to decide or add (setup sketch,
+handbook comparison, uncertainty budget). Raw data is unchanged; the analysed files
+are listed in the processing record at the end.
 
 \section{Purpose and theoretical basis}
 The experiment investigates how a microphone-shaped rigid body changes the pressure
@@ -60,24 +60,37 @@ H_{\mathrm{norm},\theta}(f)&=\frac{H_\theta(f)}{H_0^{\mathrm{ref}}(f)},&
 The subscript $0$ in $H_0^{\mathrm{ref}}$ denotes the reference run, not zero-degree
 incidence. Normalization removes the common measurement-chain response only when its
 settings and the loudspeaker and UMIK positions remain unchanged.
-\todo{Explain the low-$ka$ limit, the physical origin of the angle dependence, and the
-conditions under which the spherical loudspeaker wave approximates a plane wave.}
+
+For $ka\ll1$ the body is small compared with the wavelength, the wave flows around it
+and $\Delta L_\theta\to0$ at every angle. As $ka$ approaches 1 the front face starts to
+reflect; head-on the reflected wave doubles the pressure (\SI{+6}{dB} for an infinite
+rigid wall) and the wave diffracted at the rim of the face reaches the centre from the
+whole edge with the same delay, so the centre-of-face pressure exceeds \SI{+6}{dB} and
+reaches about \SI{+10}{dB} near $ka\approx3$. At grazing incidence ($90^\circ$) the face
+does not obstruct the wave and the increase stays within about \SI{2}{dB}. The
+loudspeaker radiates a spherical wave; over the body it approximates a plane wave when
+the source distance $r$ is large compared with the body length and when the level
+follows $1/r$ (Part~0). With $r=\SI{2.8}{m}$ and a body of \SI{0.855}{m}, the incident
+phase along the body is not exactly planar; the effect is small at the low $ka$ where
+the comparison is made.
 
 \section{Equipment and geometry}
 \par\smallskip
 \begin{tabularx}{\linewidth}{@{}lX@{}}\toprule
 Item & Recorded identity or setting \\\midrule
-PC / internal sound card & Lab desktop, internal card (\texttt{Line In} reference, \file{Speakers} output): \blank \\
-UMIK MiniDSP / USB microphone & S/N (7080329, 7080332 or 7080335): \blank \\
-Loudspeaker / amplifier & Type and gain/volume: \blank \\
-Wooden microphone mock-up & Diameter $D_{\mathrm{mock}}$: \blank; length: \blank \\
-Mock-up back end & Round / flat: \blank \\
-Loudspeaker--UMIK distance & $r=$ \blank; driver alignment: \blank \\
-UMIK tip--front-face gap & \blank; centring and height: \blank \\
-Angle reference / temperature & \blank \\\bottomrule
+PC / internal sound card & Lab desktop, internal card (\texttt{Line In} reference, \file{Speakers} output); course routine \file{meas_mag_spec2_SoundCard_LabB} called from \file{labB.m} \\
+UMIK MiniDSP / USB microphone & S/N 708-0332, correction for $90^\circ$ incidence on the UMIK (it points up) \\
+Loudspeaker / amplifier & Chamber loudspeaker; amplifier setting not noted, \textbf{unchanged} for the whole session \\
+Wooden microphone mock-up & $D_{\mathrm{mock}}=\SI{250}{mm}$, length \SI{855}{mm} --- \textbf{nominal values from the brief, not measured with the tape} \\
+Mock-up back end & Round \\
+Loudspeaker--UMIK distance & $r=\SI{2.8}{m}$ from the loudspeaker front, confirmed by the $1/r$ check; driver alignment and height not noted \\
+UMIK tip--front-face gap & Approximately \SIrange{2}{3}{cm}, not flush (confirmed by the data, Sec.~\ref{sec:tip}); mock-up rotated around the fixed UMIK \\
+Angle reference / temperature & Paper protractor under the mock-up; temperature not measured, $c=\SI{344}{m/s}$ assumed \\\bottomrule
 \end{tabularx}\par\smallskip
-\todo{Transfer actual geometry
-from \file{Lab B/data/labB_log.md}; do not replace it with BEM nominal dimensions.}
+Geometry as recorded in \file{Lab B/data/labB_log.md}. The lab PC clock runs ahead of
+real time (files stamped 12:31--13:11 for a slot that ended at 12:00); the order of
+the runs is what matters and is preserved.
+\todo{Add the setup sketch (brief Fig.~1) with the fixed positions, the \SIrange{2}{3}{cm} gap and the mock-up angle; add the mock-up dimensions if somebody measures them in a later slot.}
 
 \newpage
 \section{Part 0: Anechoic chamber and free-field check}
@@ -87,114 +100,160 @@ pressure magnitude of an approximately spherical wave varies as $1/r$, giving
 \Delta L_{21}=20\log_{10}\!\left(\frac{|p(r_2)|}{|p(r_1)|}\right)
 \simeq20\log_{10}\!\left(\frac{r_1}{r_2}\right).
 \end{equation}
-\textbf{If performed:} carry out the distance check without the mock-up, before fixing
-the source and microphone positions for Part 1. If omitted, state this explicitly.
+The distance check was carried out \emph{after} the scattering series, without the
+mock-up: the UMIK was moved from its series position (\SI{2.8}{m}) to \SI{1.4}{m} and
+\SI{0.93}{m}. Doing it last guaranteed that the microphone did not move between the
+reference and the seven angles.
 \par\smallskip
 \begin{tabularx}{\linewidth}{@{}lXXX@{}}\toprule
-Run & Distance / m & Data file & Observed difference / dB \\\midrule
-Reference distance & \blank & \blank & Reference \\
-Second distance & \blank & \blank & \blank \\
-Third (optional) & \blank & \blank & \blank \\\bottomrule
+Run & Distance / m & Data file & Observed difference / dB (mean \SIrange{125}{200}{Hz}) \\\midrule
+Reference distance & 0.93 & \file{no_mockup_0.93.mat} $\to$ \file{labB_dist93cm.mat} & Reference \\
+Second distance & 1.4 & \file{no_mockup_1.4m.mat} $\to$ \file{labB_dist140cm.mat} & $-3.66$ (predicted $-3.55$) \\
+Third & 2.8 & \file{no_mockup_1.8m.mat} $\to$ \file{labB_dist280cm.mat} & $-9.61$ (predicted $-9.57$) \\\bottomrule
 \end{tabularx}\par\smallskip
-\slot{Measured distance ratios and the $1/r$ prediction; mark \SI{125}{\hertz}.}{labB_free_field_check.png}
-\todo{State whether the distance test supports free-field conditions over the useful
-band. Discuss near-field behaviour, directivity and the chamber cutoff where relevant.}
+The third file is named \file{no_mockup_1.8m} on the lab PC; the tape reading was
+\SI{2.8}{m}, and the observed $-9.6$~dB matches \SI{2.8}{m} ($-9.57$~dB), not
+\SI{1.8}{m} ($-5.7$~dB).
+\fig{labB_free_field_check.png}{Part 0: level relative to the \SI{0.93}{m} run, with the $1/r$ predictions (dashed).}
+Between the chamber cutoff and about \SI{400}{Hz} both curves follow $1/r$ to within
+\SI{0.1}{dB}: the chamber is free-field there and the loudspeaker radiates like a point
+source. Above \SI{400}{Hz} the \SI{1.4}{m} curve ripples by $\pm3$--\SI{4}{dB}
+(interference between the direct sound and reflections from the stand, the floor net or
+the loudspeaker cabinet) and above \SI{4}{kHz} both curves wander by several dB (source
+directivity; a \SI{1}{cm} placement error is already $0.1\lambda$). Below \SI{100}{Hz}
+the \SI{2.8}{m} curve drops to \SI{-16}{dB}: below its cutoff the room reflects. The
+useful free-field band is therefore \SIrange{125}{2000}{Hz} with a margin of about
+\SI{1}{dB} at the higher frequencies.
 
 \section{Part 1: Scattering measurement procedure}
 \begin{enumerate}
-\item Connect the UMIK before starting MATLAB and check the selected devices. Begin
-with low amplifier output and inspect the measurement spectra for noise and clipping.
-\item After any distance tests, fix the loudspeaker and upward-pointing UMIK. Measure
-and save a reference without the mock-up.
-\item Position the mock-up front-face centre almost touching the UMIK tip. Rotate only
-the mock-up and measure at least $0^\circ$, $45^\circ$ and $90^\circ$.
-\item Inspect and save every run. A repeated no-mock-up reference at the end is a useful
-additional drift check. Copy and verify the data before removing files from the lab PC.
+\item The UMIK was connected before MATLAB was started; the course script found the
+internal card (\texttt{Line In}, \texttt{Speakers}) and the UMIK. A trial run
+(\file{test.mat}) was used to set the level.
+\item The loudspeaker and the upward-pointing UMIK were fixed at \SI{2.8}{m}; the
+mock-up was placed with its face centre \SIrange{2}{3}{cm} from the UMIK tip and
+rotated on a protractor for $0^\circ$, $30^\circ$, $60^\circ$, $90^\circ$, then
+$45^\circ$, $15^\circ$ and $75^\circ$.
+\item The mock-up was removed and the reference measured at the same UMIK position.
+No reference was taken \emph{before} the series, so no drift check is available.
+\item Part 0 (Sec.~3) was measured last. Data was copied to a group folder and
+verified at home.
 \end{enumerate}
-\textbf{Setup sketch to add:} sound-card output to line-in reference and amplifier;
-amplifier to loudspeaker; UMIK to PC through USB. Label the fixed positions, face gap
-and mock-up incidence angle. See the brief's Figure 1.
+\todo{Setup sketch: sound-card output to line-in reference and amplifier; amplifier to loudspeaker; UMIK to PC through USB.}
 
 \par\smallskip
 \begin{tabularx}{\linewidth}{@{}lXlX@{}}\toprule
-Parameter & Prescribed value & Parameter & Prescribed value \\\midrule
+Parameter & Value used & Parameter & Value used \\\midrule
 $f_1$ & \SI{50}{\hertz} & $f_2$ & \SI{10000}{\hertz} \\
-Tones/octave & 24 & Resolution & \SI{1}{\hertz} \\
+Tones/octave & 24 (184 tones) & Resolution & \SI{1}{\hertz} \\
 Averages $N_{\mathrm{av}}$ & 32 & UMIK incidence & $90^\circ$ \\\bottomrule
 \end{tabularx}\par\smallskip
-The UMIK incidence selects its correction and is \emph{not} the mock-up angle.
-\todo{Record the actual settings and any departures from the prescribed values.}
+All as prescribed. The UMIK incidence selects its correction and is \emph{not} the
+mock-up angle. Departure from the planned procedure: the course script \file{labB.m}
+was used instead of the group's wrapper, so each saved file holds only
+\file{h = specn(:,2)./specn(:,1)}; the frequency vector was reconstructed from the
+multitone generator with the same parameters (\file{import_group_files.m}), and the
+full spectra needed for a noise-floor plot were not saved.
 
 \newpage
 \subsection{Measurement record and quality checks}
 \par\smallskip
 \begin{tabularx}{\linewidth}{@{}lXlX@{}}\toprule
-Condition & File / repeat used & Angle & Quality / notes \\\midrule
-No mock-up & \file{labB_nomockup.mat} & -- & \blank \\
-Mock-up & \file{labB_ang000.mat} & $0^\circ$ & \blank \\
-Mock-up & \file{labB_ang045.mat} & $45^\circ$ & \blank \\
-Mock-up & \file{labB_ang090.mat} & $90^\circ$ & \blank \\
-Extra angle & \blank & \blank & \blank \\
-End reference (if taken) & \file{labB_nomockup_end.mat} & -- & \blank \\\bottomrule
+Condition & File (lab PC $\to$ analysed) & Angle & Quality / notes \\\midrule
+Trial & \file{test.mat} & -- & level check, not used \\
+Mock-up & \file{mockup_0.mat} $\to$ \file{labB_ang000.mat} & $0^\circ$ & clean below \SI{2}{kHz}; notch at \SI{3.9}{kHz} (tip gap) \\
+Mock-up & \file{mockup_15.mat} $\to$ \file{labB_ang015.mat} & $15^\circ$ & notch at \SI{2.5}{kHz} \\
+Mock-up & \file{mockup_30.mat} $\to$ \file{labB_ang030.mat} & $30^\circ$ & notch at \SI{3.4}{kHz} \\
+Mock-up & \file{mockup_45.mat} $\to$ \file{labB_ang045.mat} & $45^\circ$ & notch at \SI{3.9}{kHz} \\
+Mock-up & \file{mockup_60.mat} $\to$ \file{labB_ang060.mat} & $60^\circ$ & notch at \SI{6.0}{kHz} \\
+Mock-up & \file{mockup_75.mat} $\to$ \file{labB_ang075.mat} & $75^\circ$ & no deep notch \\
+Mock-up & \file{mockup_90.mat} $\to$ \file{labB_ang090.mat} & $90^\circ$ & no deep notch \\
+No mock-up & \file{no_mockup_1.8m.mat} $\to$ \file{labB_nomockup.mat} & -- & reference, \SI{2.8}{m}, taken after the series \\
+End reference & not taken & -- & no drift check possible \\\bottomrule
 \end{tabularx}\par\smallskip
-\textit{These are expected filenames, not confirmation that measurements exist.}
-\todo{Replace filenames if repeats were selected. Comment on the separation between
-tones and the background in the full spectra, clipping/distortion, and any repositioning.}
+No repeats were needed. Clipping cannot be excluded from the saved data (no full
+spectra), but the ratios are smooth and consistent from angle to angle, and the trial
+run was used to set a moderate level.
 
 \subsection{Normalized angle responses}
-Calculate \file{H = specn(:,2)./specn(:,1)} for every run, then divide by the no-mock-up
-reference on the same frequency grid. Plot $\Delta L_\theta$ with a logarithmic frequency
-axis. Retain the raw full spectra for noise and distortion checks.
-\slot{Normalized measured responses at $0^\circ$, $45^\circ$, $90^\circ$; add matching BEM curves.}{labB_measured_vs_bem.png}
+\fig{labB_measured_vs_bem.png}{Measured $\Delta L_\theta$ (solid) and the BEM centre-of-face prediction (dashed) for the same angles.}
 \par\smallskip
-\begin{tabularx}{\linewidth}{@{}lXXX@{}}\toprule
-Incidence & Low-frequency level / dB & Feature frequency / Hz & Feature level / dB \\\midrule
-$0^\circ$ & \blank & \blank & \blank \\
-$45^\circ$ & \blank & \blank & \blank \\
-$90^\circ$ & \blank & \blank & \blank \\\bottomrule
+\begin{tabularx}{\linewidth}{@{}lXXXX@{}}\toprule
+Incidence & Level \SIrange{125}{200}{Hz} / dB & Maximum below \SI{2}{kHz} & At \SI{1345}{Hz} / dB & BEM face centre \\\midrule
+$0^\circ$ & $+0.8$ & $+8.6$ dB at \SI{1155}{Hz} & $+8.1$ & $+9.9$ dB at \SI{1345}{Hz} \\
+$15^\circ$ & $+0.8$ & $+8.4$ dB at \SI{972}{Hz} & $+7.7$ & $+9.4$ dB \\
+$30^\circ$ & $+0.7$ & $+7.2$ dB at \SI{917}{Hz} & $+5.8$ & $+8.3$ dB \\
+$45^\circ$ & $+0.6$ & $+6.5$ dB at \SI{891}{Hz} & $+5.0$ & $+6.7$ dB at \SI{1068}{Hz} \\
+$60^\circ$ & $+0.4$ & $+5.4$ dB at \SI{917}{Hz} & $+3.8$ & $+5.0$ dB \\
+$75^\circ$ & $+0.2$ & $+3.6$ dB at \SI{1995}{Hz} & $+1.6$ & $+3.0$ dB \\
+$90^\circ$ & $0.0$ & $+2.1$ dB at \SI{891}{Hz} & $+0.3$ & $+1.7$ dB at \SI{673}{Hz} \\\bottomrule
 \end{tabularx}\par\smallskip
-\todo{Identify the useful band and describe peaks/notches and angle dependence using
-actual values from your curves. Distinguish centre-point pressure from diaphragm-averaged pressure.}
+Useful band: \SIrange{125}{2000}{Hz} ($ka$ from 0.3 to 4.6). Below \SI{200}{Hz}
+every angle is within \SI{1}{dB} of \SI{0}{dB}: the body is acoustically invisible. From
+\SI{200}{Hz} the response rises, head-on the fastest, and up to \SI{2}{kHz} the measured
+curves follow the BEM for the same angles within about \SI{1}{dB} and in the right
+order ($0^\circ$ highest, $90^\circ$ lowest, within \SI{+2}{dB}). The $0^\circ$ maximum is
+\SI{1.3}{dB} lower and 15\,\% lower in frequency than the BEM centre-of-face value, all
+oblique curves fall away above \SI{2}{kHz}, and there are notches of 10--\SI{19}{dB}
+between 2.5 and \SI{6}{kHz}. These deviations are explained in the next section.
+
+\subsection{Position of the UMIK tip}\label{sec:tip}
+\fig{labB_tip_position.png}{$0^\circ$: measured (solid) against the BEM at the face centre, at a field point \SI{3}{cm} in front of the face, and averaged over the face.}
+The BEM evaluated \SI{3}{cm} in front of the face reproduces the measured $0^\circ$ curve
+within \SI{1.5}{dB} from \SI{200}{Hz} to \SI{3.5}{kHz}: the same maximum ($+8.7$~dB at
+1.1--\SI{1.2}{kHz}), the same dip to $-1.5$~dB at \SI{2.5}{kHz}, a notch of $-21$~dB at
+\SI{4.0}{kHz} against the measured $-18$~dB at \SI{3.9}{kHz}, and the return to $+9$~dB
+at \SI{5}{kHz}. A rigid face reflects the wave onto itself and a standing wave forms in
+front of it; a quarter wavelength in front the incident and reflected waves cancel
+($\lambda/4=\SI{2.2}{cm}$ at \SI{3.9}{kHz}), consistent with the recorded gap of
+2--\SI{3}{cm}. At oblique incidence the path difference shrinks with $\cos\theta$ and the
+notch moves up in frequency; the field-point BEM places the $15^\circ$, $30^\circ$ and
+$45^\circ$ notches at 2.7, 3.4 and \SI{4.3}{kHz} (measured 2.5, 3.35 and \SI{3.9}{kHz}).
+The notch depths at oblique angles do not agree, but the BEM uses 8 circumferential
+terms and its oblique curves are not reliable above about \SI{4}{kHz}. The measured
+data is therefore a centre-of-face free-field correction up to about \SI{2}{kHz} and a
+measurement of the field \SIrange{2}{3}{cm} in front of the body above that.
 
 \subsection{Reference stability (additional quality check)}
-If the end reference exists, evaluate
-$\Delta L_{\mathrm{drift}}=20\log_{10}|H_{\mathrm{end}}/H_{\mathrm{start}}|$.
-Insert \file{labB_reference_drift.png} and report the band and size of any drift.
-\todo{State whether the reference remained stable enough for normalization; if no end
-reference was taken, describe that limitation instead of reporting zero drift.}
+No end reference was taken, so $\Delta L_{\mathrm{drift}}$ cannot be evaluated. The
+indirect evidence is that every normalized curve sits at $0.0$ to $+0.8$~dB between 125
+and \SI{200}{Hz}, in the order and at the level the BEM predicts, which a moved
+microphone or a changed gain would not give. Part~0 confirms that the gain did not
+change between the reference and the distance runs.
 
 \newpage
 \section{Part 2: BEM simulation and spatial effects}
 The supplied \file{CylinderPlaneWave} model assumes plane-wave incidence. Its frequency
 grid is \SIrange{50}{5382}{\hertz} in $1/12$-octave steps. \file{AngleS} is in radians;
-\file{CylEnd} selects a round or flat back end. Compare measurements and simulation
-only over their common, reliable band.
+\file{CylEnd} selects a round or flat back end. Geometry used: $D=\SI{250}{mm}$,
+$L=\SI{855}{mm}$, round back (\file{Lab B/bem/run_bem.m}, angles $0^\circ$ to
+$180^\circ$); the field point is \SI{3}{cm} in front of the face centre on the axis.
+Comparison is made only over the common band \SIrange{50}{5382}{Hz}.
 
 \par\smallskip
 \begin{tabularx}{\linewidth}{@{}lX@{}}\toprule
-Output / choice & Comparison to make \\\midrule
-\file{p_centre} & Pressure at the front-face centre; compare with normalized UMIK data. \\
-\file{p_FP} & Field point near the face; default is \SI{3}{\centi\metre} in front.
-Document the coordinates used and relate them to the measured tip gap. \\
-\file{p_avg} & Parabolically weighted face average; discuss a real diaphragm's spatial averaging. \\
-\file{Round} vs. \file{Flat} & Compare rear-end geometry while holding incidence fixed. \\\bottomrule
+Output / choice & Result at $0^\circ$ \\\midrule
+\file{p_centre} & $+9.9$~dB at \SI{1345}{Hz} ($ka=3.1$), dip to $-1.0$~dB at \SI{2.7}{kHz}, back to $+9.9$~dB at \SI{4}{kHz}. \\
+\file{p_FP} (\SI{3}{cm} in front) & $+8.7$~dB at 1.1--\SI{1.2}{kHz}, $-21$~dB at \SI{4.0}{kHz}: the measured curve. \\
+\file{p_avg} & $+7.8$~dB maximum, $+6.2$~dB at \SI{4}{kHz}: what a diaphragm of the full face diameter would feel; smoother at high $ka$. \\
+\file{Round} vs. \file{Flat} & Less than \SI{0.25}{dB} difference at $0^\circ$: the back end only matters for sound from behind. \\\bottomrule
 \end{tabularx}\par\smallskip
-\slot{Centre, field point, weighted average and flat/round back at matched incidence.}{labB_bem_positions.png}
-\todo{An existing BEM prediction is in the figures folder. Verify its geometry, field-point
-coordinates and model settings before inserting it. Label it as simulation, not measurement.}
+\fig{labB_bem_positions.png}{BEM, $0^\circ$: centre, field point \SI{3}{cm} in front, parabolic average over the face, and flat back end.}
 
 \subsection{Agreement and limitations}
 \par\smallskip
 \begin{tabularx}{\linewidth}{@{}lXX@{}}\toprule
 Comparison & Observation / quantitative difference & Possible explanation \\\midrule
-Measured vs. face centre & \blank & \blank \\
-Measured vs. field point & \blank & \blank \\
-Centre vs. average & \blank & \blank \\
-Round vs. flat rear & \blank & \blank \\\bottomrule
+Measured vs. face centre & Within \SI{1}{dB} up to \SI{2}{kHz} at every angle; $0^\circ$ maximum $-1.3$~dB and $-15$\,\% in frequency; notches above \SI{2.5}{kHz} & Tip not flush (2--\SI{3}{cm}); protractor $\pm2$--$3^\circ$; spherical incidence; nominal diameter \\
+Measured vs. field point & Within \SI{1.5}{dB} up to \SI{3.5}{kHz} at $0^\circ$, notch frequency within 4\,\% & This is the pressure that was actually measured \\
+Centre vs. average & Average \SI{2}{dB} lower at the maximum, \SI{3.7}{dB} lower at \SI{4}{kHz} & Pressure not uniform over the face at $ka>3$; a real diaphragm averages \\
+Round vs. flat rear & $<\SI{0.25}{dB}$ at $0^\circ$ & Front face decides head-on \\\bottomrule
 \end{tabularx}\par\smallskip
-\todo{Discuss finite source distance, tip position, supports and UMIK body scattering,
-geometry mismatch, and numerical resolution. Do not extrapolate the BEM result beyond
-its available frequency grid. State which pressure definition best represents the experiment.}
+The field-point pressure best represents the experiment. Other contributions: the
+UMIK body and its stand scatter too (the $\pm3$~dB ripples above \SI{400}{Hz} in Part~0
+are already present without the mock-up and partly cancel in the ratio); the room below
+\SI{125}{Hz}; the sound speed on the day (1\,\% per \SI{3}{\celsius} on the frequency
+axis); and the numerical resolution of the BEM above \SI{4}{kHz} at oblique angles.
 
 \newpage
 \section{Part 2 continued: Scale to real microphones}
@@ -209,33 +268,49 @@ $f_{\mathrm{mock}}=f_{\mathrm{mic}}/s$. The normalized pressure level is unchang
 under ideal geometric scaling with the same medium.
 
 \par\smallskip
-\begin{tabularx}{\linewidth}{@{}lXXX@{}}\toprule
-Nominal size & Diameter used / mm & Scale factor $s$ & Handbook type / grid condition \\\midrule
-$1''$ & \blank & \blank & \blank \\
-$1/2''$ & \blank & \blank & \blank \\
-$1/4''$ & \blank & \blank & \blank \\
-$1/8''$ & \blank & \blank & \blank \\\bottomrule
+\begin{tabularx}{\linewidth}{@{}lXXXX@{}}\toprule
+Nominal size & Diameter used / mm & Scale factor $s$ & Measured $0^\circ$ maximum lands at & Handbook type \\\midrule
+$1''$ & 23.77 & 10.5 & \SI{12.1}{kHz} & B\&K 4144/4145 \\
+$1/2''$ & 12.70 & 19.7 & \SI{22.7}{kHz} & B\&K 4133/4134 \\
+$1/4''$ & 6.35 & 39.4 & \SI{45}{kHz} & B\&K 4135/4136 \\
+$1/8''$ & 3.175 & 78.7 & \SI{91}{kHz} & B\&K 4138 \\\bottomrule
 \end{tabularx}\par\smallskip
-\todo{Use the measured mock-up diameter and state the physical diameter convention for
-each real microphone. Nominal inch size and actual body diameter need not be identical.}
-\slot{Scaled measured and BEM curves, compared with the handbook corrections.}{labB_scaled_to_microphones.png}
-\todo{For each size, compare levels and characteristic frequencies at matching incidence.
-Identify the handbook figure and whether the protection grid is fitted. The current
-processing figure contains scaled measurements; add scaled BEM/datasheet evidence as needed.}
+$D_{\mathrm{mock}}=\SI{250}{mm}$ is the nominal value; the real microphone diameters
+are the nominal body diameters (the $1''$ body is \SI{23.77}{mm}, not \SI{25.4}{mm}).
+\fig{labB_scaled_to_microphones.png}{The measured curves on the frequency axis of each microphone size.}
+For the $1''$ microphone the handbook free-field correction (B\&K 4145 in the brief)
+peaks at about \SI{+10}{dB} between 12 and \SI{15}{kHz} at $0^\circ$ and falls towards
+\SI{0}{dB} at $90^\circ$; the scaled measurement puts $+8.6$~dB at \SI{12}{kHz}, the
+right place and slightly low for the reason given in Sec.~\ref{sec:tip}. The scaled BEM
+centre value would be $+9.9$~dB at \SI{14}{kHz}.
+\todo{Identify the exact handbook figure and whether the protection grid is fitted; add the scaled BEM curve to the figure if the group wants a three-way comparison.}
 
 \section{Uncertainty and conclusion}
-\textbf{Sources to assess:} repeatability, angle reading, tip gap/centring, diameter,
-reference drift, noise, sound speed and deviations from plane-wave/rigid-body assumptions.
-For $s=D_{\mathrm{mock}}/D_{\mathrm{mic}}$, independent diameter uncertainties give
+\textbf{Sources, ranked by their effect on the result:}
+\begin{enumerate}
+\item UMIK tip \SIrange{2}{3}{cm} in front of the face: changes the result qualitatively above \SI{2}{kHz} and lowers the $0^\circ$ maximum by \SI{1.3}{dB}. Systematic, explained by the BEM field point.
+\item No start reference: drift cannot be quantified; the low-frequency levels ($0.0$ to $+0.8$~dB) bound it to below \SI{1}{dB}.
+\item Mock-up diameter not measured: a few per cent on every frequency in the scaled comparison, nothing on the dB axis. For $s=D_{\mathrm{mock}}/D_{\mathrm{mic}}$,
 \begin{equation}
 \frac{u(s)}{s}=\sqrt{\left(\frac{u(D_{\mathrm{mock}})}{D_{\mathrm{mock}}}\right)^2+
 \left(\frac{u(D_{\mathrm{mic}})}{D_{\mathrm{mic}}}\right)^2}.
 \end{equation}
-\todo{Rank the main limitations using your evidence. For any numerical uncertainty,
-state the input values, distributions and coverage; account for shared-reference
-correlation rather than assuming all normalized curves are independent.}
-\todo{Conclude with the measured angle dependence, BEM agreement and validity of the
-scaled comparison. Give the frequency band over which those conclusions are supported.}
+\item Angle read from a paper protractor ($\pm2$--$3^\circ$): the curves are 0.5--\SI{1}{dB} apart per $15^\circ$ near the maximum.
+\item Spherical incidence from \SI{2.8}{m}, temperature not recorded, room below \SI{125}{Hz}: each below \SI{1}{dB} or outside the useful band.
+\end{enumerate}
+All normalized curves share one reference, so their errors are correlated: a reference
+error moves every angle together and does not change the angle dependence.
+\todo{Give numbers with a stated coverage if the group wants a numerical budget (rectangular distribution for the protractor and the diameter).}
+
+\textbf{Conclusion.} Between \SI{125}{Hz} and \SI{2}{kHz} ($ka=0.3$ to $4.6$) the
+measured pressure increase at the face of the mock-up is \SI{0}{dB} below $ka\approx0.5$,
+rises head-on to $+8.6$~dB at \SI{1155}{Hz} and stays within $+2$~dB at grazing
+incidence, in the order and within about \SI{1}{dB} of the level the BEM predicts for
+the face centre. Above \SI{2}{kHz} the measurement is that of a point 2--\SI{3}{cm} in
+front of the face, which the BEM field point reproduces within \SI{1.5}{dB} up to
+\SI{3.5}{kHz} including the \SI{3.9}{kHz} notch. Scaled to a $1''$ microphone the
+maximum lands at \SI{12}{kHz}, where the handbook correction has its $+10$~dB. Part~0
+confirms free-field conditions to \SI{0.1}{dB} between 125 and \SI{400}{Hz}.
 
 \section*{Sources and processing record}
 \small
@@ -243,11 +318,13 @@ DTU 34870, \emph{Lab B -- Microphone scattering -- E26},
 \file{34870_Lab_B_CylinderScattering_E2026.pdf}: pp. 1--5 (procedure, equations and
 BEM), followed by the microphone handbook excerpts. Source: course vault / DTU Learn.
 
-Repository workflow: \file{Lab B/matlab/labB_devices.m} (device check),
-\file{Lab B/matlab/measure_labB.m}, \file{Lab B/bem/run_bem.m}, \file{Lab B/matlab/process_labB.m}.
-Update \file{D_mockup} before processing. The BEM package is obtained separately from DTU Learn.
-Course measurement files: the 21 September 2026 re-upload (\texttt{34870 - Lab B (2).zip}), which
-finds the internal sound card by the names \texttt{Line In} and \file{Speakers}.
+Repository workflow: raw files from the lab PC in \file{Lab B/data/Lab B master group 10/}
+(unchanged); \file{Lab B/matlab/import_group_files.m} (frequency axis and metadata,
+writes \file{labB_*.mat}); \file{Lab B/bem/run_bem.m}; \file{Lab B/matlab/process_labB.m}
+with \file{D_mockup = 0.250} (nominal). Course measurement files: the 21 September 2026
+re-upload (\texttt{34870 - Lab B (2).zip}).
 
-\textbf{Analysis version / selected repeats / deviations:} \blank
+\textbf{Analysis version / selected repeats / deviations:} processed 22 September 2026;
+no repeats; \file{test.mat} excluded; reference \file{no_mockup_1.8m.mat} identified as
+the \SI{2.8}{m} run by the $1/r$ check; no start reference, hence no drift figure.
 \end{document}

@@ -1,0 +1,18 @@
+nomockup       <- labB_nomockup.mat
+ang000         <- labB_ang000.mat
+ang015         <- labB_ang015.mat
+ang030         <- labB_ang030.mat
+ang045         <- labB_ang045.mat
+ang060         <- labB_ang060.mat
+ang075         <- labB_ang075.mat
+ang090         <- labB_ang090.mat
+0 deg notch: -17.9 dB at 3868 Hz  (quarter-wave gap c/4f = 2.2 cm)
+angle  125-200 Hz mean  peak below 2 kHz       at 1345 Hz  
+0      0.84               8.6 dB at  1155 Hz        8.1
+15     0.81               8.4 dB at   972 Hz        7.8
+30     0.73               7.2 dB at   917 Hz        6.0
+45     0.61               6.5 dB at   891 Hz        5.3
+60     0.39               5.4 dB at   917 Hz        4.2
+75     0.22               3.6 dB at  1995 Hz        1.9
+90     0.02               2.1 dB at   891 Hz        0.6
+exit 0
