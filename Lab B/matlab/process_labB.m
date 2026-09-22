@@ -7,8 +7,9 @@
 D_mockup = 0.250;                         % [m]  <-- measured diameter of the mock-up
 here = fileparts(mfilename('fullpath')); dataDir = fullfile(here, '..', 'data'); figDir = fullfile(here, '..', 'figures');
 if ~exist(figDir, 'dir'), mkdir(figDir); end
-ref = load(fullfile(dataDir, 'labB_nomockup.mat'));
-files = dir(fullfile(dataDir, 'labB_ang*.mat')); files = files(cellfun(@isempty, regexp({files.name}, '_\d+\.mat$')));   % skip repeats
+ref = load(latest(dataDir, 'nomockup'));
+tags = unique(regexprep({dir(fullfile(dataDir, 'labB_ang*.mat')).name}, '^labB_(ang\d+).*$', '$1'));
+files = cellfun(@(t) dir(latest(dataDir, t)), tags);     % one file per angle: the LAST repeat (measure_labB never overwrites)
 bem = load(fullfile(here, '..', 'bem', 'bem_results.mat'));
 col = lines(numel(files));
 
@@ -48,6 +49,16 @@ for q = 1:numel(mics)
 end
 exportgraphics(gcf, fullfile(figDir, 'labB_scaled_to_microphones.png'), 'Resolution', 200);
 
+% ---- 3b) did anything drift? reference taken again at the end of the series (tag 'nomockup_end')
+fe = dir(fullfile(dataDir, 'labB_nomockup_end*.mat'));
+if ~isempty(fe)
+    e = load(latest(dataDir, 'nomockup_end'));
+    lightfig(5); semilogx(fn, 20*log10(abs(e.H ./ ref.H)), 'k-', 'LineWidth', 1.2); grid on; xlim([50 10000]); ylim([-3 3])
+    xlabel('Frequency [Hz]'); ylabel('dB'); title('no-mock-up reference at the end / at the start  (should be 0 dB: nothing moved)')
+    exportgraphics(gcf, fullfile(figDir, 'labB_reference_drift.png'), 'Resolution', 200);
+    fprintf('reference drift, end vs start: max %.2f dB (125 Hz - 10 kHz)\n', max(abs(20*log10(abs(e.H(fn >= 125) ./ ref.H(fn >= 125))))));
+end
+
 % ---- 4) Part 0 (optional): 1/r check from labB_dist<cm>cm.mat files
 dfiles = dir(fullfile(dataDir, 'labB_dist*cm.mat'));
 if numel(dfiles) >= 2
@@ -64,6 +75,14 @@ if numel(dfiles) >= 2
     set(gca, 'XScale', 'log'); grid on; xlim([50 10000]); xlabel('Frequency [Hz]'); ylabel('level difference [dB]'); legend
     title('Part 0: free-field check (chamber cut-off 125 Hz)')
     exportgraphics(gcf, fullfile(figDir, 'labB_free_field_check.png'), 'Resolution', 200);
+end
+
+function p = latest(dataDir, tag)
+% newest repeat of a tag: labB_<tag>.mat, labB_<tag>_2.mat, ... -> the highest number wins
+c = dir(fullfile(dataDir, ['labB_' tag '*.mat'])); c = c(~cellfun(@isempty, regexp({c.name}, ['^labB_' tag '(_\d+)?\.mat$'])));
+if isempty(c), error('no file labB_%s*.mat in %s', tag, dataDir); end
+n = cellfun(@(x) max([1 sscanf(regexprep(x, ['^labB_' tag '_?'], ''), '%d')]), {c.name});
+[~, i] = max(n); p = fullfile(dataDir, c(i).name); fprintf('%-14s <- %s\n', tag, c(i).name);
 end
 
 function lightfig(n)

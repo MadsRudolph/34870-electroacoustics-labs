@@ -88,12 +88,12 @@ for II=1:nIDev % Find microphone and line input
     if contains(infoIO.input(II).Name,'Umik')
         deviceID2=infoIO.input(II).ID;
     end
-    if contains(infoIO.input(II).Name,'Line') && contains(infoIO.input(II).Name,'USB') % For use with external sound card "7.1 Surround"
+    if contains(infoIO.input(II).Name,'Line In')
         deviceID1=infoIO.input(II).ID;
     end
 end
 for II=1:nODev % Find loudspeaker output
-    if contains(infoIO.output(II).Name,'Speakers') && contains(infoIO.output(II).Name,'USB') % For use with external sound card "7.1 Surround"
+    if contains(infoIO.output(II).Name,'Speakers')
         deviceID3=infoIO.output(II).ID;
     end
 end

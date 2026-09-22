@@ -4,7 +4,8 @@ Quiz (Lab B + C together, individual): deadline **Mon 5 Oct 2026**. Brief: `3487
 
 | Folder | What |
 |---|---|
-| `matlab/course/` | The course measurement routine and the UMIK correction files, unchanged (from `34870 - Lab B.zip`). |
+| `matlab/course/` | The course measurement routine and the UMIK correction files, unchanged (from `34870 - Lab B (2).zip`, the 21-Sep re-upload: devices are now found as `Line In` / `Speakers` on the internal sound card, not the USB card). |
+| `matlab/labB_devices.m` | Run first on the lab PC: prints the audio devices and which three the course routine will pick. If one is NaN, fix the `contains` tests before measuring. |
 | `matlab/measure_labB.m` | Lab-day wrapper: one call per measurement, uses the parameters from the lab sheet, saves `data/labB_<tag>.mat` straight away (never overwrites) and shows signal vs. noise floor. |
 | `matlab/process_labB.m` | At home: normalise with the no-mock-up reference, overlay the BEM model, scale to 1", 1/2", 1/4", 1/8" microphones, optional 1/r check. Writes `figures/`. |
 | `bem/run_bem.m` | Runs the course BEM model `CylinderPlaneWave` for 0–180° and both back-end shapes → `bem_results.mat` / `.csv`. The 106 MB package is unpacked into `bem/package/` (gitignored; unzip `BEM_FreeField.zip` from DTU Learn there). |
@@ -16,11 +17,15 @@ Quiz (Lab B + C together, individual): deadline **Mon 5 Oct 2026**. Brief: `3487
 Copy `matlab/` to the lab PC (it has no internet; bring it on a stick or laptop). Connect the UMIK **before** starting MATLAB. Then, with loudspeaker and UMIK fixed for the whole series:
 
 ```matlab
+labB_devices                             % Umik, Line In, Speakers all found?
 measure_labB('nomockup', '708-03xx')     % reference WITHOUT the mock-up (do it first and again at the end)
 measure_labB('ang000',   '708-03xx')     % mock-up face almost touching the UMIK, 0 deg
 measure_labB('ang045',   '708-03xx')
 measure_labB('ang090',   '708-03xx')     % more angles if there is time: ang030, ang060, ...
+measure_labB('nomockup_end', '708-03xx') % reference again: proves nothing moved
 ```
+
+A bad run: just call it again with the same tag. Nothing is overwritten (`_2`, `_3`, ...) and `process_labB` takes the newest repeat of each tag.
 
 Optional Part 0 (before the mock-up series, because it moves the microphone): `measure_labB('dist100cm', …)`, `measure_labB('dist200cm', …)`.
 
