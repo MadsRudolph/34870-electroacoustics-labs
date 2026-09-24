@@ -1,6 +1,7 @@
 % PROCESS_LABB  Lab B post-processing: normalise the mock-up measurements with the no-mock-up
 % reference, compare with the BEM model, scale to real microphone sizes.
 %
+% testingg
 % Expects  ../data/labB_nomockup.mat, labB_ang000.mat, labB_ang045.mat, labB_ang090.mat, ...
 % (written by measure_labB, or by import_group_files from the files the course script saved on 22-Sep) and ../bem/bem_results.mat (written by bem/run_bem.m).
 % Figures go to ../figures/.  Set D_mockup to the diameter you measured with the tape.
