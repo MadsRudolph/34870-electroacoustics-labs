@@ -298,9 +298,13 @@ measured values. The free-field capsule has about twice the backplate resistance
 is the damping that gives it its low $Q$.
 
 \subsection{LTspice circuit}
-The circuit uses three domains: acoustic in the impedance analogy, mechanical in the
-mobility analogy, and electrical. The actuator is a \SI{1}{\pascal} source applied
-directly to the diaphragm. There is no $G_{pb}$ generator for the diffraction function
+The circuit is drawn as in the lectures: an electrical loop and a mechanical loop side by
+side, with the acoustic network below. Mechanical and acoustic parts both use the impedance
+analogy (voltage = force or pressure, current = velocity or volume velocity). The domains are
+linked by controlled sources driven by a \SI{0}{\volt} ammeter in the mechanical loop, whose
+current is the diaphragm velocity $u_D$: the force $S_D(p_\mathrm{front}-p_\mathrm{back})$, the
+volume velocity $S_D u_D$ and the electrical output current $(E C_{E0}/x_0)\,u_D$. The actuator
+is a \SI{1}{\pascal} source applied directly to the diaphragm. There is no $G_{pb}$ generator for the diffraction function
 $T(s)$, because the actuator does not create a sound field. Only $f_s$ and $Q$ are typed
 in; LTspice computes $M_{AS}$ and $R_{AS}$ from them with the formulas above.
 
@@ -313,8 +317,8 @@ in; LTspice computes $M_{AS}$ and $R_{AS}$ from them with the formulas above.
 \begin{figure}[H]\centering
 \includegraphics[width=0.85\linewidth]{labC_ltspice_vs_measurement.png}
 \caption{LTspice output (lines) against the calibrated measurement (circles), in
-absolute sensitivity. The LTspice source is entered with \SI{180}{\degree} phase, so no
-extra phase shift is needed.}
+absolute sensitivity. The output current source carries the sign of the ground convention,
+so no extra \SI{180}{\degree} shift is needed.}
 \end{figure}
 
 \begin{figure}[H]\centering

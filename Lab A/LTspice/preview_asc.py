@@ -17,6 +17,7 @@ FONT = next((f for f in ("/usr/share/fonts/liberation/LiberationSans-Bold.ttf",
 SIZES = {0: 0.625, 1: 1.0, 2: 1.5, 3: 2.0, 4: 2.5, 5: 3.5, 6: 5.0, 7: 7.0}
 PX = 17                       # text height in schematic units per unit of LTspice size factor
 ROT = {"R0": lambda x, y: (x, y), "R90": lambda x, y: (-y, x), "R180": lambda x, y: (-x, -y), "R270": lambda x, y: (y, -x)}
+ROT.update({"M" + k[1:]: (lambda f: lambda x, y: f(-x, y))(f) for k, f in list(ROT.items())})   # mirror = flip x, then rotate
 
 
 def font(size):
@@ -64,6 +65,8 @@ def text_box(x, y, just, size, s, rot="R0"):
     """bounding box of a label. V-justified text is vertical in the symbol frame; R90/R270 turn it."""
     vert = just.startswith("V")
     j = just[1:] if vert else just
+    if rot.startswith("M"):
+        j = {"Left": "Right", "Right": "Left"}.get(j, j); rot = "R" + rot[1:]
     if rot in ("R90", "R270"):
         vert = not vert
     if rot in ("R180", "R270"):

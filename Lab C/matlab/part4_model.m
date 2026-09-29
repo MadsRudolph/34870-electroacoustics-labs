@@ -205,9 +205,9 @@ ylabel('phase [deg]'); xlabel('Frequency [Hz]')
 exportgraphics(fig, fullfile(figdir, 'labC_ltspice_vs_measurement.png'), 'Resolution', 200);
 
 %%
-% The phase of the LTspice output is shown without any 180 deg shift: the
-% actuator source in the schematic is entered as "AC 1 180", which already
-% takes care of the ground convention.
+% The phase of the LTspice output is shown without any 180 deg shift: the sign
+% of the ground convention is carried by the output current source F_e
+% (gain -E*CE0/x0) in the schematic.
 
 save(fullfile(outdir, 'part4_results.mat'), 'SD', 'CAB', 'MA1', 'CMT', 'M_model_mV_per_Pa', 'CE0_pF', ...
      'fs_1', 'Q_1', 'MAS_1', 'RAS_1', 'fs_2', 'Q_2', 'MAS_2', 'RAS_2', 'param_line', 'diff_Mic1_dB', 'diff_Mic2_dB', ...
