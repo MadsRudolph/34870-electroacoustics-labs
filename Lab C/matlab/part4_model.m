@@ -146,15 +146,16 @@ worst_deg_Mic2 = max(abs(angle(meas_2 ./ model_2)*180/pi))
 % within about 1 dB and a few degrees, and the slide reading and the fit give the
 % same f_s and Q within 3 %.
 %
-% *Mic 2 (4133)* is not. Its phase flattens out around -75 deg between 10 and
-% 20 kHz and only then falls again, which no single mass-spring-damper can do.
-% A free-field capsule gets its heavy damping from the air film between the
-% diaphragm and a backplate with holes and slots, and that damping changes with
-% frequency (more than one resonance / a distributed R_AS). So the -90 deg reading
-% (22.9 kHz) and the whole-curve fit (21.1 kHz) differ by 9 %. Use the slide
-% values as the brief asks, and mention the difference as a limitation of the
-% lumped model. In LTspice, adjusting f_s and Q a little towards the fit values
-% gives a compromise between the magnitude and the phase.
+% *Mic 2 (4133)* also follows the model up to its resonance: aligned at 1 kHz the
+% shape agrees within 0.5 dB and 5 deg up to 20 kHz (see the LTspice section below).
+% Above resonance it departs by up to 1.6 dB and 19 deg: the measured phase falls
+% slowly between about 12 and 25 kHz and then faster than the model. A free-field
+% capsule gets its heavy damping from the air film between the diaphragm and a
+% slotted, perforated backplate, and that damping depends on frequency, so one
+% lumped R_AS and M_AS cannot fit every region at once. This is also why the
+% -90 deg reading (22.9 kHz) and the whole-curve fit (21.1 kHz) differ by 9 %.
+% Use the slide values as the brief asks and mention the difference as a
+% limitation of the lumped model.
 
 %% LTspice against measurement
 % The LTspice schematic (ltspice/LabC_CondenserMics.asc) holds the full
