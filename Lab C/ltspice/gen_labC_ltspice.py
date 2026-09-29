@@ -25,9 +25,9 @@ import gen_ltspice as g                      # noqa: E402  (schematic builder + 
 RHO, C0, EPS0 = 1.18, 344.0, 8.854e-12
 # data given in the brief (identical for both microphones)
 P = dict(a=8.95e-3 / 2, x0=20.77e-6, E=200.0, MMD=1.5e-6, CMD=0.02e-3, V=126.4e-9, RL=10e9)
-# PLACEHOLDERS until measured: (fs [Hz], Q). 4133 = free-field type (heavily damped), 4134 = pressure type
-FS_Q = {"33": (20e3, 0.45), "34": (20e3, 0.95)}
-NAMES = {"33": "B&K 4133 (S/N 591628)", "34": "B&K 4134 (S/N 1534527)"}
+# measured 29-Sep-2026 (matlab/part3_mic_responses.m): fs from the -90 deg phase crossing, Q = |H(fs)|/|H(low f)|
+FS_Q = {"33": (22930, 0.340), "34": (20221, 0.835)}
+NAMES = {"33": "B&K 4133, free field (Mic 2 in the lab)", "34": "B&K 4134, pressure field (Mic 1 in the lab)"}
 
 
 def derived(fs, Q):
@@ -109,5 +109,13 @@ if __name__ == "__main__":
     D = derived(*FS_Q["33"])
     print(f"S_D = {D['SD']:.4g} m2, C_AB = {D['CAB']:.4g}, M_A1 = {D['MA1']:.4g}, C_MT = {D['CMT']:.4g} m/N, C_E0 = {D['CE0']*1e12:.2f} pF, "
           f"M = {D['M']*1e3:.2f} mV/Pa, resonance without any backplate mass = {D['f0_no_backplate']/1e3:.1f} kHz")
+    if "--export" in sys.argv:          # LTspice result as CSV for matlab/part4_model.m
+        d = g.run_ltspice(HERE / "LabC_CondenserMics.asc")
+        out = HERE.parent / "matlab" / "results" / "ltspice_labC.csv"
+        with open(out, "w") as fh:
+            fh.write("f_Hz,re_out33,im_out33,re_out34,im_out34\n")
+            for fi, a, b in zip(d["frequency"], d["v(out33)"], d["v(out34)"]):
+                fh.write(f"{fi.real:.6g},{a.real:.9g},{a.imag:.9g},{b.real:.9g},{b.imag:.9g}\n")
+        print(f"wrote {out}")
     if "--verify" in sys.argv:
         sys.exit(0 if verify() else 1)
