@@ -127,27 +127,42 @@ pressure magnitude of an approximately spherical wave varies as $1/r$, giving
 The distance check was carried out \emph{after} the scattering series, without the
 mock-up: the UMIK was moved from its series position (\SI{2.8}{m}) to \SI{1.4}{m} and
 \SI{0.93}{m}. Doing it last guaranteed that the microphone did not move between the
-reference and the seven angles.
+reference and the seven angles. The series position, \SI{2.8}{m}, is taken as the
+reference, so the two closer positions should read $20\log_{10}(2.8/r)$ higher.
 \par\smallskip
 \begin{tabularx}{\linewidth}{@{}lXXX@{}}\toprule
-Run & Distance / m & Data file & Observed difference / dB (mean \SIrange{125}{200}{Hz}) \\\midrule
-Reference distance & 0.93 & \file{no_mockup_0.93.mat} $\to$ \file{labB_dist93cm.mat} & Reference \\
-Second distance & 1.4 & \file{no_mockup_1.4m.mat} $\to$ \file{labB_dist140cm.mat} & $-3.66$ (predicted $-3.55$) \\
-Third & 2.8 & \file{no_mockup_1.8m.mat} $\to$ \file{labB_dist280cm.mat} & $-9.61$ (predicted $-9.57$) \\\bottomrule
+Run & Distance / m & Data file & Level re \SI{2.8}{m} / dB (mean \SIrange{125}{200}{Hz}) \\\midrule
+Reference distance & 2.8 & \file{no_mockup_1.8m.mat} $\to$ \file{labB_dist280cm.mat} & Reference \\
+Second distance & 1.4 & \file{no_mockup_1.4m.mat} $\to$ \file{labB_dist140cm.mat} & $+6.25$ (predicted $+6.02$) \\
+Third & 0.93 & \file{no_mockup_0.93.mat} $\to$ \file{labB_dist93cm.mat} & $+9.84$ (predicted $+9.57$) \\\bottomrule
 \end{tabularx}\par\smallskip
-The third file is named \file{no_mockup_1.8m} on the lab PC; the tape reading was
-\SI{2.8}{m}, and the observed $-9.6$~dB matches \SI{2.8}{m} ($-9.57$~dB), not
-\SI{1.8}{m} ($-5.7$~dB).
-\fig{labB_free_field_check.png}{Part 0: level relative to the \SI{0.93}{m} run, with the $1/r$ predictions (dashed).}
-Between the chamber cutoff and about \SI{400}{Hz} both curves follow $1/r$ to within
-\SI{0.1}{dB}: the chamber is free-field there and the loudspeaker radiates like a point
-source. Above \SI{400}{Hz} the \SI{1.4}{m} curve ripples by $\pm3$--\SI{4}{dB}
-(interference between the direct sound and reflections from the stand, the floor net or
-the loudspeaker cabinet) and above \SI{4}{kHz} both curves wander by several dB (source
-directivity; a \SI{1}{cm} placement error is already $0.1\lambda$). Below \SI{100}{Hz}
-the \SI{2.8}{m} curve drops to \SI{-16}{dB}: below its cutoff the room reflects. The
-useful free-field band is therefore \SIrange{125}{2000}{Hz} with a margin of about
-\SI{1}{dB} at the higher frequencies.
+The reference file is named \file{no_mockup_1.8m} on the lab PC; the tape reading was
+\SI{2.8}{m}. The \SI{0.93}{m} run is \SI{9.8}{dB} above it. That matches \SI{2.8}{m}
+(\SI{9.57}{dB}), not \SI{1.8}{m} (\SI{5.7}{dB}), so the file name is a typo.
+\fig{labB_free_field_check.png}{Part 0: level relative to the \SI{2.8}{m} run (the series position), with the $1/r$ predictions (dashed).}
+\textbf{How close to free field?}
+\begin{itemize}
+\item \textbf{125--\SI{300}{Hz}:} both positions follow $1/r$ within
+$-0.8$ to $+1.6$~dB (\SI{1.4}{m}) and $\pm0.8$~dB (\SI{0.93}{m}). The band means are
+0.2--\SI{0.3}{dB} above the prediction. Here the chamber behaves as a free field and the
+loudspeaker radiates like a point source.
+\item \textbf{\SI{300}{Hz}--\SI{4}{kHz}:} ripples of up to \SI{\pm3}{dB} around $1/r$,
+with a mean still within \SI{0.6}{dB}. Much of the ripple is common to both curves, so it
+comes from the \SI{2.8}{m} reference itself: interference between the direct sound and
+weak reflections from the stand, the floor net or the loudspeaker cabinet, which matter
+most at the largest distance, where the direct sound is weakest.
+\item \textbf{Above \SI{4}{kHz}:} both closer positions read 2--\SI{4}{dB} below $1/r$
+on average. At short range the microphone is no longer in the far field of the driver,
+and small offsets from the driver axis change the angle and hence the directivity. A
+\SI{1}{cm} placement error is already $0.1\lambda$.
+\item \textbf{Below the \SI{125}{Hz} cut-off:} the closer positions read up to
+\SIrange{6}{8}{dB} above $1/r$. The wedges no longer absorb, and the room field adds to
+the direct sound, most strongly at the far position used as the reference.
+\end{itemize}
+For the scattering measurement this matters less than the ripple suggests. Every angle is
+normalised by the no-mock-up measurement at the \emph{same} position, so a reflection
+that is common to both measurements cancels to first order. What remains is the error
+from reflections between the mock-up and the room, which the reference cannot remove.
 
 \section{Part 1: Scattering measurement procedure}
 \begin{enumerate}
