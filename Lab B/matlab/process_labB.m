@@ -83,6 +83,7 @@ if ~isempty(fe)
 end
 
 % ---- 4) Part 0 (optional): 1/r check from labB_dist<cm>cm.mat files
+% reference = the largest distance (2.8 m, where the UMIK sat for the scattering series)
 dfiles = dir(fullfile(dataDir, 'labB_dist*cm.mat'));
 if numel(dfiles) >= 2
     lightfig(4); hold on
@@ -90,13 +91,17 @@ if numel(dfiles) >= 2
         m = load(fullfile(dataDir, dfiles(k).name)); r(k) = sscanf(dfiles(k).name, 'labB_dist%d') / 100; %#ok<SAGROW>
         Hd(:, k) = m.H; %#ok<SAGROW>
     end
-    [r, o] = sort(r); Hd = Hd(:, o);
+    [r, o] = sort(r, 'descend'); Hd = Hd(:, o);
+    band = fn >= 125 & fn <= 200;
     for k = 2:numel(r)
-        semilogx(fn, 20*log10(abs(Hd(:, k) ./ Hd(:, 1))), 'LineWidth', 1.2, 'DisplayName', sprintf('%.2f m vs %.2f m: measured', r(k), r(1)));
-        yline(20*log10(r(1) / r(k)), '--', sprintf('1/r law: %.1f dB', 20*log10(r(1) / r(k))), 'HandleVisibility', 'off');
+        dL = 20*log10(abs(Hd(:, k) ./ Hd(:, 1)));
+        semilogx(fn, dL, 'LineWidth', 1.2, 'DisplayName', sprintf('%.2f m vs %.2f m: measured', r(k), r(1)));
+        yline(20*log10(r(1) / r(k)), '--', sprintf('1/r law: %+.2f dB', 20*log10(r(1) / r(k))), 'LabelHorizontalAlignment', 'left', 'HandleVisibility', 'off');
+        fprintf('Part 0: %.2f m vs %.2f m: mean 125-200 Hz %+.2f dB, 1/r predicts %+.2f dB\n', r(k), r(1), mean(dL(band)), 20*log10(r(1) / r(k)));
     end
-    set(gca, 'XScale', 'log'); grid on; xlim([50 10000]); xlabel('Frequency [Hz]'); ylabel('level difference [dB]'); legend
-    title('Part 0: free-field check (chamber cut-off 125 Hz)')
+    xline(125, ':', 'chamber cut-off 125 Hz', 'HandleVisibility', 'off');
+    set(gca, 'XScale', 'log'); grid on; xlim([50 10000]); xlabel('Frequency [Hz]'); ylabel(sprintf('level re %.1f m [dB]', r(1))); legend('Location', 'southeast')
+    title(sprintf('Part 0: free-field check, reference %.1f m', r(1)))
     exportgraphics(gcf, fullfile(figDir, 'labB_free_field_check.png'), 'Resolution', 200);
 end
 

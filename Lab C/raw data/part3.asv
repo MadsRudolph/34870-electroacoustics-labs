@@ -1,0 +1,15 @@
+f1=20; 
+f2=60000; 
+Amax=1; 
+n_oct=6; 
+Nav=4; 
+fb=200; 
+fres=1;
+
+[fn,specn,f,spec,ch]=meas_mag_spec2(f1,f2,Amax,n_oct,Nav,fb,fres);
+figure;
+H_21 = specn(:,2)./specn(:,1);
+H_pv_m2 = H_21./H21_ref 
+semilogx(fn,db(abs(H_pv_m2)))
+legend('H_pv_m2')
+title('Transferfunction - micro sensitivity after correction')
