@@ -86,6 +86,7 @@ pressure magnitude of an approximately spherical wave varies as $1/r$, giving
 \begin{equation}
 \Delta L_{21}=20\log_{10}\!\left(\frac{|p(r_2)|}{|p(r_1)|}\right)
 \simeq20\log_{10}\!\left(\frac{r_1}{r_2}\right).
+\label{eq:1/r}
 \end{equation}
 \textbf{If performed:} carry out the distance check without the mock-up, before fixing
 the source and microphone positions for Part 1. If omitted, state this explicitly.
@@ -93,14 +94,31 @@ the source and microphone positions for Part 1. If omitted, state this explicitl
 \begin{tabularx}{\linewidth}{@{}lXXX@{}}\toprule
 Run & Distance / m & Data file & Observed difference / dB \\\midrule
 Reference distance & 2.8m & \file{labB_dist280cm.mat} & Reference \\
-Second distance & 1.4m & \file{labB_dist140cm.mat} & \blank \\
-Third & 0.93 & \file{labB_dist93cm.mat} & \blank \\\bottomrule
+Second distance & 1.4m & \file{labB_dist140cm.mat} & 5.5 dB \\
+Third & 0.93 & \file{labB_dist93cm.mat} & 8.6 dB \\\bottomrule
 \end{tabularx}\par\smallskip
-\slot{Measured distance ratios and the $1/r$ prediction; mark \SI{125}{\hertz}.}{labB_free_field_check.png}
-\todo{Check the distances against the log (the lab-PC file \file{no_mockup_1.8m} is suspected
-to be a typo: does the level difference agree with 1.8 or 2.8\,m?). Note that Part 0 was
-measured \emph{after} the series. State whether the distance test supports free-field conditions over the useful
-band. Discuss near-field behaviour, directivity and the chamber cutoff where relevant.}
+
+
+
+% \slot{Measured distance ratios and the $1/r$ prediction; mark \SI{125}{\hertz}.}{labB_free_field_check.png}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{Lab B/figures/labB_free_field_check_sophie.png}
+    \caption{Difference in level with reference to 280cm}
+    \label{fig:free_field_check}
+\end{figure}
+
+The level difference between plane waves in a free-field are expected to behave linearly, with dependency only on their radius from the sound source, $r$, as written in Equation \ref{eq:1/r}. Thus, the sound level at varying radii, $r$, can be taken across the relevant frequency range in order to verify that the sound field is a free-field, and the validity of the frequency range used.\\
+
+
+The level difference between the three measured quantities were close to the theoretical values, but not perfect. Figure \ref{fig:free_field_check} shows the averages of the measured level differences being within 1 dB of the expected level difference according to the $\frac{1}{r}$ law. In particular, the 140cm difference is much closer to the predicted behavior, while the 93cm difference is around 1 dB away from its prediction. These predictions are based on the $\frac{1}{r}$ law, which assumes plane waves. However, waves from a spherical point source can only be modeled as plane waves if they are sufficiently far enough away from the source, also known as the far field. It can be seen here that the 93cm distance is not behaving as expected, given the discrepancy between its measured level difference and the one which the $\frac{1}{r}$ law predicts. Therefore, this distance is not considered sufficient to follow plane wave behavior, and is instead considered within the near field. On the other hand, the 140cm average level difference has a discrepancy of 0.5 dB with its theoretical value. This difference can be considered small enough that 140cm may be within the far field range.\\
+
+Additionally, the limitations of the room itself contribute to discrepancies between the theoretical and measured level differences. It can be seen that before the 125 Hz line, the behavior is very different from the rest of the frequencies. There should be no frequency dependency on level differences and the theoretical difference should therefore be a flat line as shown with the black lines. It is clear from Figure \ref{fig:free_field_check} that responses before 125 Hz are not behaving as expected, which can be attributed to the limitations of the room in creating a truly free-field in all frequencies. To take this into account, the level average is taken only from frequencies past 125 Hz.
+
+% \todo{Check the distances against the log (the lab-PC file \file{no_mockup_1.8m} is suspected
+% to be a typo: does the level difference agree with 1.8 or 2.8\,m?). Note that Part 0 was
+% measured \emph{after} the series. State whether the distance test supports free-field conditions over the useful
+% band. Discuss near-field behaviour, directivity and the chamber cutoff where relevant.}
 
 \section{Part 1: Scattering measurement procedure}
 \begin{enumerate}
