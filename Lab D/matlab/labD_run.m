@@ -13,6 +13,11 @@ try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end   % run from th
 
 %% 0b. Check the copy works (no hardware): must print PASS
 test_labD
+% Pressing Run (F5) stops here, so it never fires all the measurements in a
+% row. From here on use Run Section (Ctrl+Enter) on one section at a time.
+% The sections below need the Data Acquisition Toolbox and the NI card,
+% so they only work on the lab PC.
+return
 
 %% 2a1. Tweeter impedance (100 Hz - 24 kHz)
 tag  = 'tweeter';
