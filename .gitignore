@@ -20,3 +20,6 @@ Lab */quiz/
 # course BEM package (106 MB of pre-computed matrices, from BEM_FreeField.zip on DTU Learn)
 Lab B/bem/package/
 Lab B/bem/*.log
+
+# Lab D lab-PC folder as copied off the drive (865 MB of 32 MB .mat files)
+Lab D/raw data/
