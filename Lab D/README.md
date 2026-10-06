@@ -3,7 +3,7 @@
 The measurements from 6-Oct are already in `data/` under tags that the scripts recognise. To get going:
 
 1. `git pull`
-2. In `matlab/labD_dims.m`, fill in `d.cone_diam` (the woofer cone diameter we wrote down, in **metres**). Without it, `analyse_labD` skips S_D, M_MS, Bl and C_MS. The rest of the file is already filled in.
+2. `matlab/labD_dims.m` is already filled in. The cone diameter is the effective diameter D = 211 mm from the woofer data sheet (`datasheets/woofer_ScanSpeak_26W8534G00.jpeg`, Scan-Speak Discovery 26W/8534G00). If you measure it yourself, put the new value in there (in metres).
 3. In MATLAB, `cd` to `Lab D/matlab` and run `r = analyse_labD;`. It covers the free air, the closed box, V_AS, the vents, the near field and the room modes in one go. The plots for the report have to be made separately.
 
 ## What was fixed in the data (and why)
@@ -13,7 +13,7 @@ The measurements from 6-Oct are already in `data/` under tags that the scripts r
   - `nf_cone_L160/L200/L240`
   - `nf_vent_L160/L200/L240`
 - **R:** the measurement was given R_E (3.4 / 4.6 / 5.7) as `'R'` instead of the series resistor, so the saved Z was wrong. Z has been recomputed with **R = 32.9 Ω**.
-- **V_amp = 2 × AI0:** AI0 sat at about +9.4 V DC and only read half the amplifier voltage. We think the amplifier has a bridged output. With the factor 2, |Z| goes to R_E at low frequencies, as it should. This applies to both Z and the near-field H.
+- **V_amp = 2 × AI0:** AI0 sat at about +9.4 V DC and only read half the amplifier voltage. We think the amplifier has a bridged output. With the factor 2, |Z| goes to R_E at low frequencies, as it should, and the free-air peak lands on the data sheet's Z_o = 117 Ω. This applies to both Z and the near-field H.
 
 ## Files
 

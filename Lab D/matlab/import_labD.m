@@ -10,7 +10,7 @@ function import_labD()
 %     specn with the resistor actually used, R = 32.9 ohm.
 %   - AI0 (V_amp) reads half the amplifier voltage on top of a ~9.4 V DC
 %     offset (one leg of a bridged output, presumably). With V_amp = 2*AI0
-%     |Z| settles on R_E at low frequency for all three drivers, so k = 2 is
+%     |Z| settles on R_E at low frequency for all three drivers and the free-air peak matches the data sheet (117 ohm), so k = 2 is
 %     applied to both Z and the near-field H.
 %
 %   Each output file keeps fn, specn, the metadata and the corrected Z or H,

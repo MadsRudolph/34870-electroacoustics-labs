@@ -12,7 +12,7 @@ d.RE_tweeter  = 3.4;
 d.R_series    = 32.9;             % the resistor used (33.3 and 33.1 were the other two)
 
 % woofer cone: diameter across the cone plus half the surround on each side
-d.cone_diam   = NaN;              % TODO: written down on the day, fill in
+d.cone_diam   = 0.211;            % effective diaphragm diameter D, Scan-Speak 26W/8534G00 data sheet (S_D = 350 cm^2)
 
 % woofer box, INNER dimensions, no filling
 d.box_inner   = [0.435 0.45 0.45];  % width, height, depth (88.1 L)
