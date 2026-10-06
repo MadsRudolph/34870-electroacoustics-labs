@@ -6,6 +6,11 @@ The measurements from 6-Oct are already in `data/` under tags that the scripts r
 2. `matlab/labD_dims.m` is already filled in. The cone diameter is the effective diameter D = 211 mm from the woofer data sheet (`datasheets/woofer_ScanSpeak_26W8534G00.pdf`, Scan-Speak Discovery 26W/8534G00). If you measure it yourself, put the new value in there (in metres).
 3. In MATLAB, `cd` to `Lab D/matlab` and run `r = analyse_labD;`. It covers the free air, the closed box, V_AS, the vents, the near field and the room modes in one go. The plots for the report have to be made separately.
 
+## The setup (System D)
+
+- **Midrange + tweeter:** a DALI 2-way bookshelf speaker with its port kept closed. The model was not noted; it is probably a **DALI Concept 1 or 2** (25 mm soft-dome tweeter, 5" or 6½" bass/mid, 3 kHz crossover, 8 Ω nominal). DALI never published driver datasheets, so our measured impedances (`tweeter`, `midrange`) are the driver data.
+- **Woofer:** Scan-Speak Discovery 26W/8534G00 (data sheet in `datasheets/`), in the large box with exchangeable vent tubes and removable filling. The box has two vents; we used one.
+
 ## What was fixed in the data (and why)
 
 - **Tags:** in the lab we reused `vent_L1`, `nf_cone_L1` and so on for every tube length. `import_labD.m` renamed every run based on the note saved in the file:
