@@ -1,6 +1,6 @@
 # Lab E: loudspeaker response in free field
 
-**Slot:** Tue 20 Oct 10:00, rooms 028/025 (b.354), System D. The quiz covers Lab D and Lab E and is due Mon 26 Oct.
+**Slot:** Tue 20 Oct 08:30, rooms 028/025 (b.354), System D. The quiz covers Lab D and Lab E and is due Mon 26 Oct.
 
 ## On the lab PC
 
