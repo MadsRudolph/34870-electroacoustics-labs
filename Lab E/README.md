@@ -28,3 +28,11 @@ For part 2, start on the **woofer** and switch to the **midrange** during the fi
 - `matlab/measure_labE.m` is the wrapper around the course routine. It saves `fn`, `specn`, `f`, `spec`, `ch`, `H = p/V` for each unit, the settings and a timestamp.
 - `matlab/course/` holds the course files from DTU Learn: `meas_mag_spec2_SoundCard_LabE.m`, `diffrac.m`, `phaseunwrap.m` and the UMIK correction files.
 - Note that the routine reads `beeps.wav` while the file is called `Beeps.wav`. That's fine on Windows, but on Linux the name must match.
+
+## Reference report
+
+`report/LabE_reference.tex` (→ `LabE_reference.pdf`) is a **reference version for checking**, not
+the hand-in: a complete worked write-up of our data to compare the group's own report and plots
+against. Its figures live in `report/reference_figures/`, separate from `figures/`, which is left
+for the group's own plots. In Overleaf set the main document to `Lab E/report/LabE_reference.tex`
+to compile it.
