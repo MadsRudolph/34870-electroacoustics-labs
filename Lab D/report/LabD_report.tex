@@ -173,7 +173,7 @@ The box volume is calculated from the equivalent volume $V_{AB}$. In this case, 
     \begin{tabular}{c|c|c|c}
          & 0.16m & 0.20m & 0.24m \\
          \hline
-        Measured & 24.1 & 22.3 & 20.9\\
+        Measured: Impedance & 24.1 & 22.3 & 20.9\\
         \hline
         Calculated & 26.5 & 23.7 & 21.6\\
         \hline
@@ -184,18 +184,20 @@ The box volume is calculated from the equivalent volume $V_{AB}$. In this case, 
     \label{tab:ventf}
 \end{table}
 
-The vent resonant frequencies are measured by finding the minima between the two resonance peaks. They are also calculated analytically with the equation:
+The vent resonant frequencies are measured by finding the minima between the two resonance peaks. The vent creates an outlet which air can escape from. The air in this vent acts as an acoustic mass with the air trapped in the box acting like an acoustic spring. Thus, when the cone is driven at the resonance frequency of the vent, the vent dominates the air movement, and decreases the movement of the cone. With the cone's decreased movement, the it's electrical resistance is also decreased. Thus, a dip in impedance corresponds to the vent's resonance frequency, as shown in Figure \ref{fig:Impedance_Full}.\\
+
+Vent resonance frequencies are also calculated analytically with the equation:
 
 \begin{equation}
     f_b = \frac{c}{2 \pi} \sqrt{\frac{S}{V_{AB} L}}
     \label{eq:ventfrequency}
 \end{equation}
 
-for three different vent lengths $L$. These results are shown in Table \ref{tab:ventf}. While there is a 1-2dB difference between the measured and calculated resonance frequencies, the trend towards lower resonant frequencies with larger vent length is followed by both.
+for three different vent lengths $L = 0.16m,\ 0.20m$, and $0.24m$. These results are shown in Table \ref{tab:ventf}. While there is a 1-2dB difference between the measured and calculated resonance frequencies, the trend towards lower resonant frequencies with larger vent length is followed by both.
 
-\section{Part 3: Near Field responses of the woofer unit and the vent}
+\section{Part 3: Near field responses of the woofer unit and the vent}
 
-Anechoic conditions are hard to fulfill below 100Hz in anechoic chambers. Therefore, near field techniques can be used at low frequencies, where the radiation impedance is dominated by the mass of air, $M_{A1}$. It follows that the sound pressure in front of the diaphragm is:
+ The sound pressure in front of the cone and vent can also be used to identify the vent resonance frequency $f_b$. Because anechoic conditions are hard to fulfill below 100Hz in anechoic chambers, near field techniques for determining sound pressure can be used at low frequencies, where the radiation impedance is dominated by the mass of air, $M_{A1}$. It follows that the sound pressure in front of the diaphragm is:
 
 \begin{align}
     p_{near} = j \omega M_{A1} U\\
@@ -213,9 +215,7 @@ Thus, the near field pressure is a scaled up version of the frequency response a
     \label{fig:NF_TF}
 \end{figure}
 
-The near field sound pressure response for each of the three tube lengths are found in Figure \ref{fig:NF_TF}. The $f_b$ is then determined by finding the peak at the vent. This peak is not the traditional sharp peak, but a very smoothed curve due to noise, a non-anechoic room, and imprecision in setting up the microphone in front of the vent and cone. The frequency at which the sound pressure in front of the vent reaches a maximum should therefore happen at the same frequency at which the sound pressure at the cone reaches a minimum. This is because the vent is at its resonance, and so it dominates the motion of the air, leaving very little air to be expelled from the cone, and most of it at the vent. It is observed that the cone response has a somewhat more pronounced dip than the vent has a peak, and this was used alongside an estimation of the vent response to estimate the vent resonance impedance frequency.\\
-
-It can also be observed that the vent length does show a difference in 
+The near field sound pressure response for each of the three tube lengths are found in Figure \ref{fig:NF_TF}. The $f_b$ is then determined by finding the peak at the vent. This peak is not the traditional sharp peak, but a very smoothed curve due to noise, a non-anechoic room, and imprecision in setting up the microphone in front of the vent and cone. The frequency at which the sound pressure in front of the vent reaches a maximum should therefore happen at the same frequency at which the sound pressure at the cone reaches a minimum. This is because the vent is at its resonance, and so it dominates the motion of the air, leaving little air to be expelled from the cone, and most of it at the vent. It is observed that the cone response has a somewhat more pronounced dip than the vent has a peak, and this was used alongside the estimation of the vent response to estimate the vent resonance frequency. It can also be observed that the vent length does show a difference in resonance frequency, agreeing with the impedance measurements and analytical calculations that increasing vent length shifts $f_b$ to lower frequencies.
 
 
 \section{Results for loudspeaker project}
