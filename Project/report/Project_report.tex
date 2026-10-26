@@ -1,0 +1,74 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,textcomp}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath,amssymb,siunitx,booktabs,graphicx,tabularx,array,enumitem,xcolor,fancyhdr,float}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlength{\headheight}{14pt}
+\renewcommand{\arraystretch}{1.2}
+\renewcommand{\tabularxcolumn}[1]{>{\raggedright\arraybackslash}p{#1}}
+\setlist{nosep,leftmargin=*}
+\newcommand{\file}[1]{\nolinkurl{#1}}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\sisetup{per-mode=symbol}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{34870 Electroacoustics}
+\fancyhead[R]{Loudspeaker project --- System D}
+\fancyfoot[L]{Group 10}
+\fancyfoot[R]{\thepage}
+\graphicspath{{../figures/}{Project/figures/}{../ltspice/}{Project/ltspice/}}
+\begin{document}
+\begin{center}
+{\Large\bfseries Loudspeaker project --- three-way system D}\\[5pt]
+34870 Electroacoustics\\[4pt]
+Group 10: Louis Andrianne, Sophie Kimura, Mads Rudolph\\[4pt]
+System D (shared with Group 4): Scan-Speak 26W/8534G00 woofer box + DALI Spektor 2 (S/N 7446912 -- L)
+\end{center}
+\thispagestyle{fancy}
+
+\section{System and plan}
+\todo{Figure 1 of the guide redrawn for our system: amplifier ch.\,1 $\to$ digital LPF $\to$ woofer;
+ch.\,2 $\to$ digital HPF $\to$ passive LPF/HPF $\to$ midrange/tweeter. Units, box dimensions,
+who does what, and the two crossover frequencies we aim for.}
+
+\section{Task 1: Low-frequency tuning of the woofer box}
+\subsection{Thiele--Small parameters (Lab D)}
+\todo{Table of $f_S$, $Q_{ES}$, $Q_{MS}$, $Q_{TS}$, $V_{AS}$, $R_E$, $L_E$ from Lab D, next to the data sheet.}
+\subsection{LTspice analogy circuit of the box}
+\todo{Circuit (Lectures 7--8), closed vs.\ vented, vent acoustic mass for one/two/no vents, filling.}
+\subsection{Validation against the near-field measurements}
+\todo{Simulated vs.\ measured cone + vent near field for L = 160/200/240 mm.}
+\subsection{Chosen tuning}
+\todo{Bandwidth ($f_3$) and ripple of the chosen non-standard tuning, and why.}
+
+\section{Task 2: Modelling the crossover filters}
+\subsection{Measured data in LTspice}
+\todo{Zi (Lab D) and TF (Lab E) through \file{Matlab2LTspice.m}; distance $d$ used for all units;
+check that LTspice reproduces the measured $|Z|$ and $p/V$ before adding filters.}
+\subsection{Digital crossover woofer--midrange}
+\todo{Cut-off, order, \file{DigitalCrossover.m} strings (note: Butterworth biquads, not Linkwitz--Riley).}
+\subsection{Passive crossover midrange--tweeter}
+\todo{Topology, values from the standard list (Appendix 1), loaded by the real driver impedance,
+level matching of the tweeter, tolerance check.}
+\subsection{Combined system response}
+\todo{Sum of the three outputs (series controlled sources, polarity), on and off axis, iterations.}
+
+\section{Task 3: Implementing the crossovers}
+\subsection{MiniDSP configuration}
+\todo{Outputs 1/2, biquad strings, output gains.}
+\subsection{Passive filter board}
+\todo{Components actually used, photo of the board.}
+\subsection{Anechoic measurement of the complete system}
+\todo{Measured vs.\ simulated system response; what changed between iterations.}
+
+\section{Task 4: Listening test}
+\todo{Procedure (IEC listening room, IEC 60268-13), subjects, programme material, questionnaire,
+results and what we changed afterwards.}
+
+\section{Conclusion}
+\todo{Final design summary for the demonstration on 3 December.}
+
+\end{document}

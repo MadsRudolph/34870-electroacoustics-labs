@@ -1,0 +1,97 @@
+# Loudspeaker project: three-way System D
+
+Design a complete three-way loudspeaker from the units we measured in Lab D and Lab E:
+tune the woofer box at low frequencies, model the crossovers in LTspice with the measured
+data, build them (digital woofer/midrange crossover in the MiniDSP, passive midrange/tweeter
+crossover on a filter board), and validate by listening. The brief is
+`34870_Project_Guide_2026.pdf` on DTU Learn (Project).
+
+**System D** is shared with Group 4 (book lab time together):
+- Woofer box: **Scan-Speak 26W/8534G00** in the 88 L box (0.435 × 0.45 × 0.45 m), two telescopic
+  vents (we measured the Ø 6.5 cm one). Data sheet in `../Lab D/datasheets/`.
+- Mid/tweeter box: **DALI Spektor 2 (S/N 7446912 – L)**, 5¼″ mid + 25 mm soft dome. The box stays closed.
+  (`Lab D/README.md` still guesses "DALI Concept"; the guide's appendix 2 says Spektor 2.)
+
+Group 10: Louis Andrianne, Sophie Kimura, Mads Rudolph.
+
+## Tasks and deadlines
+
+| Task | What | Based on |
+|---|---|---|
+| 1 | Woofer box LF tuning: closed or vented, filling, vent mass (one, two or no vents), LTspice analogy validated against the near field | Lectures 7–8, Lab D |
+| 2 | Crossover models in LTspice: Zi + TF of each unit, digital LPF/HPF (woofer/mid), passive LPF/HPF (mid/tweeter), summed response | Lecture 9, Lab D + E |
+| 3 | Build: MiniDSP biquads + passive board, measure the system in the anechoic room (vents may be covered) | Lecture 9 |
+| 4 | Listening test in the IEC room (booked all of November): procedure, subjects, questionnaire | Lecture 10 |
+| 5 | Project quiz (individual) + demonstration | |
+
+- **Project quiz part 1** (LTspice models + Lab D/E integration): **Sun 8 Nov 2026**
+- **Project quiz part 2** (final results + discussion): **Mon 30 Nov 2026**
+- **Demonstration** of all groups in room 019: **Thu 3 Dec 2026**. Bring the passive board and the digital coefficients; boxes and equipment are there; no formal presentation needed.
+- Passive components: only the standard values in the guide's Appendix 1, no combining parts to get an in-between value.
+
+Like the lab quizzes, the project quiz is individual and must be passed to sit the exam. This
+repo holds the shared work behind it.
+
+## Folders
+
+```
+Project/
+  data/            exported LTspice text files (Zi_*.txt, TF_*.txt) and new measurements
+  matlab/
+    load_systemD.m     loads every Lab D/E file the project needs (see below)
+    course/            course files: DigitalCrossover.m, Matlab2LTspice.m, phaseunwrap.m
+    course/ventedbox/  Lecture 8 ventbox.m (+ QB3, cheby2)
+  ltspice/
+    course/passive/    course example: one unit with Zi + TF, plus the example 2nd-order filter
+    course/digital/    course example: woofer with two cascaded biquad E-sources
+  figures/         plots for the report
+  report/Project_report.tex   write-up skeleton (sections follow tasks 1–4)
+```
+
+## Getting the measured data into LTspice
+
+```matlab
+cd Project/matlab
+S = load_systemD;          % S.Zi.*, S.NF.*, S.TF.f, S.TF.on.*, S.TF.off30.*
+addpath course
+cd ../data
+Matlab2LTspice(S.Zi.midrange.f, S.Zi.midrange.Z, 'Zi_mid', 0);        % impedance: no distance
+Matlab2LTspice(S.TF.f, S.TF.on.midrange, 'TF_mid', 1, -1.15);         % TF: same d for all units
+```
+
+What feeds what:
+
+| Need | File | In `S` |
+|---|---|---|
+| Zi midrange / tweeter (passive filter loads) | `Lab D/data/labD_midrange.mat`, `labD_tweeter.mat` | `S.Zi.midrange`, `S.Zi.tweeter` |
+| Woofer T-S parameters | `labD_woofer_free.mat`, `labD_woofer_closed.mat` (+ `Lab D/matlab/analyse_labD.m`) | `S.Zi.woofer_free/closed` |
+| Woofer in the box with one vent | `labD_vent_L160/L200/L240.mat` | `S.Zi.vent_L*` |
+| Near field cone / vent (validate Task 1) | `labD_nf_cone_L*.mat`, `labD_nf_vent_L*.mat` | `S.NF.cone_L*`, `S.NF.vent_L*` |
+| TF of the three units, 0° and 30° | `Lab E/data/labE_system_0.mat`, `labE_system_30.mat` (`H(:,1:3)` = woofer, mid, tweeter, vent plugged) | `S.TF.on.*`, `S.TF.off30.*` |
+
+Notes on the data:
+- Z already uses the 32.9 Ω series resistor and V_amp = 2·AI0 (see `Lab D/README.md`).
+- The three Lab E units were measured in one run, so their relative phase is valid. `system_60`
+  was not measured, and `labE_system_30_bad.mat` is a rejected run.
+- Matlab2LTspice's distance `d`: `d = -1.15 m` flattens the Lab E phases (the lab convention used in
+  the Lab E reference report). Use the same `d` for every unit, and never on Zi.
+- Each exported file starts with a line naming its source and labels (`BiZin Vspkr …`,
+  `BvTF Pout …`). Rename them per unit (e.g. `Vspkr_mid`, `Pout_mid`), because duplicate
+  names break the simulation.
+- The UMIK channel jumps about 20 dB above 18.4 kHz. Ignore the TF up there.
+
+## Gotchas
+
+- **`DigitalCrossover.m` makes Butterworth biquads, not Linkwitz–Riley.** n = 2 gives Q = 0.707,
+  n = 4 gives Q = 0.541 and 1.307. For an LR4 sum, cascade two n = 2 Butterworth sections at the
+  same f₀ (two E-sources) and check the summed response.
+- **The passive example `.asc` (`ltspice/course/passive/… example filter.asc`) is drawn as a
+  high-pass** even though the guide's Figure 2 calls it a 2nd-order low-pass. Check the topology
+  before you copy it.
+- **Lecture 9, slide 10:** the 10.06 µF in the worked example should be **10.61 µF**.
+- `ventedbox/cheby2.m` shadows the Signal Processing Toolbox `cheby2`. Only add that folder to the
+  path when you run `ventbox`.
+- Keep the LTspice Y range under about 100 dB, or every curve looks flat.
+- The tweeter is about 9 dB more sensitive than the midrange (Lab E), so the passive HPF needs an
+  L-pad or a level compromise. Its resonance is about 1.45 kHz (Lab D), so keep the
+  mid/tweeter crossover well above it (around 2.5–3 kHz).

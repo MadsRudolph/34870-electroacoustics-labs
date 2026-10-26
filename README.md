@@ -12,6 +12,7 @@ Overleaf or locally.
 | C | Microphone calibration | 21–29 Sep | 5 Oct |
 | D | Loudspeaker enclosures | 5–20 Oct | 26 Oct |
 | E | Loudspeaker response | 5–20 Oct | 26 Oct |
+| Project | Three-way loudspeaker, System D (`Project/`) | 26 Oct – 3 Dec | part 1: 8 Nov, part 2: 30 Nov |
 
 Quizzes are answered individually; this repo is for the shared work behind them.
 
