@@ -132,7 +132,7 @@ The design lives in `design/design.json`. Crossover Studio exports the same form
 file), so a design found by playing in the app can be pasted there and pushed through the Python and
 LTspice pipeline.
 
-**Crossover Studio** (`app/`) is the whole model in a browser page: box tuning, MiniDSP filters,
+**Crossover Studio** (`app/`) is the whole model in a browser page. It opens on a System view: a 3D model of the two boxes whose cones and vent air move with the real amplitude and phase at a probe frequency, a live signal-chain diagram (click a part to edit it), per-unit levels and phase dials, and a Checks list. Box tuning, MiniDSP filters,
 Appendix 1 passive parts, polarity and levels, with the response, phase/summing, amplifier load,
 filter and woofer-box views updating as you change anything. It has an optimiser, a tolerance band, a
 pinned reference curve for A/B comparison, and export of the MiniDSP text, the LTspice strings, the
