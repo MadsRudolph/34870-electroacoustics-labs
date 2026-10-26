@@ -36,9 +36,13 @@ repo holds the shared work behind it.
 
 ```
 Project/
-  data/            exported LTspice text files (Zi_*.txt, TF_*.txt) and new measurements
+  data/            LTspice text files Zi_{mid,tw}.txt, TF_{woof,mid,tw}.txt, TF30_*.txt
+                   (export_systemD.m), csv/ = the same data as f,re,im for scripts
+  ltspice/units/   Unit_woof/mid/tw.asc: one unit with our measured data, no filter
+  ltspice/System_template.asc   Figure 1 wired up, filter slots empty (gen_templates.py)
   matlab/
     load_systemD.m     loads every Lab D/E file the project needs (see below)
+    export_systemD.m   writes data/ from it
     course/            course files: DigitalCrossover.m, Matlab2LTspice.m, phaseunwrap.m
     course/ventedbox/  Lecture 8 ventbox.m (+ QB3, cheby2)
   ltspice/
@@ -47,6 +51,18 @@ Project/
   figures/         plots for the report
   report/Project_report.tex   write-up skeleton (sections follow tasks 1–4)
 ```
+
+## Start here
+
+1. Work plan: `report/Project_todo.tex` (PDF next to it). It goes through the guide task by task,
+   with a tick box and a name on every step.
+2. The measured data is already exported for LTspice in `data/` (run `matlab -batch export_systemD`
+   in `matlab/` to redo it, e.g. with another distance `d`).
+3. Open `ltspice/units/Unit_mid.asc` (or `_tw`, `_woof`) and run it: that is each unit with our
+   own Zi and TF, no filter. `ltspice/System_template.asc` is the whole of Figure 1 wired up with
+   empty filter slots.
+4. `python3 ltspice/gen_templates.py --verify` regenerates those files and checks them against
+   the measurements in LTspice (needs LTspice under wine, as for the labs).
 
 ## Getting the measured data into LTspice
 

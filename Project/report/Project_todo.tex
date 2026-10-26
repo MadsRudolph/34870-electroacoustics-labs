@@ -1,0 +1,242 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,textcomp}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath,amssymb,siunitx,booktabs,tabularx,array,enumitem,xcolor,fancyhdr,pifont}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlength{\headheight}{14pt}
+\renewcommand{\arraystretch}{1.2}
+\renewcommand{\tabularxcolumn}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\file}[1]{\nolinkurl{#1}}
+\newcommand{\who}{\textcolor{gray}{[who: \rule{1.6cm}{0.4pt}]}}
+\newcommand{\out}[1]{\par\hspace*{1.2em}\textit{Output:} #1}
+\newcommand{\chk}[1]{\par\hspace*{1.2em}\textit{Check:} #1}
+\newlist{todo}{itemize}{2}
+\setlist[todo]{label=$\square$,leftmargin=1.6em,itemsep=5pt}
+\sisetup{per-mode=symbol}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{34870 Electroacoustics}
+\fancyhead[R]{Loudspeaker project --- work plan}
+\fancyfoot[L]{Group 10}
+\fancyfoot[R]{\thepage}
+
+\begin{document}
+\begin{center}
+{\Large\bfseries Loudspeaker project, System D: work plan}\\[5pt]
+Group 10: Louis Andrianne, Sophie Kimura, Mads Rudolph\\[3pt]
+Based on \file{34870_Project_Guide_2026.pdf}. Tick the boxes as we go, and put a name on each step.
+\end{center}
+
+\section*{How to use this}
+The project follows the guide's five tasks. Each step below says what goes in (which file we
+already have), what we do with it, what comes out, and how we check it before moving on. Do the
+steps in order inside a task; Tasks~1 and~2 can run in parallel. Every result that ends up in
+the quiz or the report gets a figure in \file{Project/figures/} and a line in
+\file{Project/report/Project_report.tex}.
+
+\begin{center}
+\begin{tabularx}{\linewidth}{lX}
+\toprule
+Date & Milestone \\
+\midrule
+\textbf{Sun 8 Nov} & Project quiz part 1: LTspice models and the Lab D/E data in them (Tasks 1 and 2) \\
+November & IEC listening room booked for all of November (Task 4) \\
+\textbf{Mon 30 Nov} & Project quiz part 2: final results and discussion \\
+\textbf{Thu 3 Dec} & Demonstration in room 019: bring the passive board and the DSP coefficients \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section*{What we already have}
+\begin{tabularx}{\linewidth}{lX}
+\toprule
+Data & File (labs repo) \\
+\midrule
+Woofer impedance, free air and closed box & \file{Lab D/data/labD_woofer_free.mat}, \file{labD_woofer_closed.mat} \\
+Woofer impedance, one vent at 160/200/240 mm & \file{Lab D/data/labD_vent_L160/L200/L240.mat} \\
+Near field of cone and vent, each length & \file{Lab D/data/labD_nf_cone_L*.mat}, \file{labD_nf_vent_L*.mat} \\
+Midrange and tweeter impedance $Z_i$ & \file{Lab D/data/labD_midrange.mat}, \file{labD_tweeter.mat} \\
+Anechoic $p/V$ of all three units, $0^\circ$ and $30^\circ$ & \file{Lab E/data/labE_system_0.mat}, \file{labE_system_30.mat} \\
+Woofer data sheet & \file{Lab D/datasheets/} \\
+Course tools & \file{Project/matlab/course/} (\file{Matlab2LTspice.m}, \file{DigitalCrossover.m}, \file{ventbox}) \\
+Course LTspice examples & \file{Project/ltspice/course/passive/}, \file{digital/} \\
+One loader for all of it & \file{Project/matlab/load_systemD.m} \\
+\midrule
+\multicolumn{2}{l}{\textbf{Ready to use (made from the data above)}} \\
+LTspice data files, names already unique & \file{Project/data/Zi_mid.txt}, \file{Zi_tw.txt}, \file{TF_\{woof,mid,tw\}.txt},
+  \file{TF30_*.txt} (made by \file{matlab/export_systemD.m}, $d = \SI{-1.15}{m}$) \\
+The same data as CSV (Python, Excel) & \file{Project/data/csv/} \\
+One test schematic per unit & \file{Project/ltspice/units/Unit_woof.asc}, \file{Unit_mid.asc}, \file{Unit_tw.asc} \\
+Empty system skeleton (Figure~1) & \file{Project/ltspice/System_template.asc} \\
+\bottomrule
+\end{tabularx}
+
+The unit and system files are written by \file{Project/ltspice/gen_templates.py};
+\file{python3 gen_templates.py --verify} runs LTspice and confirms each unit reproduces the
+measured $Z_i$ and $p/V$ (to \SI{0.04}{dB}). Open them in LTspice straight from the repo:
+the \file{.inc} paths are relative.
+
+Known problems with the data (see \file{Project/README.md}): $Z$ already uses $R = \SI{32.9}{\ohm}$
+and $V_\text{amp} = 2\cdot\text{AI0}$; temperature was not recorded (assume \SI{20}{\celsius});
+the UMIK channel is unusable above \SI{18.4}{kHz}; \file{labE_system_30_bad.mat} is rejected;
+the woofer TF in Lab E was taken with the vent plugged.
+
+\section*{Task 0: Before we start}
+\begin{todo}
+\item Agree who owns which task, and book lab time with Group 4 (we share System D). \who
+\item Measure what we never wrote down, next time we are at the box: inner diameter of
+  \emph{both} vents, how the telescopic length is defined (and its min/max), whether there was
+  filling in the box during the Lab D runs, and the room temperature. \who
+  \chk{Task 1 needs the second vent's diameter to model ``two vents''. Without it we can only
+  model the one we measured.}
+\item Everyone runs \file{S = load_systemD} in MATLAB once, so we know the data loads on every PC. \who
+\end{todo}
+
+\section*{Task 1: Low-frequency tuning of the woofer box}
+Lectures 7 and 8, Lab D. Goal: choose closed or vented, the vent mass (none, one, two vents) and
+filling, from an LTspice analogy that has been validated against our near-field measurements.
+
+\subsection*{1.1 Thiele--Small parameters}
+\begin{todo}
+\item Run \file{Lab D/matlab/analyse_labD.m} and copy $f_S$, $Q_{MS}$, $Q_{ES}$, $Q_{TS}$,
+  $V_{AS}$, $R_E$ into a table next to the data-sheet values. \who
+  \out{T-S table for the report (section 2.1).}
+  \chk{$f_c/f_S$ should equal $Q_{TC}/Q_{TS}$ (the script prints both). Explain why our
+  $V_{AS}$ differs from the data sheet.}
+\item Derive the circuit elements $M_{MS}$, $C_{MS}$, $R_{MS}$, $Bl$ from them ($S_D$ from the
+  data sheet), and decide how much of $M_{MS}$ is air load (Lecture 7: $M_{MD} = M_{MS} - $ air
+  mass). \who
+\end{todo}
+
+\subsection*{1.2 LTspice analogy circuit}
+\begin{todo}
+\item Draw the woofer-in-box circuit in LTspice (Lecture 7 slide 27 / Lecture 8): electrical,
+  mechanical and acoustical domain, front radiation impedance, box compliance $C_{AB}$. Start
+  from the closed box. \who
+  \chk{Simulated $|Z_E|$ against \file{labD_woofer_closed.mat}: same peak frequency and height.}
+\item Add the vent: acoustic mass $M_{AP} = \rho(L + \Delta L)/S_P$ in parallel with $C_{AB}$,
+  plus a leak/loss resistance. Write down which end correction we use and why. \who
+  \chk{Simulated $|Z_E|$ against \file{labD_vent_L160/200/240.mat}: both peaks and the minimum
+  between them ($\approx f_B$). If the formula does not move $f_B$ the way the measurement does,
+  write that down; it tells us something about the vent geometry.}
+\item Add outputs: far-field pressure $\propto j\omega(U_D - U_P)$ and the near-field pressures
+  of cone and vent ($\propto j\omega U/a$). \who
+\end{todo}
+
+\subsection*{1.3 Validation against the near field}
+\begin{todo}
+\item Plot simulated against measured near field (cone and vent) for each vent length, using
+  \file{labD_nf_*}. \who
+  \out{One figure per length, or one figure with three panels.}
+  \chk{Cone notch at $f_B$, vent peak around $f_B$, crossing point of the two curves. Explain any
+  offset (mic position, room modes below \SI{120}{Hz}, the vent mic picking up the cone above
+  $\approx$\SI{60}{Hz}).}
+\end{todo}
+
+\subsection*{1.4 Choose the tuning}
+\begin{todo}
+\item With the validated circuit, step through the options the guide allows: closed; one vent at
+  different lengths; two vents in parallel ($M_{AP,1} \parallel M_{AP,2}$); filling (larger
+  effective volume, more damping). \who
+\item For each one, read off $f_3$ and the ripple of the low-frequency response. \who
+  \out{A table option $\to$ $f_B$, $f_3$, ripple, and one overlay plot.}
+\item Pick one and argue for it (bandwidth against ripple, cone excursion near $f_B$, what the
+  standard alignments in Lecture 8 would ask for, and why we cannot reach them). \who
+\end{todo}
+
+\section*{Task 2: Modelling the crossover filters}
+Lecture 9, Lab D and Lab E.
+
+\subsection*{2.1 Measured data into LTspice}
+\begin{todo}
+\item Read \file{matlab/export_systemD.m} and understand what it does: it calls
+  \file{Matlab2LTspice.m} for $Z_i$ of midrange and tweeter (no distance) and the TF of all three
+  units (same $d$ for all), then renames the first line of each file (\file{Vspkr_mid},
+  \file{Pout_mid}, \dots) because duplicate names break the simulation. Try another $d$ if the
+  phase is hard to read, and re-run it. \who
+\item Open \file{ltspice/units/Unit_mid.asc}, \file{Unit_tw.asc}, \file{Unit_woof.asc} and run
+  them. \who
+  \chk{LTspice $|Z|$ and phase equal Lab D; \file{V(Pout_*)} equals Lab E's $p/V$ (the script
+  checks this, but look at the plots yourselves and put one in the report).}
+\item Note: the course's \file{...and example filter.asc} is drawn as a \textbf{high-pass}
+  (C in series, L to ground) although the guide's Figure~2 calls it a low-pass. \who
+\end{todo}
+
+\subsection*{2.2 Choose the two crossover frequencies}
+\begin{todo}
+\item Overlay the three measured responses (Lab E, $0^\circ$ and $30^\circ$) and the impedances. \who
+\item Woofer--midrange: where both are still smooth, and where the woofer has not started to
+  beam (compare $0^\circ$ and $30^\circ$). \who
+\item Midrange--tweeter: well above the tweeter resonance (Lab D), and where the midrange still
+  behaves off axis. Note the level difference between the two units. \who
+  \out{Two frequencies with one line of justification each.}
+\end{todo}
+
+\subsection*{2.3 Digital crossover (woofer / mid-high)}
+\begin{todo}
+\item Run \file{DigitalCrossover.m} for the LPF and the HPF at our frequency; decide the order. \who
+  \chk{The function makes Butterworth sections ($n=4$ gives $Q = 0.541$ and $1.307$). If we
+  want Linkwitz--Riley, cascade two $n=2$ sections at the same $f_0$, and say so in the report.}
+\item Paste the Laplace strings into the E sources of \file{ltspice/course/digital/}, woofer branch
+  first, and check the filter on its own. \who
+\end{todo}
+
+\subsection*{2.4 Passive crossover (midrange / tweeter)}
+\begin{todo}
+\item Choose topology and order; compute the values for the nominal impedance. \who
+\item Round to the standard values in Appendix 1 (no combining components). \who
+\item Simulate each filter loaded with a resistor, then with the real $Z_i$, and compare. \who
+  \chk{Does the driver impedance shift the corner? Add a Zobel or a series resistor if it does.}
+\item Match the tweeter level to the midrange (L-pad or series resistor). \who
+\item Tolerance check: step the component values by their tolerance and look at the sum. \who
+\end{todo}
+
+\subsection*{2.5 Complete system}
+\begin{todo}
+\item Start from \file{ltspice/System_template.asc}: it is Figure~1 already wired, with gain-1
+  biquad slots and plain wires where the passive filters go. Then wire all three units as in the guide's Figure 1 (digital LPF $\to$ woofer; digital HPF
+  $\to$ passive LPF/HPF $\to$ mid/tweeter), and sum the three outputs with series controlled
+  sources. Try polarity $\pm1$ per unit. \who
+\item Add the woofer/mid level difference as a gain (this becomes the DSP output gain). \who
+\item Iterate (frequencies, orders, polarity, levels) until the on-axis sum is flat and the
+  $30^\circ$ sum is reasonable. Keep a log of each iteration and why it changed. \who
+  \out{Final LTspice schematic, on-axis and $30^\circ$ sum, iteration log.}
+\end{todo}
+
+\subsection*{Quiz part 1 (Sun 8 Nov)}
+\begin{todo}
+\item Everyone answers individually, but compare figures beforehand: T-S table, validated box
+  circuit, near-field comparison, LTspice $Z_i$/TF checks, first full-system sum. \who
+\end{todo}
+
+\section*{Task 3: Implementing the crossovers}
+\begin{todo}
+\item MiniDSP: paste the \file{biquad_DSP} strings into Xover of outputs 1 and 2 (everything
+  else bypassed); set the output gains from 2.5. \who
+\item Passive board: mount our standard values; photograph it; note which parts we used. \who
+\item Anechoic measurement of the complete system (vents may be covered), on and off axis. \who
+  \chk{Measured against simulated. Explain the differences and decide if another iteration of
+  Task 2 is needed.}
+\end{todo}
+
+\section*{Task 4: Listening test (IEC room, November)}
+\begin{todo}
+\item Read Lecture 10 (and Bech \& Zacharov if needed) and write a short procedure: what we
+  compare, in what order, how long, listening position, level. \who
+\item Choose the programme material (a few tracks with clear bass, voice, cymbals). \who
+\item Write the questionnaire (fixed attributes and scale), and find subjects. \who
+\item Run the test, collect the answers, summarise them, and decide what to change. \who
+\end{todo}
+
+\section*{Task 5: Quiz part 2 and demonstration}
+\begin{todo}
+\item Final results and discussion in quiz part 2 (Mon 30 Nov), individually. \who
+\item Demonstration Thu 3 Dec: passive board and DSP coefficients ready, plus the plots we
+  want to show. \who
+\item Fill in \file{Project_report.tex} section by section as each task finishes. \who
+\end{todo}
+
+\end{document}
