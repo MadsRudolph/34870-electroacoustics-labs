@@ -111,3 +111,31 @@ Notes on the data:
 - The tweeter is about 9 dB more sensitive than the midrange (Lab E), so the passive HPF needs an
   L-pad or a level compromise. Its resonance is about 1.45 kHz (Lab D), so keep the
   mid/tweeter crossover well above it (around 2.5–3 kHz).
+
+## Solution branch (`project-solution`)
+
+This branch carries a complete first design, every step documented in
+`report/Project_report.tex` (the numbers in it are written by the scripts below, so rerunning them
+updates the report). `main` keeps only the ready-to-use files, so the group can still work through
+`report/Project_todo.tex` on its own and compare.
+
+| Step | Run (from `Project/`) | Writes |
+|---|---|---|
+| Task 1: fit the woofer box to Lab D, tuning table | `python3 ltspice/task1/box_model.py --plots` | `figures/task1_*.png`, `report/results_task1.tex` |
+| Task 1 in LTspice (plugged + 3 vent lengths, `.step`) | `python3 ltspice/task1/gen_box_ltspice.py --verify` | `ltspice/task1/Task1_WooferBox.asc` |
+| Task 2: evaluate / re-optimise the crossover | `python3 design/xover.py [--optimise] --plots --export` | `design/design.json`, `figures/xover_*.png`, `data/dsp/`, `report/results_design.tex` |
+| Task 2 in LTspice (whole system, verified against xover.py) | `python3 ltspice/gen_system.py --verify` | `ltspice/System_D_design.asc`, `data/Box_woof.txt` |
+| Crossover Studio (interactive app) | `python3 app/build_app.py --test` | `app/index.html` |
+| Report | `cd report && tectonic Project_report.tex` | `report/Project_report.pdf` |
+
+The design lives in `design/design.json`. Crossover Studio exports the same format (Export → Design
+file), so a design found by playing in the app can be pasted there and pushed through the Python and
+LTspice pipeline.
+
+**Crossover Studio** (`app/`) is the whole model in a browser page: box tuning, MiniDSP filters,
+Appendix 1 passive parts, polarity and levels, with the response, phase/summing, amplifier load,
+filter and woofer-box views updating as you change anything. It has an optimiser, a tolerance band, a
+pinned reference curve for A/B comparison, and export of the MiniDSP text, the LTspice strings, the
+parts list and the design file. `engine.js` is a port of `xover.py` and `box_model.py`;
+`test_engine.mjs` checks it against them (`build_app.py --test`). Open `app/index.html` directly in a
+browser; nothing needs installing.

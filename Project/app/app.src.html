@@ -1,0 +1,656 @@
+<title>Crossover Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an instrument rack. Control rail on the left, the analyser screen on the right,
+   a status strip of readings across the top, like the front panel of a level recorder. */
+:root {
+  --paper: #eef0ea;      /* chart-recorder paper, slightly green */
+  --panel: #f8f9f5;
+  --sunk: #e3e7df;
+  --ink: #1b2226;
+  --muted: #5d6a65;
+  --rule: #cfd7cf;
+  --grid: #d9e0d7;
+  --accent: #b4362f;     /* recorder pen red: active controls */
+  --accent-ink: #ffffff;
+  --woof: #2c5fa8;
+  --mid: #c26c14;
+  --tw: #2b8653;
+  --sum: #1b2226;
+  --ref: #8a8f99;
+  --good: #2b8653;
+  --warn: #b7791f;
+  --bad: #b4362f;
+  --band: rgba(27, 34, 38, 0.07);
+  --font-display: "Barlow Semi Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --font-body: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #111518; --panel: #192024; --sunk: #0d1113; --ink: #e3e8e2; --muted: #93a09a; --rule: #2a3439; --grid: #222c31;
+    --accent: #e06a5e; --accent-ink: #160c0b; --woof: #72a0e6; --mid: #eca355; --tw: #5fc38d; --sum: #eef2ec; --ref: #8b919b;
+    --good: #5fc38d; --warn: #e2b04f; --bad: #e06a5e; --band: rgba(238, 242, 236, 0.07); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #111518; --panel: #192024; --sunk: #0d1113; --ink: #e3e8e2; --muted: #93a09a; --rule: #2a3439; --grid: #222c31;
+  --accent: #e06a5e; --accent-ink: #160c0b; --woof: #72a0e6; --mid: #eca355; --tw: #5fc38d; --sum: #eef2ec; --ref: #8b919b;
+  --good: #5fc38d; --warn: #e2b04f; --bad: #e06a5e; --band: rgba(238, 242, 236, 0.07); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); font: 15px/1.45 var(--font-body); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel); }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- top strip */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--panel); border-bottom: 1px solid var(--rule);
+       padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+       display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.brand h1 { margin: 0; font: 700 22px/1 var(--font-display); letter-spacing: 0.06em; text-transform: uppercase; }
+.brand h1 b { color: var(--accent); font-weight: 700; }
+.brand span { font: 500 12px var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.readings { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 420px; }
+.rd { display: flex; flex-direction: column; padding: 3px 10px 4px; border-left: 3px solid var(--rule); min-width: 92px; }
+.rd[data-state="good"] { border-color: var(--good); }
+.rd[data-state="warn"] { border-color: var(--warn); }
+.rd[data-state="bad"] { border-color: var(--bad); }
+.rd small { font: 600 10.5px var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.rd output { font: 500 15px var(--font-mono); font-variant-numeric: tabular-nums; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.btn { border: 1px solid var(--rule); background: var(--panel); border-radius: var(--r); padding: 6px 12px; cursor: pointer;
+       font: 600 13px var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn .prog { display: inline-block; width: 46px; text-align: right; font-family: var(--font-mono); letter-spacing: 0; }
+
+/* ---------- rack */
+.rack { display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 0; min-height: calc(100% - 64px); }
+.rail { border-right: 1px solid var(--rule); background: var(--panel); padding-block: 8px 40px;
+        padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: 16px; }
+.screen { min-width: 0; padding-block: 14px 30px; padding-left: 20px; padding-right: max(16px, env(safe-area-inset-right, 0px));
+          display: flex; flex-direction: column; gap: 12px; }
+@media (max-width: 900px) {
+  .rack { grid-template-columns: minmax(0, 1fr); }
+  .rail { border-right: 0; border-bottom: 1px solid var(--rule); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .screen { padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+}
+
+/* ---------- control modules */
+.mod { border-bottom: 1px solid var(--rule); padding-block: 12px 14px; display: grid; gap: 10px; }
+.mod:last-child { border-bottom: 0; }
+.mod h2 { margin: 0; display: flex; align-items: center; gap: 8px; font: 700 13px var(--font-display); letter-spacing: 0.14em; text-transform: uppercase; }
+.mod h2 i { width: 10px; height: 10px; border-radius: 2px; background: var(--c, var(--muted)); }
+.mod p.note { margin: 0; font-size: 12.5px; color: var(--muted); }
+.row { display: grid; grid-template-columns: 92px minmax(0, 1fr) 76px; align-items: center; gap: 8px; }
+.row > label { font: 600 12px var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.row > output { font: 500 13px var(--font-mono); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: var(--r); overflow: hidden; }
+.seg button { border: 0; background: transparent; padding: 5px 10px; cursor: pointer; font: 600 12.5px var(--font-display); letter-spacing: 0.06em; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.pick { display: grid; grid-template-columns: 28px minmax(0, 1fr) 28px; border: 1px solid var(--rule); border-radius: var(--r); overflow: hidden; }
+.pick button { border: 0; background: var(--sunk); cursor: pointer; font-size: 15px; }
+.pick select { border: 0; background: var(--panel); text-align: center; text-align-last: center; padding: 4px 0; font: 500 13px var(--font-mono); appearance: none; cursor: pointer; }
+.pol { border: 1px solid var(--rule); background: var(--panel); border-radius: var(--r); padding: 3px 0; cursor: pointer; font: 600 13px var(--font-mono); }
+.pol[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tag { display: inline-block; font: 600 10.5px var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; background: var(--sunk); color: var(--muted); }
+.tag.warn { color: var(--warn); }
+
+/* ---------- screen */
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--rule); }
+.tabs button { border: 0; background: none; padding: 8px 12px 9px; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -1px;
+               font: 700 13px var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.tabs button[aria-selected="true"] { color: var(--ink); border-color: var(--accent); }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.legend button { border: 0; background: none; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; padding: 2px 0;
+                 font: 600 12.5px var(--font-display); letter-spacing: 0.06em; }
+.legend button i { width: 18px; height: 3px; border-radius: 2px; background: var(--c); }
+.legend button[aria-pressed="false"] { opacity: 0.35; }
+.chk { display: inline-flex; align-items: center; gap: 6px; font: 600 12.5px var(--font-display); letter-spacing: 0.06em; cursor: pointer; }
+.chk input { accent-color: var(--accent); }
+.scope { position: relative; background: var(--panel); border: 1px solid var(--rule); border-radius: var(--r); }
+.scope canvas { display: block; width: 100%; }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--panel); border-radius: 4px; padding: 6px 8px;
+       font: 12px/1.45 var(--font-mono); white-space: nowrap; font-variant-numeric: tabular-nums; z-index: 2; }
+.tip b { font-weight: 500; }
+.tip i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; background: var(--c); }
+.explain { font-size: 13.5px; color: var(--muted); max-width: 78ch; margin: 0; }
+.explain strong { color: var(--ink); font-weight: 600; }
+
+/* ---------- export sheet */
+.sheet { position: fixed; inset: 0; z-index: 20; background: rgba(10, 14, 16, 0.45); display: grid; place-items: center;
+         padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.sheet > div { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; width: min(860px, 100%); max-height: 100%; overflow: auto;
+               padding: 16px 18px 18px; display: grid; gap: 12px; }
+.sheet h3 { margin: 0; font: 700 16px var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; }
+.sheet .head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sheet pre, .sheet textarea { margin: 0; background: var(--sunk); border: 1px solid var(--rule); border-radius: var(--r); padding: 10px 12px;
+                              font: 12.5px/1.5 var(--font-mono); overflow: auto; max-height: 300px; white-space: pre; width: 100%; }
+.sheet textarea { min-height: 160px; resize: vertical; }
+.sheet .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.sheet .msg { font-size: 13px; color: var(--muted); }
+table.bom { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+table.bom th, table.bom td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--rule); }
+table.bom th { font: 600 11.5px var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+table.bom td.v { font-family: var(--font-mono); }
+@media (prefers-reduced-motion: no-preference) { .btn, .seg button, .tabs button { transition: background-color 0.15s, color 0.15s, border-color 0.15s; } }
+</style>
+
+<header class="top">
+  <div class="brand"><h1>Crossover <b>Studio</b></h1><span>System D · 34870 · Group 10</span></div>
+  <div class="readings" id="readings"></div>
+  <div class="actions">
+    <button class="btn" id="undo" title="Undo (Ctrl+Z)">Undo</button>
+    <button class="btn" id="pin" title="Keep the current sum as a dashed reference curve">Pin as reference</button>
+    <button class="btn primary" id="opt" title="Search fc, alignment, levels and every Appendix 1 value for the flattest sum">Optimise</button>
+    <button class="btn" id="exp">Export</button>
+  </div>
+</header>
+
+<div class="rack">
+  <aside class="rail" id="rail"></aside>
+  <main class="screen">
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+    <div class="toolbar" id="toolbar"></div>
+    <div class="scope" id="scopeA"><canvas id="cA" height="420"></canvas><div class="tip" id="tipA" hidden></div></div>
+    <div class="scope" id="scopeB"><canvas id="cB" height="200"></canvas><div class="tip" id="tipB" hidden></div></div>
+    <p class="explain" id="explain"></p>
+  </main>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="head"><h3 id="sheetTitle">Export</h3><button class="btn" id="sheetClose">Close</button></div>
+    <nav class="tabs" id="sheetTabs"></nav>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<script>
+/*@@ENGINE@@*/
+const DATA = /*@@DATA@@*/null;
+const E = makeEngine(DATA);
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "on") for (const [ev, fn] of Object.entries(v)) n.addEventListener(ev, fn);
+    else if (k === "style") n.style.cssText = v;
+    else if (v !== undefined && v !== null && v !== false) n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat()) n.append(k instanceof Node ? k : document.createTextNode(k));
+  return n;
+};
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmtF = x => x >= 1000 ? (x / 1000).toFixed(x >= 10000 ? 1 : 2).replace(/\.?0+$/, "") + " kHz" : x.toFixed(x < 100 ? 1 : 0) + " Hz";
+const fmtV = (kind, v) => v === null || v === 0 || v === undefined ? (kind === "R" ? "none" : "-") :
+  kind === "L" ? `${+(v * 1e3).toFixed(2)} mH` : kind === "C" ? `${+(v * 1e6).toFixed(1)} µF` : `${v} Ω`;
+
+// ======================================================================== state
+const STORE = "crossover-studio-design-v1";
+function initialDesign() {
+  const d = structuredClone(DATA.design);
+  d.box = Object.assign({ mode: "one", L: 0.160, L2: 0.160, a2: 0.050, fill: 1 }, d.box);
+  if (!d.box.mode || d.box.mode === "custom") d.box.mode = "one";
+  d.Rdcr = d.Rdcr || 0; d.tw.pad = d.tw.pad || {};
+  return d;
+}
+let des = initialDesign();
+try { const s = localStorage.getItem(STORE); if (s) des = Object.assign(initialDesign(), JSON.parse(s)); } catch (e) {}
+const undo = [];
+let pinned = null, view = "response", angle = "on", showTol = false, showPower = false, tolCache = null;
+const vis = { woof: true, mid: true, tw: true, sum: true };
+function commit(mut) {
+  undo.push(JSON.stringify(des)); if (undo.length > 100) undo.shift();
+  mut(des); tolCache = null; schedule();
+}
+function save() { try { localStorage.setItem(STORE, JSON.stringify(des)); } catch (e) {} }
+
+// ======================================================================== computation
+let cache = { boxKey: "", box: null, boxCfg: null };
+function compute() {
+  const cfg = E.boxConfig(des.box), key = JSON.stringify(cfg);
+  if (key !== cache.boxKey) { cache.box = E.boxRatio(cfg); cache.boxKey = key; cache.boxCfg = cfg; }
+  des.box.MAP = cfg.MAP; des.box.label = cfg.label;
+  const on = E.evaluate(des, "on", cache.box), off = E.evaluate(des, "off30", cache.box);
+  const m = E.metrics(des, cache.box);
+  return { on, off, m, cfg };
+}
+
+// ======================================================================== rail (controls)
+const STD = DATA.std;
+function seg(opts, cur, onPick) {
+  return el("div", { class: "seg", role: "group" }, opts.map(([v, lab]) =>
+    el("button", { "aria-pressed": String(v === cur), on: { click: () => onPick(v) } }, lab)));
+}
+function slider(id, label, min, max, step, value, fmt, onInput) {
+  const out = el("output", { for: id }, fmt(value));
+  const inp = el("input", { type: "range", id, min, max, step, value, "aria-label": label,
+    on: { input: e => { out.value = fmt(+e.target.value); onInput(+e.target.value, false); },
+          change: e => onInput(+e.target.value, true) } });
+  return el("div", { class: "row" }, el("label", { for: id }, label), inp, out);
+}
+function picker(id, label, kind, list, value, onPick) {
+  const sel = el("select", { id, "aria-label": label, on: { change: e => onPick(list[+e.target.value]) } },
+    list.map((v, i) => { const o = el("option", { value: i }, fmtV(kind, v)); if (v === value) o.selected = true; return o; }));
+  const idx = () => Math.max(0, list.indexOf(value));
+  const step = d => { const i = Math.min(list.length - 1, Math.max(0, idx() + d)); onPick(list[i]); };
+  return el("div", { class: "row" }, el("label", { for: id }, label),
+    el("div", { class: "pick" }, el("button", { "aria-label": `${label} down`, on: { click: () => step(-1) } }, "‹"), sel,
+       el("button", { "aria-label": `${label} up`, on: { click: () => step(1) } }, "›")), el("span"));
+}
+function polButton(unit) {
+  const inv = des.pol[unit] < 0;
+  return el("button", { class: "pol", "aria-pressed": String(inv), title: "Reverse the polarity of this unit",
+    on: { click: () => commit(d => { d.pol[unit] *= -1; }) } }, inv ? "− inverted" : "+ normal");
+}
+function live(mut, final) {
+  // slider drag: update without an undo step on every pixel; one undo step on release
+  if (final) { commit(mut); return; }
+  mut(des); tolCache = null; schedule(false);
+}
+
+function renderRail() {
+  const r = $("#rail"), focusId = document.activeElement?.id;
+  r.replaceChildren();
+  queueMicrotask(() => { if (focusId) document.getElementById(focusId)?.focus({ preventScroll: true }); });
+  const b = des.box;
+  // --- woofer box
+  const box = el("section", { class: "mod", style: "--c: var(--woof)" },
+    el("h2", {}, el("i"), "Woofer box"),
+    seg([["plugged", "Plugged"], ["one", "One vent"], ["two", "Two vents"]], b.mode, v => commit(d => { d.box.mode = v; })));
+  if (b.mode !== "plugged")
+    box.append(slider("boxL", "Vent L", 0.10, 0.30, 0.005, b.L, v => `${(v * 1e3).toFixed(0)} mm`, (v, fin) => live(d => { d.box.L = v; }, fin)));
+  if (b.mode === "two") {
+    box.append(slider("boxL2", "Vent 2 L", 0.08, 0.30, 0.005, b.L2, v => `${(v * 1e3).toFixed(0)} mm`, (v, fin) => live(d => { d.box.L2 = v; }, fin)));
+    box.append(slider("boxA2", "Vent 2 ⌀", 0.03, 0.10, 0.001, b.a2 * 2, v => `${(v * 1e3).toFixed(0)} mm`, (v, fin) => live(d => { d.box.a2 = v / 2; }, fin)));
+    box.append(el("p", { class: "note" }, el("span", { class: "tag warn" }, "estimate"), " The second vent was never measured; its diameter here is a guess until we measure it."));
+  }
+  box.append(slider("boxFill", "Filling", 1, 1.3, 0.01, b.fill ?? 1, v => `V × ${v.toFixed(2)}`, (v, fin) => live(d => { d.box.fill = v; }, fin)));
+  box.append(el("p", { class: "note" }, "Vent mass interpolated from the three lengths measured in Lab D (160/200/240 mm). Filling only enlarges the effective volume; its extra damping is not modelled."));
+  r.append(box);
+  // --- digital
+  const dg = des.digital;
+  r.append(el("section", { class: "mod", style: "--c: var(--ink)" },
+    el("h2", {}, el("i"), "Digital crossover · MiniDSP"),
+    el("div", { class: "row" }, el("label", {}, "Type"), seg([["BW2", "BW2"], ["LR4", "LR4"], ["BW4", "BW4"]], dg.align, v => commit(d => { d.digital.align = v; })), el("span")),
+    slider("fc", "Cut-off", 150, 800, 5, dg.fc, v => fmtF(v), (v, fin) => live(d => { d.digital.fc = v; }, fin)),
+    slider("gw", "Woofer gain", -12, 6, 0.5, dg.g_woof_dB, v => `${v > 0 ? "+" : ""}${v.toFixed(1)} dB`, (v, fin) => live(d => { d.digital.g_woof_dB = v; }, fin)),
+    el("div", { class: "row" }, el("label", {}, "Woofer"), polButton("woof"), el("span"))));
+  // --- midrange
+  const m = des.mid;
+  const mid = el("section", { class: "mod", style: "--c: var(--mid)" },
+    el("h2", {}, el("i"), "Midrange · passive low-pass"),
+    el("div", { class: "row" }, el("label", {}, "Order"), seg([["LP1", "1st"], ["LP2", "2nd"]], m.topo, v => commit(d => {
+      d.mid.topo = v; if (v === "LP2" && !d.mid.vals.C1) d.mid.vals.C1 = 6.8e-6; })), el("span")));
+  for (const [, kind, n] of E.TOPOLOGIES[m.topo])
+    mid.append(picker(`mid${n}`, kind === "L" ? "Series L" : "Shunt C", kind, STD[kind], m.vals[n], v => commit(d => { d.mid.vals[n] = v; })));
+  mid.append(el("div", { class: "row" }, el("label", {}, "Polarity"), polButton("mid"), el("span")));
+  r.append(mid);
+  // --- tweeter
+  const t = des.tw, pad = t.pad || {};
+  const tw = el("section", { class: "mod", style: "--c: var(--tw)" },
+    el("h2", {}, el("i"), "Tweeter · passive high-pass"),
+    el("div", { class: "row" }, el("label", {}, "Order"), seg([["HP2", "2nd"], ["HP3", "3rd"]], t.topo, v => commit(d => {
+      d.tw.topo = v; if (v === "HP3" && !d.tw.vals.C2) d.tw.vals.C2 = 10e-6; })), el("span")));
+  const names = { C1: "Series C", L1: "Shunt L", C2: "Series C2" };
+  for (const [, kind, n] of E.TOPOLOGIES[t.topo])
+    tw.append(picker(`tw${n}`, names[n], kind, STD[kind], t.vals[n], v => commit(d => { d.tw.vals[n] = v; })));
+  tw.append(picker("twRs", "L-pad Rs", "R", [0, ...STD.R], pad.Rs || 0, v => commit(d => { d.tw.pad.Rs = v; })));
+  tw.append(picker("twRp", "L-pad Rp", "R", [null, ...STD.R], pad.Rp || null, v => commit(d => { d.tw.pad.Rp = v; })));
+  tw.append(el("div", { class: "row" }, el("label", {}, "Polarity"), polButton("tw"), el("span")));
+  r.append(tw);
+  // --- parts
+  r.append(el("section", { class: "mod", style: "--c: var(--muted)" },
+    el("h2", {}, el("i"), "Parts"),
+    slider("dcr", "Coil R", 0, 1, 0.05, des.Rdcr || 0, v => `${v.toFixed(2)} Ω/mH`, (v, fin) => live(d => { d.Rdcr = v; }, fin)),
+    el("p", { class: "note" }, "Only the standard values of the guide's Appendix 1 can be picked, one part per position. Coil resistance is unknown for the basket coils; 0.3–0.6 Ω/mH is typical.")));
+}
+
+// ======================================================================== plotting
+const plots = {};
+function setupScope(id, tipId) {
+  const cv = $(id), tip = $(tipId);
+  const st = { cv, tip, cfg: null };
+  plots[id] = st;
+  const ro = new ResizeObserver(() => draw(st)); ro.observe(cv);
+  cv.addEventListener("pointermove", e => hover(st, e));
+  cv.addEventListener("pointerleave", () => { st.hx = null; tip.hidden = true; draw(st); });
+  return st;
+}
+const lx = (st, f) => { const { x0, x1 } = st.box, [a, b] = st.cfg.xr; return x0 + (Math.log10(f) - Math.log10(a)) / (Math.log10(b) - Math.log10(a)) * (x1 - x0); };
+const ly = (st, v) => { const { y0, y1 } = st.box, [a, b] = st.cfg.yr; return y1 - (v - a) / (b - a) * (y1 - y0); };
+function niceTicks(a, b, n = 6) {
+  const span = b - a, raw = span / n, mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map(s => s * mag).find(s => s >= raw);
+  const out = []; for (let v = Math.ceil(a / step) * step; v <= b + 1e-9; v += step) out.push(+v.toFixed(10)); return out;
+}
+function draw(st) {
+  const { cv, cfg } = st; if (!cfg) return;
+  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = +cv.getAttribute("height");
+  cv.style.height = H + "px";
+  if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  st.box = { x0: 54, x1: W - 14, y0: 12, y1: H - 28 };
+  const { x0, x1, y0, y1 } = st.box, ink = css("--ink"), muted = css("--muted"), grid = css("--grid");
+  g.font = `11px ${css("--font-mono")}`; g.textBaseline = "middle";
+  // grid
+  g.strokeStyle = grid; g.lineWidth = 1;
+  const [fa, fb] = cfg.xr;
+  for (let dec = 10 ** Math.floor(Math.log10(fa)); dec <= fb; dec *= 10)
+    for (let k = 1; k < 10; k++) {
+      const fx = dec * k; if (fx < fa || fx > fb) continue;
+      const x = Math.round(lx(st, fx)) + 0.5; g.globalAlpha = k === 1 ? 1 : 0.55;
+      g.beginPath(); g.moveTo(x, y0); g.lineTo(x, y1); g.stroke();
+      if ([1, 2, 5].includes(k)) { g.globalAlpha = 1; g.fillStyle = muted; g.textAlign = "center"; g.fillText(fx >= 1000 ? `${fx / 1000}k` : `${fx}`, x, y1 + 14); }
+    }
+  g.globalAlpha = 1;
+  for (const v of niceTicks(...cfg.yr, cfg.yTicks || 6)) {
+    const y = Math.round(ly(st, v)) + 0.5;
+    g.strokeStyle = grid; g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
+    g.fillStyle = muted; g.textAlign = "right"; g.fillText(cfg.yfmt ? cfg.yfmt(v) : `${v}`, x0 - 6, y);
+  }
+  g.save(); g.translate(12, (y0 + y1) / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+  g.font = `600 11px ${css("--font-display")}`; g.fillStyle = muted; g.fillText(cfg.ylabel, 0, 0); g.restore();
+  g.save(); g.beginPath(); g.rect(x0, y0, x1 - x0, y1 - y0); g.clip();
+  for (const b of cfg.bands || []) {
+    g.fillStyle = b.color; g.beginPath();
+    b.x.forEach((fx, i) => { const X = lx(st, fx), Y = ly(st, b.hi[i]); i ? g.lineTo(X, Y) : g.moveTo(X, Y); });
+    for (let i = b.x.length - 1; i >= 0; i--) g.lineTo(lx(st, b.x[i]), ly(st, b.lo[i]));
+    g.closePath(); g.fill();
+  }
+  for (const h of cfg.hbands || []) { g.fillStyle = h.color; const ya = ly(st, h.hi), yb = ly(st, h.lo); g.fillRect(x0, ya, x1 - x0, yb - ya); }
+  for (const v of cfg.vlines || []) {
+    if (!v.x) continue; const X = Math.round(lx(st, v.x)) + 0.5;
+    g.strokeStyle = muted; g.setLineDash([3, 4]); g.beginPath(); g.moveTo(X, y0); g.lineTo(X, y1); g.stroke(); g.setLineDash([]);
+    g.fillStyle = muted; g.textAlign = "left"; g.font = `11px ${css("--font-mono")}`; g.fillText(v.label, X + 5, y0 + 9);
+  }
+  for (const t of cfg.traces) {
+    if (t.hidden) continue;
+    g.strokeStyle = t.color; g.lineWidth = t.width || 1.6; g.setLineDash(t.dash || []); g.lineJoin = "round";
+    g.beginPath(); let pen = false, prev = null;
+    for (let i = 0; i < t.x.length; i++) {
+      const v = t.y[i]; if (!isFinite(v)) { pen = false; continue; }
+      if (t.wrap && prev !== null && Math.abs(v - prev) > 180) pen = false;
+      const X = lx(st, t.x[i]), Y = ly(st, v); pen ? g.lineTo(X, Y) : g.moveTo(X, Y); pen = true; prev = v;
+    }
+    g.stroke(); g.setLineDash([]);
+  }
+  if (st.hx !== null && st.hx !== undefined) {
+    const X = lx(st, st.hx); g.strokeStyle = ink; g.globalAlpha = 0.5; g.beginPath(); g.moveTo(X, y0); g.lineTo(X, y1); g.stroke(); g.globalAlpha = 1;
+  }
+  g.restore();
+  g.strokeStyle = css("--rule"); g.strokeRect(x0 + 0.5, y0 + 0.5, x1 - x0, y1 - y0);
+}
+function nearest(xs, x) { let lo = 0, hi = xs.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; xs[m] < x ? lo = m : hi = m; } return Math.abs(xs[lo] - x) < Math.abs(xs[hi] - x) ? lo : hi; }
+function hover(st, e) {
+  if (!st.cfg || !st.box) return;
+  const r = st.cv.getBoundingClientRect(), x = e.clientX - r.left, { x0, x1 } = st.box;
+  if (x < x0 || x > x1) { st.hx = null; st.tip.hidden = true; draw(st); return; }
+  const [a, b] = st.cfg.xr, fx = 10 ** (Math.log10(a) + (x - x0) / (x1 - x0) * (Math.log10(b) - Math.log10(a)));
+  st.hx = fx; draw(st);
+  const rows = st.cfg.traces.filter(t => !t.hidden && t.name).map(t => {
+    const i = nearest(t.x, fx); return `<div><i style="--c:${t.color}"></i>${t.name.padEnd(10, " ").replace(/ /g, "&nbsp;")} <b>${(st.cfg.tipfmt || (v => v.toFixed(1)))(t.y[i])}</b></div>`;
+  });
+  st.tip.innerHTML = `<div><b>${fmtF(fx)}</b></div>` + rows.join("");
+  st.tip.hidden = false;
+  const tw = st.tip.offsetWidth, left = x + 14 + tw > r.width ? x - tw - 14 : x + 14;
+  st.tip.style.left = left + "px"; st.tip.style.top = "14px";
+}
+
+// ======================================================================== views
+const f = Array.from(E.f);
+const dbA = z => Array.from(E.dbArr(z));
+const phA = (z, d = -1.15) => Array.from(f, (fx, i) => {
+  // same compensation as Matlab2LTspice: phase + 2 pi f d / c
+  let p = Math.atan2(z.im[i], z.re[i]) + 2 * Math.PI * fx * d / 345;
+  p = Math.atan2(Math.sin(p), Math.cos(p)); return p * 180 / Math.PI;
+});
+const COLORS = () => ({ woof: css("--woof"), mid: css("--mid"), tw: css("--tw"), sum: css("--sum"), ref: css("--ref") });
+const NAMES = { woof: "woofer", mid: "midrange", tw: "tweeter", sum: "sum" };
+const VIEWS = {
+  response: "Response", phase: "Phase & summing", impedance: "Impedance", filters: "Filters", box: "Woofer box",
+};
+
+function renderTabs() {
+  $("#tabs").replaceChildren(...Object.entries(VIEWS).map(([k, lab]) =>
+    el("button", { role: "tab", "aria-selected": String(view === k), on: { click: () => { view = k; try { localStorage.setItem(STORE + "-view", k); } catch (e) {} renderTabs(); schedule(); } } }, lab)));
+}
+function legendButtons(keys) {
+  const C = COLORS();
+  return el("div", { class: "legend" }, keys.map(k => el("button", { "aria-pressed": String(vis[k]), style: `--c:${C[k]}`,
+    on: { click: () => { vis[k] = !vis[k]; schedule(); } } }, el("i"), NAMES[k])));
+}
+function toolbarFor(v) {
+  const tb = $("#toolbar"); tb.replaceChildren();
+  if (v === "response" || v === "phase") {
+    tb.append(seg([["on", "On axis"], ["off30", "30°"], ["both", "Both"]], angle, a => { angle = a; schedule(); }));
+    tb.append(legendButtons(["woof", "mid", "tw", "sum"]));
+  }
+  if (v === "response") {
+    tb.append(el("label", { class: "chk" }, el("input", { type: "checkbox", id: "tol", checked: showTol, on: { change: e => { showTol = e.target.checked; schedule(); } } }), "Tolerance band"));
+    tb.append(el("label", { class: "chk" }, el("input", { type: "checkbox", id: "pw", checked: showPower, on: { change: e => { showPower = e.target.checked; schedule(); } } }), "Power sum"));
+  }
+}
+
+function render() {
+  const R = compute(), C = COLORS(), m = R.m;
+  save();
+  readings(R);
+  toolbarFor(view);
+  const A = plots["#cA"], Bp = plots["#cB"];
+  const level = m.on.level;
+  $("#scopeB").hidden = false; $("#cA").setAttribute("height", 420);
+  if (view === "response") {
+    const sets = angle === "both" ? [["on", R.on, []], ["off30", R.off, [6, 4]]] : [[angle, angle === "on" ? R.on : R.off, []]];
+    const traces = [];
+    for (const [ang, out, dash] of sets) for (const k of ["woof", "mid", "tw", "sum"])
+      traces.push({ x: f, y: dbA(out[k]), color: C[k], width: k === "sum" ? 2.6 : 1.4, dash, hidden: !vis[k], name: `${NAMES[k]}${sets.length > 1 ? (ang === "on" ? " 0°" : " 30°") : ""}` });
+    if (showPower) {
+      const out = sets[0][1];
+      traces.push({ x: f, y: f.map((_, i) => 10 * Math.log10(["woof", "mid", "tw"].reduce((a, u) => a + out[u].re[i] ** 2 + out[u].im[i] ** 2, 0))), color: C.ref, dash: [2, 3], name: "power sum" });
+    }
+    if (pinned) traces.push({ x: f, y: pinned.y, color: C.ref, width: 1.8, dash: [7, 5], name: "reference" });
+    const bands = [];
+    if (showTol) { if (!tolCache) tolCache = E.tolerance(des, cache.box); bands.push({ x: f, lo: Array.from(tolCache.lo), hi: Array.from(tolCache.hi), color: css("--band") }); }
+    A.cfg = { xr: [50, 20000], yr: [level - 30, level + 10], ylabel: "dB re 1 Pa/V", traces, bands,
+              hbands: [{ lo: level - 2, hi: level + 2, color: css("--band") }],
+              vlines: [{ x: m.x_wm, label: fmtF(m.x_wm || 0) }, { x: m.x_mt, label: fmtF(m.x_mt || 0) }] };
+    // lower: the electrical drive at each unit's terminals
+    Bp.cfg = { xr: [50, 20000], yr: [-40, 5], ylabel: "drive (dB)", yTicks: 4, traces: [
+      { x: f, y: dbA(R.on.HL).map(v => v + des.digital.g_woof_dB), color: C.woof, name: "woofer" },
+      { x: f, y: f.map((_, i) => 20 * Math.log10(Math.hypot(R.on.HH.re[i], R.on.HH.im[i]) * Math.hypot(R.on.Tm.re[i], R.on.Tm.im[i]))), color: C.mid, name: "midrange" },
+      { x: f, y: f.map((_, i) => 20 * Math.log10(Math.hypot(R.on.HH.re[i], R.on.HH.im[i]) * Math.hypot(R.on.Tt.re[i], R.on.Tt.im[i]))), color: C.tw, name: "tweeter" }] };
+    $("#explain").innerHTML = `<strong>Top:</strong> each unit's measured anechoic response (Lab E) through its filters, and their complex sum, for 1 V into the MiniDSP. The grey band is ±2 dB around the median from 150 Hz to 15 kHz; dashed lines mark the acoustic crossovers. <strong>Bottom:</strong> the voltage that reaches each driver's terminals. Below about 125 Hz the woofer curve uses the box model, because the chamber cannot measure there.`;
+  } else if (view === "phase") {
+    const out = angle === "off30" ? R.off : R.on;
+    A.cfg = { xr: [100, 20000], yr: [-180, 180], ylabel: "phase (deg)", yTicks: 8, tipfmt: v => `${v.toFixed(0)}°`,
+              traces: ["woof", "mid", "tw", "sum"].map(k => ({ x: f, y: phA(out[k]), color: C[k], width: k === "sum" ? 2.4 : 1.4, wrap: true, hidden: !vis[k], name: NAMES[k] })),
+              vlines: [{ x: m.x_wm, label: fmtF(m.x_wm || 0) }, { x: m.x_mt, label: fmtF(m.x_mt || 0) }] };
+    const diff = f.map((_, i) => 20 * Math.log10(Math.hypot(out.sum.re[i], out.sum.im[i])) - 10 * Math.log10(["woof", "mid", "tw"].reduce((a, u) => a + out[u].re[i] ** 2 + out[u].im[i] ** 2, 0)));
+    Bp.cfg = { xr: [100, 20000], yr: [-12, 6], ylabel: "sum − power sum", yTicks: 6, tipfmt: v => `${v.toFixed(1)} dB`,
+               traces: [{ x: f, y: diff, color: C.sum, width: 2, name: "sum − power" }], hbands: [{ lo: -0.3, hi: 3.3, color: css("--band") }],
+               vlines: [{ x: m.x_wm, label: "" }, { x: m.x_mt, label: "" }] };
+    $("#explain").innerHTML = `<strong>Top:</strong> phase of each contribution, with the same distance compensation (d = −1.15 m) as the LTspice files, so the curves are readable. <strong>Bottom:</strong> how much the sum beats adding powers: +3 dB means two units in phase, 0 dB uncorrelated, below 0 they cancel. A good crossover peaks near +3 dB exactly at the dashed lines and never dips below zero.`;
+  } else if (view === "impedance") {
+    const za = R.on.Zamp2;
+    A.cfg = { xr: [50, 20000], yr: [0, 30], ylabel: "|Z| (Ω)", tipfmt: v => `${v.toFixed(2)} Ω`, traces: [
+      { x: f, y: f.map((_, i) => Math.hypot(za.re[i], za.im[i])), color: C.sum, width: 2.4, name: "amp ch. 2" },
+      { x: f, y: f.map((_, i) => Math.hypot(E.ZI.mid.re[i], E.ZI.mid.im[i])), color: C.mid, dash: [5, 4], name: "Zi mid" },
+      { x: f, y: f.map((_, i) => Math.hypot(E.ZI.tw.re[i], E.ZI.tw.im[i])), color: C.tw, dash: [5, 4], name: "Zi tweeter" }],
+      hbands: [{ lo: 0, hi: 4, color: css("--band") }] };
+    Bp.cfg = { xr: [50, 20000], yr: [-90, 90], ylabel: "phase (deg)", yTicks: 6, tipfmt: v => `${v.toFixed(0)}°`, traces: [
+      { x: f, y: f.map((_, i) => Math.atan2(za.im[i], za.re[i]) * 180 / Math.PI), color: C.sum, width: 2, name: "amp ch. 2" }] };
+    $("#explain").innerHTML = `The load amplifier channel 2 sees: the passive board with both drivers (their measured impedances from Lab D, dashed). The shaded strip marks 0–4 Ω; staying out of it keeps the amplifier comfortable. Minimum now: <strong>${m.Zamp2_min.toFixed(2)} Ω</strong>.`;
+  } else if (view === "filters") {
+    const on = R.on, mag = z => dbA(z);
+    const prod = (a, b) => f.map((_, i) => 20 * Math.log10(Math.hypot(a.re[i], a.im[i]) * Math.hypot(b.re[i], b.im[i])));
+    A.cfg = { xr: [50, 20000], yr: [-50, 5], ylabel: "transfer (dB)", traces: [
+      { x: f, y: mag(on.HL), color: C.woof, name: "digital LPF" }, { x: f, y: mag(on.HH), color: C.ref, name: "digital HPF" },
+      { x: f, y: prod(on.HH, on.Tm), color: C.mid, width: 2, name: "mid drive" }, { x: f, y: prod(on.HH, on.Tt), color: C.tw, width: 2, name: "tweeter drive" },
+      { x: f, y: mag(on.Tm), color: C.mid, dash: [4, 4], name: "passive LPF" }, { x: f, y: mag(on.Tt), color: C.tw, dash: [4, 4], name: "passive HPF" }] };
+    const ph = z => f.map((_, i) => Math.atan2(z.im[i], z.re[i]) * 180 / Math.PI);
+    Bp.cfg = { xr: [50, 20000], yr: [-180, 180], ylabel: "phase (deg)", yTicks: 8, tipfmt: v => `${v.toFixed(0)}°`, traces: [
+      { x: f, y: ph(on.Tm), color: C.mid, wrap: true, name: "passive LPF" }, { x: f, y: ph(on.Tt), color: C.tw, wrap: true, name: "passive HPF" }] };
+    $("#explain").innerHTML = `Electrical transfer functions. Dashed: the passive filters alone, loaded by the real driver impedance (not a resistor), which is why their slopes are not textbook-clean. Solid: what reaches the midrange and tweeter after the digital high-pass as well.`;
+  } else if (view === "box") {
+    boxView(R, C);
+  }
+  draw(A); draw(Bp);
+}
+
+function boxView(R, C) {
+  const A = plots["#cA"], Bp = plots["#cB"];
+  const fb = Array.from({ length: 400 }, (_, i) => 10 * 40 ** (i / 399));
+  const Vg = 2.83, pref = 20e-6;
+  const cfg = R.cfg;
+  const cur = E.boxSystem(fb, cfg.MAP ? E.ventBox(cfg.MAP, cfg.fill) : E.boxDict({ RAB: E.B.RAB, fill: cfg.fill }));
+  const closed = E.boxSystem(fb, E.boxDict({ RAB: E.B.RAB }));
+  const spl = s => fb.map((_, i) => 20 * Math.log10(Vg * Math.hypot(s.p1m.re[i], s.p1m.im[i]) / pref));
+  const xm = s => fb.map((fx, i) => Vg * Math.hypot(s.UD.re[i], s.UD.im[i]) / E.B.SD / (2 * Math.PI * fx) * 1e3);
+  const r = E.f3Ripple(fb, cur.p1m), rc = E.f3Ripple(fb, closed.p1m);
+  A.cfg = { xr: [10, 400], yr: [60, 100], ylabel: "SPL 1 m, 2.83 V", tipfmt: v => `${v.toFixed(1)} dB`, traces: [
+    { x: fb, y: spl(closed), color: C.ref, dash: [6, 4], name: "plugged" }, { x: fb, y: spl(cur), color: C.woof, width: 2.6, name: "this box" }],
+    vlines: [{ x: r.f3, label: `f3 ${r.f3.toFixed(1)} Hz` }] };
+  Bp.cfg = { xr: [10, 400], yr: [0, 2], ylabel: "excursion (mm)", yTicks: 4, tipfmt: v => `${v.toFixed(2)} mm`, traces: [
+    { x: fb, y: xm(closed), color: C.ref, dash: [6, 4], name: "plugged" }, { x: fb, y: xm(cur), color: C.woof, width: 2.2, name: "this box" }] };
+  const fbv = cfg.MAP ? 1 / (2 * Math.PI * Math.sqrt(cfg.MAP * E.B.VB * cfg.fill / (E.B.rho * E.B.c ** 2))) : null;
+  $("#explain").innerHTML = `${cfg.label}${fbv ? `: f<sub>B</sub> = <strong>${fbv.toFixed(1)} Hz</strong>` : ""}, f<sub>3</sub> = <strong>${r.f3.toFixed(1)} Hz</strong>, ripple <strong>${r.ripple >= 0 ? "+" : ""}${r.ripple.toFixed(1)} dB</strong> (plugged: f<sub>3</sub> ${rc.f3.toFixed(1)} Hz). Half space, no room, from the circuit fitted to the Lab D impedances (f<sub>S</sub> 22.6 Hz, Q<sub>TS</sub> 0.47, V<sub>AS</sub> 204 L). The lower plot is cone excursion at 2.83 V: a vent tuned near f<sub>B</sub> holds the cone still there.`;
+}
+
+// ======================================================================== top readings
+function readings(R) {
+  const m = R.m, st = (v, g, w) => v <= g ? "good" : v <= w ? "warn" : "bad";
+  const inRange = (x, [lo, hi]) => x && x >= lo && x <= hi ? "good" : "warn";
+  const fb = E.f3Ripple(Array.from({ length: 300 }, (_, i) => 10 * 40 ** (i / 299)),
+    E.boxSystem(Array.from({ length: 300 }, (_, i) => 10 * 40 ** (i / 299)), R.cfg.MAP ? E.ventBox(R.cfg.MAP, R.cfg.fill) : E.boxDict({ RAB: E.B.RAB, fill: R.cfg.fill })).p1m);
+  const items = [
+    ["On-axis spread", `${m.on.spread.toFixed(1)} dB`, st(m.on.spread, 4, 6)],
+    ["30° spread", `${m.off30.spread.toFixed(1)} dB`, st(m.off30.spread, 6, 8)],
+    ["Woofer / mid", m.x_wm ? fmtF(m.x_wm) : "none", inRange(m.x_wm, DATA.limits.wm)],
+    ["Mid / tweeter", m.x_mt ? fmtF(m.x_mt) : "none", inRange(m.x_mt, DATA.limits.mt)],
+    ["Box f3", `${fb.f3.toFixed(1)} Hz`, "good"],
+    ["Min load", `${m.Zamp2_min.toFixed(2)} Ω`, m.Zamp2_min >= 4 ? "good" : m.Zamp2_min >= 3 ? "warn" : "bad"],
+  ];
+  $("#readings").replaceChildren(...items.map(([k, v, s]) => el("div", { class: "rd", "data-state": s }, el("small", {}, k), el("output", {}, v))));
+}
+
+// ======================================================================== scheduling
+let pending = false;
+function schedule(rail = true) {
+  if (pending) return; pending = true;
+  requestAnimationFrame(() => { pending = false; if (rail) renderRail(); render(); });
+}
+
+// ======================================================================== actions
+$("#undo").addEventListener("click", () => { const s = undo.pop(); if (s) { des = JSON.parse(s); tolCache = null; schedule(); } });
+document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "z") { e.preventDefault(); $("#undo").click(); } });
+$("#pin").addEventListener("click", () => {
+  if (pinned) { pinned = null; $("#pin").textContent = "Pin as reference"; }
+  else { const R = compute(); pinned = { y: dbA(R.on.sum) }; $("#pin").textContent = "Clear reference"; }
+  schedule();
+});
+let optRun = null;
+$("#opt").addEventListener("click", () => {
+  if (optRun) { optRun.cancel = true; return; }
+  const gen = E.optimise(des, cache.box), btn = $("#opt");
+  optRun = { cancel: false }; const run = optRun;
+  btn.innerHTML = `Stop <span class="prog">0 %</span>`;
+  const startScore = E.score(des, cache.box);
+  let last = null;
+  const step = () => {
+    const t0 = performance.now();
+    while (performance.now() - t0 < 40) {
+      const r = gen.next();
+      if (r.done || run.cancel) { finish(r.done ? r.value : last); return; }
+      last = r.value; btn.querySelector(".prog").textContent = `${Math.round(r.value.progress * 100)} %`;
+    }
+    setTimeout(step, 0);
+  };
+  const finish = res => {
+    optRun = null; btn.textContent = "Optimise";
+    if (res && res.des && res.score < startScore - 1e-9) commit(d => Object.assign(d, structuredClone(res.des), { box: d.box }));
+  };
+  setTimeout(step, 0);
+});
+
+// ---- export sheet
+function bomRows() {
+  const rows = [];
+  const add = (branch, part, kind, v) => { if (v) rows.push([branch, part, fmtV(kind, v)]); };
+  for (const [, kind, n] of E.TOPOLOGIES[des.mid.topo]) add("Midrange", kind === "L" ? "series inductor" : "shunt capacitor", kind, des.mid.vals[n]);
+  const nm = { C1: "series capacitor", L1: "shunt inductor", C2: "second series capacitor" };
+  for (const [, kind, n] of E.TOPOLOGIES[des.tw.topo]) add("Tweeter", nm[n], kind, des.tw.vals[n]);
+  add("Tweeter", "L-pad series resistor", "R", des.tw.pad?.Rs); add("Tweeter", "L-pad shunt resistor (across tweeter)", "R", des.tw.pad?.Rp);
+  return rows;
+}
+function exportDesign() {
+  const out = structuredClone(des); out.box.MAP = cache.boxCfg.MAP; out.box.label = cache.boxCfg.label; return JSON.stringify(out, null, 2);
+}
+const SHEETS = {
+  minidsp: ["MiniDSP", () => {
+    const dg = des.digital;
+    return [el("p", { class: "msg" }, `Outputs → Xover → Advanced, paste, Process. Output 1 gain ${dg.g_woof_dB.toFixed(1)} dB, output 2 gain 0 dB. ${dg.align} at ${dg.fc} Hz.`),
+      copyBlock("Output 1 · woofer (low-pass)", E.minidspText(dg.fc, "LPF", dg.align)),
+      copyBlock("Output 2 · midrange + tweeter (high-pass)", E.minidspText(dg.fc, "HPF", dg.align))];
+  }],
+  ltspice: ["LTspice", () => {
+    const dg = des.digital, lp = E.ltspiceText(dg.fc, "LPF", dg.align), hp = E.ltspiceText(dg.fc, "HPF", dg.align);
+    const one = lp.length === 1 ? "BW2 is one biquad: leave the second E source at 1." : "Paste section 1 into E1 and section 2 into E2.";
+    return [el("p", { class: "msg" }, `Value field of the E sources in System_D_design.asc / System_template.asc. ${one}`),
+      ...lp.map((s, i) => copyBlock(`E_LP${i + 1} · woofer`, s)), ...hp.map((s, i) => copyBlock(`E_HP${i + 1} · mid + tweeter`, s))];
+  }],
+  parts: ["Passive board", () => [
+    el("table", { class: "bom" }, el("thead", {}, el("tr", {}, el("th", {}, "Branch"), el("th", {}, "Part"), el("th", {}, "Value"), el("th", {}, "Source"))),
+      el("tbody", {}, bomRows().map(([b, p, v]) => el("tr", {}, el("td", {}, b), el("td", {}, p), el("td", { class: "v" }, v), el("td", {}, "course basket"))))),
+    el("p", { class: "msg" }, `Polarity: woofer ${des.pol.woof > 0 ? "normal" : "inverted"}, midrange ${des.pol.mid > 0 ? "normal" : "inverted"}, tweeter ${des.pol.tw > 0 ? "normal" : "inverted"}. Every value is a single Appendix 1 part.`)]],
+  json: ["Design file", () => {
+    const ta = el("textarea", { id: "importTa", spellcheck: "false", "aria-label": "Design JSON" }, exportDesign());
+    const msg = el("span", { class: "msg" }, "Copy this into Project/design/design.json to rerun the Python and LTspice pipeline, or paste a design here and load it.");
+    return [ta, el("div", { class: "bar" }, msg, el("div", { class: "actions" },
+      el("button", { class: "btn", on: { click: e => copyText(ta.value, e.target) } }, "Copy"),
+      el("button", { class: "btn primary", on: { click: () => {
+        try { const d = JSON.parse(ta.value); if (!d.digital || !d.mid || !d.tw) throw new Error("missing digital, mid or tw");
+              commit(x => Object.assign(x, initialDesign(), d, { box: Object.assign({}, initialDesign().box, d.box) })); msg.textContent = "Loaded.";
+        } catch (err) { msg.textContent = `Could not load: ${err.message}. Check that it is a design.json.`; } } } }, "Load pasted design")))];
+  }],
+};
+let sheetTab = "minidsp";
+function copyText(text, btn) {
+  const ok = () => { const t = btn.textContent; btn.textContent = "Copied"; setTimeout(() => btn.textContent = t, 1200); };
+  navigator.clipboard?.writeText(text).then(ok, () => { btn.textContent = "Select and copy by hand"; });
+}
+function copyBlock(title, text) {
+  const pre = el("pre", { tabindex: "0" }, text);
+  return el("div", { style: "display:grid;gap:6px" }, el("div", { class: "bar" }, el("strong", { style: "font:600 13px var(--font-display);letter-spacing:.08em;text-transform:uppercase" }, title),
+    el("button", { class: "btn", on: { click: e => copyText(text, e.target) } }, "Copy")), pre);
+}
+function renderSheet() {
+  $("#sheetTabs").replaceChildren(...Object.entries(SHEETS).map(([k, [lab]]) =>
+    el("button", { "aria-selected": String(sheetTab === k), on: { click: () => { sheetTab = k; renderSheet(); } } }, lab)));
+  $("#sheetBody").replaceChildren(el("div", { style: "display:grid;gap:12px" }, SHEETS[sheetTab][1]()));
+}
+$("#exp").addEventListener("click", () => { renderSheet(); $("#sheet").hidden = false; });
+$("#sheetClose").addEventListener("click", () => { $("#sheet").hidden = true; });
+$("#sheet").addEventListener("click", e => { if (e.target.id === "sheet") $("#sheet").hidden = true; });
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("#sheet").hidden = true; });
+
+// ======================================================================== boot
+try { const v = localStorage.getItem(STORE + "-view"); if (v && VIEWS[v]) view = v; } catch (e) {}
+setupScope("#cA", "#tipA"); setupScope("#cB", "#tipB");
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => schedule());
+new MutationObserver(() => schedule()).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+renderTabs(); schedule();
+</script>

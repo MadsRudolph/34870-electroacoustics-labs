@@ -71,9 +71,10 @@ class Asc:
     def t(self, x, y, txt, d=False):
         self.l.append(f"TEXT {x} {y} Left 2 {'!' if d else ';'}{txt}")
 
-    def e(self, x, y, name, val, cin, cneg="0", oneg="0"):
-        """E source with its + output at (x, y); returns that point. Control and - output by flags."""
-        self.l += [f"SYMBOL e {x} {y - 16} R0", "WINDOW 0 24 104 Left 2", "WINDOW 3 24 136 Left 2",
+    def e(self, x, y, name, val, cin, cneg="0", oneg="0", hide=False):
+        """E source with its + output at (x, y); returns that point. Control and - output by flags.
+        hide=True keeps a long value (a Laplace string) off the sheet, as the course files do."""
+        self.l += [f"SYMBOL e {x} {y - 16} R0", "WINDOW 0 24 104 Left 2", f"WINDOW 3 24 136 {'Invisible' if hide else 'Left'} 2",
                    f"SYMATTR InstName {name}", f"SYMATTR Value {val}"]
         self.flag(x, y + 80, oneg)
         self.w(x - 48, y + 16, x - 96, y + 16); self.flag(x - 96, y + 16, cin)
@@ -155,9 +156,14 @@ def run(asc):
     raw = work.with_suffix(".raw")
     if not raw.exists():
         log = work.with_suffix(".log")
-        raise SystemExit(f"{asc.name} failed:\n" + (log.read_bytes().decode("utf-16le", "ignore") if log.exists() else "no log"))
+        raise SystemExit(f"{asc.name} failed:\n" + (log_text(log) if log.exists() else "no log"))
     d = g.read_raw(raw); shutil.rmtree(tmp, ignore_errors=True)
     return {k: np.array(v) for k, v in d.items()}
+
+
+def log_text(log):
+    b = log.read_bytes()
+    return b.decode("utf-16le", "ignore") if b[1:2] == b"\x00" else b.decode("utf-8", "ignore")
 
 
 def csv(name):
