@@ -713,10 +713,11 @@ function init3D() {
   const wbox = new THREE.Mesh(new THREE.BoxGeometry(WB.w, WB.h, WB.d), boxMat);
   wbox.position.set(0, WB.h / 2, 0); wbox.castShadow = true; wbox.receiveShadow = true; scene.add(wbox);
   const zF = WB.d / 2;
-  // DALI Spektor 2 on top: 170 x 290 x 238 mm, white
-  const SP = { w: 0.170, h: 0.290, d: 0.238 };
+  // DALI Spektor 2 on top: 170 x 290 x 238 mm, white. Placed as in Lab E (labE_dims.m layout):
+  // midrange centre 0.12 m to the side of and 0.29 m above the woofer centre (side not recorded: right, seen from the front)
+  const SP = { w: 0.170, h: 0.290, d: 0.238 }, XREL = 0.12, YWOOF = 0.29, YREL = 0.29;
   const spk = new THREE.Mesh(new THREE.BoxGeometry(SP.w, SP.h, SP.d), mat(0xe8e8e3, { roughness: 0.45 }));
-  spk.position.set(0, WB.h + SP.h / 2, zF - SP.d / 2); spk.castShadow = true; spk.receiveShadow = true; scene.add(spk);
+  spk.position.set(XREL, WB.h + SP.h / 2, zF - SP.d / 2); spk.castShadow = true; spk.receiveShadow = true; scene.add(spk);
 
   function driver(r, rCone, depth, coneColor, dome) {
     const g = new THREE.Group(), moving = new THREE.Group();
@@ -744,11 +745,11 @@ function init3D() {
     mid: driver(0.068, 0.053, 0.03, 0xb9b7ae, false),
     tw: driver(0.036, 0.013, 0, 0x2a2b2d, true),
   };
-  drv.woof.g.position.set(0, 0.29, zF); scene.add(drv.woof.g);
-  drv.mid.g.position.set(0, WB.h + 0.105, zF); scene.add(drv.mid.g);
-  drv.tw.g.position.set(0, WB.h + 0.222, zF); scene.add(drv.tw.g);
+  drv.woof.g.position.set(0, YWOOF, zF); scene.add(drv.woof.g);
+  drv.mid.g.position.set(XREL, YWOOF + YREL, zF); scene.add(drv.mid.g);
+  drv.tw.g.position.set(XREL, YWOOF + YREL + 0.117, zF); scene.add(drv.tw.g);
   const fp = new THREE.Mesh(new THREE.CylinderGeometry(0.046, 0.046, 0.006, 48), mat(0x18191a, { metalness: 0.3, roughness: 0.4 }));
-  fp.rotation.x = Math.PI / 2; fp.position.set(0, WB.h + 0.222, zF + 0.002); scene.add(fp);
+  fp.rotation.x = Math.PI / 2; fp.position.set(XREL, YWOOF + YREL + 0.117, zF + 0.002); scene.add(fp);
 
   // vents: mouth on the baffle, tube going back into the box, and the moving air plug
   const vents = new THREE.Group(); scene.add(vents);
@@ -794,7 +795,7 @@ function init3D() {
 
   const labelBox = $("#labels"), lbl = {};
   for (const u of ["woof", "mid", "tw"]) { lbl[u] = el("div", { class: "lbl" }, el("span", {})); labelBox.append(lbl[u]); }
-  const anchors = { woof: new THREE.Vector3(0.36, 0.42, zF), mid: new THREE.Vector3(-0.2, WB.h + 0.11, zF), tw: new THREE.Vector3(0.17, WB.h + 0.27, zF) };
+  const anchors = { woof: new THREE.Vector3(-0.15, 0.43, zF), mid: new THREE.Vector3(XREL - 0.2, YWOOF + YREL + 0.02, zF), tw: new THREE.Vector3(XREL + 0.17, YWOOF + YREL + 0.17, zF) };
 
   const target = new THREE.Vector3(0, 0.4, 0);
   const home = { th: 0.62, ph: 1.2, r: 2.35 };
