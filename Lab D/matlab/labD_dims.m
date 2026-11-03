@@ -3,7 +3,7 @@ function d = labD_dims()
 %   NaN = not measured yet. Lengths in metres, resistances in ohm.
 
 d.system      = 'D';
-d.T_celsius   = NaN;              % not recorded on 6-Oct: the analysis assumes 20 C
+d.T_celsius   = 20;              % not recorded on 6-Oct: the analysis assumes 20 C
 
 % Part 1: multimeter, DC resistance of each driver
 d.RE_woofer   = 5.7;
