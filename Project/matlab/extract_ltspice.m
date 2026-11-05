@@ -15,9 +15,8 @@ function p = extract_ltspice_params(d,datadir)
 % FSdud
 % ESdPd
 % Ma1f
-% Mab
+% Map
 % Cab
-% Ral
 %
 %==============================================================
 
@@ -136,20 +135,22 @@ Cab = VB/(rho*c^2);
 
 ws = 2*pi*Fs;
 
-Mmd = 1/(ws^2*Cms);
+% total moving mass, INCLUDING the air on the cone (this is what the
+% free-air resonance gives). Mmd is worked out further down, after Ma1f.
+Mms = 1/(ws^2*Cms);
 
 %% -------------------------------------------------------------
 % MECHANICAL RESISTANCE
 %% -------------------------------------------------------------
 
-Rms = ws*Mmd/Qms;
+Rms = ws*Mms/Qms;
 
 %% -------------------------------------------------------------
 % FORCE FACTOR
 %% -------------------------------------------------------------
 
 Bl = sqrt( ...
-    ws*Re*Mmd/Qes );
+    ws*Re*Mms/Qes );
 
 %% -------------------------------------------------------------
 % LTSPICE TRANSFORMERS
@@ -171,17 +172,15 @@ a = d.cone_diam/2;
 
 Ma1f = 8*rho/(3*pi^2*a);
 
-%% -------------------------------------------------------------
-% RADIATION RESISTANCE
-%% -------------------------------------------------------------
-
-Ral = rho*c/Sd;
+% Ma1f is its own inductor in LTspice, so take that air out of the
+% moving mass or it is counted twice
+Mmd = Mms - Sd^2*Ma1f;
 
 %% -------------------------------------------------------------
 % PORT MASS
 %% -------------------------------------------------------------
 
-Mab = 0;
+Map = 0;
 
 if isfield(d,'vents')
 
@@ -195,7 +194,7 @@ if isfield(d,'vents')
 
         N  = d.vents{1,3};
 
-        Mab = rho * ...
+        Map = rho * ...
             (L + 1.46*aP) / ...
             (N*SP);
 
@@ -233,10 +232,9 @@ p.FSdud = FSdud;
 p.ESdPd = ESdPd;
 
 p.Ma1f  = Ma1f;
-p.Mab   = Mab;
+p.Map   = Map;   % vent mass (first vent length in labD_dims). In the circuit Mab is just a wire
 
 p.Cab   = Cab;
-p.Ral   = Ral;
 
 p.Bl    = Bl;
 p.Fs    = Fs;
@@ -267,10 +265,9 @@ fprintf('FSdud  = %.6g\n',p.FSdud);
 fprintf('ESdPd  = %.6g\n',p.ESdPd);
 
 fprintf('Ma1f   = %.6g\n',p.Ma1f);
-fprintf('Mab    = %.6g\n',p.Mab);
+fprintf('Map    = %.6g\n',p.Map);
 
 fprintf('Cab    = %.6g\n',p.Cab);
-fprintf('Ral    = %.6g\n',p.Ral);
 
 fprintf('\n');
 fprintf('Bl     = %.6g\n',Bl);
