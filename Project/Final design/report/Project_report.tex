@@ -4,6 +4,8 @@
 \usepackage{lmodern,textcomp}
 \usepackage[margin=2.2cm]{geometry}
 \usepackage{amsmath,amssymb,siunitx,booktabs,graphicx,tabularx,array,enumitem,xcolor,fancyhdr,float,fancyvrb}
+\usepackage{circuitikz}
+\usetikzlibrary{arrows.meta}
 \usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{4pt}
@@ -14,6 +16,7 @@
 \newcommand{\file}[1]{\nolinkurl{#1}}
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
 \sisetup{per-mode=symbol}
+\DeclareSIPrefix\micro{\text{\textmu}}{-6}   % XeTeX (tectonic) otherwise prints a T1 "ţ"
 \pagestyle{fancy}\fancyhf{}
 \fancyhead[L]{34870 Electroacoustics}
 \fancyhead[R]{Loudspeaker project --- System D}
@@ -225,6 +228,7 @@ the two outputs stay in phase through the crossover (Figure~\ref{fig:phase}). Th
 lists the coefficients.
 
 \subsection{Passive crossover midrange--tweeter}
+The circuit is drawn in Figure~\ref{fig:xcircuit} (Section~4.2).
 \begin{itemize}
 \item \textbf{Midrange:} second-order low-pass, series \xMidLa, shunt \xMidCa ($1/2\pi\sqrt{LC} =
   \SI{\xfMidLC}{Hz}$). The driver's rising impedance (\SI{8.5}{\ohm} at \SI{2}{kHz}, \SI{13.6}{\ohm} at
@@ -267,6 +271,8 @@ Output~1 gain \SI{\xgWoof}{dB}, output~2 gain \SI{0}{dB}. The LTspice strings fo
 in \file{data/dsp/LTspice_*.txt}.
 
 \subsection{Passive filter board}
+Figure~\ref{fig:xcircuit} is the circuit to build.
+\res{crossover_circuit.tex}
 \begin{center}
 \begin{tabular}{llll}
 \toprule

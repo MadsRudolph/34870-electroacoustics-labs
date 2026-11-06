@@ -1,0 +1,51 @@
+% The crossover as it will be built: MiniDSP + two amplifier channels (top) and the passive board
+% (bottom). Values come from results_design.tex, so the drawing follows design/design.json.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  blk/.style={draw, rounded corners=2pt, minimum height=11mm, align=center, font=\small},
+  arr/.style={-{Latex[length=2mm]}, thick}]
+  \node[blk, minimum width=16mm] (src) at (0,0) {Source};
+  \node[draw, dashed, rounded corners=4pt, minimum width=50mm, minimum height=36mm,
+        label={[font=\small\bfseries]above:MiniDSP ($f_s = \SI{96}{kHz}$)}] (dsp) at (4.6,0) {};
+  \node[blk, minimum width=44mm] (lp) at (4.6,0.85) {Output 1: \xalignDig\ low-pass, \SI{\xfcDig}{Hz}\\gain \SI{\xgWoof}{dB}};
+  \node[blk, minimum width=44mm] (hp) at (4.6,-0.85) {Output 2: \xalignDig\ high-pass, \SI{\xfcDig}{Hz}\\gain \SI{0}{dB}};
+  \node[blk, minimum width=17mm] (a1) at (9.0,0.85) {Amp ch.~1};
+  \node[blk, minimum width=17mm] (a2) at (9.0,-0.85) {Amp ch.~2};
+  \node[blk, minimum width=30mm] (wf) at (12.6,0.85) {Woofer 26W/8534G00\\vented box, $L = \SI{160}{mm}$};
+  \node[blk, minimum width=30mm, dashed] (pb) at (12.6,-0.85) {Passive board\\(below)};
+  \draw[arr] (src.east) -- ++(0.45,0) |- (lp.west);
+  \draw[arr] (src.east) -- ++(0.45,0) |- (hp.west);
+  \draw[arr] (lp) -- (a1); \draw[arr] (hp) -- (a2);
+  \draw[arr] (a1) -- (wf); \draw[arr] (a2) -- (pb);
+\end{tikzpicture}
+
+\vspace{6mm}
+\begin{circuitikz}[european resistors, american inductors, scale=0.95, transform shape]
+  % amplifier channel 2 drives both branches
+  \draw (0,-2) node[ground]{} to[sV, l=amp ch.~2] (0,0) -- (1.2,0) node[circ]{};
+  % midrange: 2nd-order low-pass
+  \draw (1.2,0) -- (1.2,1.6) to[L, l=$L_1$, a=\xMidLa] (4.4,1.6) node[circ]{}
+        to[C, l_=$C_1$, a^=\xMidCa] (4.4,-0.4) node[ground]{};
+  \draw (4.4,1.6) -- (11,1.6) to[R, l=midrange, a={$Z_{i,\mathrm{mid}}$ (Lab D)}, *-] (11,-0.4) node[ground]{};
+  \node[font=\small] at (11.45,1.25) {$+$};
+  % tweeter: 2nd-order high-pass + L-pad
+  \draw (1.2,0) -- (1.2,-2.4) to[C, l=$C_2$, a=\xTwCa] (4.4,-2.4) node[circ]{}
+        to[L, l_=$L_2$, a^=\xTwLa] (4.4,-4.4) node[ground]{};
+  \draw (4.4,-2.4) to[R, l=$R_s$, a=\xTwRs] (7.4,-2.4) node[circ]{}
+        to[R, l_=$R_p$, a^=\xTwRp] (7.4,-4.4) node[ground]{};
+  \draw (7.4,-2.4) -- (11,-2.4) to[R, l=tweeter, a={$Z_{i,\mathrm{tw}}$ (Lab D)}, *-] (11,-4.4) node[ground]{};
+  \node[font=\small] at (11.45,-2.75) {$+$};
+  % labels
+  \node[font=\small\itshape, anchor=west] at (0.95,2.55) {midrange low-pass (\xtopoMid)};
+  \node[font=\small\itshape, anchor=west] at (0.95,-1.45) {tweeter high-pass (\xtopoTw) + L-pad};
+  \draw[dashed, rounded corners] (0.8,2.95) rectangle (8.6,-4.9);
+  \node[font=\small, anchor=north east] at (8.6,-4.95) {passive board};
+\end{circuitikz}
+\caption{The crossover as it will be built. Top: signal chain. Bottom: the passive board on amplifier
+channel~2. The drivers are drawn as their measured input impedances $Z_i$, which is how they load the
+filters in the simulation; $+$ marks the red terminal (all three units normal polarity). Every part
+is a single Appendix~1 value. Electrical corners: midrange
+$1/2\pi\sqrt{L_1C_1} = \SI{\xfMidLC}{Hz}$, tweeter $1/2\pi\sqrt{L_2C_2} = \SI{\xfTwLC}{Hz}$; acoustic
+crossovers \SI{\xxWM}{Hz} and \SI{\xxMT}{Hz}.}\label{fig:xcircuit}
+\end{figure}
