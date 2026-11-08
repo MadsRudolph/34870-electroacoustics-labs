@@ -37,8 +37,13 @@ def load_sym(kind):
     return geo, wins
 
 
+GRAPHICS = []
+
+
 def parse(path):
     wires, flags, syms, texts = [], [], [], []
+    global GRAPHICS
+    GRAPHICS = []                                # schematic-level LINE / RECTANGLE (the course's dashed boxes)
     cur = None
     for ln in open(path).read().splitlines():
         t = ln.split()
@@ -55,6 +60,8 @@ def parse(path):
             cur["win"][int(t[1])] = (int(t[2]), int(t[3]), t[4], int(t[5]))
         elif t[0] == "SYMATTR" and cur:
             cur["attr"][t[1]] = ln.split(None, 2)[2]
+        elif t[0] in ("LINE", "RECTANGLE") and len(t) >= 6:
+            GRAPHICS.append((t[0], [int(v) for v in t[2:6]]))
         elif t[0] == "TEXT":
             body = ln.split(None, 5)[5]
             texts.append((int(t[1]), int(t[2]), t[3], int(t[4]), body[1:].split("\\n"), body[0] == "!"))
@@ -109,6 +116,8 @@ def main(path):
         for idx, key in ((0, "InstName"), (3, "Value"), (123, "Value2"), (39, "SpiceLine")):
             if idx in wins and key in s["attr"] and (idx in (0, 3) or idx in s["win"]):
                 wx, wy, just, size = wins[idx]
+                if just == "Invisible":             # hidden in LTspice (e.g. the long Laplace strings)
+                    continue
                 labels.append((text_box(*P(wx, wy), just, size, s["attr"][key], s["rot"]), s["attr"][key], size, "label:" + s["attr"].get("InstName", "")))
     for x, y, name in flags:
         if name != "0":
@@ -158,6 +167,18 @@ def main(path):
                 s_, e_ = T(pts[2]), T(pts[3])
                 a0 = math.degrees(math.atan2(s_[1] - cy, s_[0] - cx)); a1 = math.degrees(math.atan2(e_[1] - cy, e_[0] - cx))
                 d.arc(box, a1, a0, fill=BLUE, width=2)
+    def dashed(a, b):
+        L = math.hypot(b[0] - a[0], b[1] - a[1]) or 1
+        for k in range(0, int(L), 12):
+            t0, t1 = k / L, min(k + 7, L) / L
+            d.line([(a[0] + (b[0] - a[0]) * t0, a[1] + (b[1] - a[1]) * t0), (a[0] + (b[0] - a[0]) * t1, a[1] + (b[1] - a[1]) * t1)], fill=BLUE, width=2)
+    for kind, v in GRAPHICS:
+        a, b = T(v[:2]), T(v[2:])
+        if kind == "LINE":
+            dashed(a, b)
+        else:
+            for p0, p1 in ((a, (b[0], a[1])), ((b[0], a[1]), b), (b, (a[0], b[1])), ((a[0], b[1]), a)):
+                dashed(p0, p1)
     for x, y, name in flags:
         if name == "0":
             px, py = T((x, y))

@@ -187,12 +187,28 @@ Acoustical & pressure & air flow (volume velocity) & $C_{AB}$ the box air (the s
 The parts are linked by the motor: current in the coil gives a force $F = Bl\,i$, and a moving coil
 gives a voltage back, $e = Bl\,u$. The cone turns velocity into air flow by its area $S_D$.
 
-LTspice then solves the circuit at each frequency. From the result we read the air flow out of the
-cone, $U_D$, and out of the vent, $U_P$. The pressure \SI{1}{m} away (speaker on the floor, so sound
-goes into a half space) is
-\[ p = j\omega\rho\,\frac{U_D - U_P}{2\pi r}. \]
-The minus sign is there because the vent flow is counted into the box; the vent breathes out when the
-cone moves in.
+In LTspice the links are controlled sources, as in the lectures: two H sources make $e = Bl\,u$ and
+$F = Bl\,i$, an E source makes the force $F = S_D\,p$ of the air on the cone, and an F source pushes
+the cone's air flow $U_D = S_D\,u$ into the acoustic loop. Zero-volt sources (\file{Vd1} to \file{Vd5})
+work as ammeters, so every flow we need can be read and plotted.
+
+LTspice then solves the circuit at each frequency. Inside the box the cone's air flow $U_D$ splits
+three ways: into the box air $C_{AB}$ (it gets squeezed), out through the vent ($U_P$) and through
+the leak ($U_L$). Only the part that squeezes the box air is net air leaving the cabinet, and that is
+what we hear far away. The pressure \SI{1}{m} away (speaker on the floor, so sound goes into a half
+space) is
+\[ p = j\omega\rho\,\frac{U_D - U_P - U_L}{2\pi r} = j\omega\rho\,\frac{U_{AB}}{2\pi r}. \]
+The minus signs are there because the vent and leak flows are counted into the box; the vent breathes
+out when the cone moves in. In the circuit, \file{Vd5} in series with $C_{AB}$ measures $U_{AB}$ directly,
+and \file{Vd4} and \file{Vd3} give the cone and the vent alone.
+
+We keep two versions of the circuit. \file{Woofer_Vented_L160.asc} (Figure~\ref{fig:task1sch}) is the
+chosen tuning drawn the way the lectures draw it, starting from the circuit our group built for the
+closed, open and vented boxes; it is the one in the quiz. \file{Task1_WooferBox.asc} is the same physics
+with every value as a \file{.param} and a \file{.step} over plugged / 160 / 200 / 240\,mm; it is the
+one checked against the fit, and it adds the radiation resistance in front of the cone. The two agree
+within \SI{0.06}{dB} in the near field and \SI{0.3}{dB} in impedance. Figure~\ref{fig:task1lt} shows
+what LTspice gives for the chosen tuning.
 
 \subsection{Getting the values: fitting the circuit to the impedance}
 The circuit is only as good as its values. The data sheet gives a set, but our driver is not exactly
@@ -335,13 +351,26 @@ the cone moves. Note the vented cone's dip at $f_B$: the vent does the work ther
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\linewidth]{task1/preview/Task1_WooferBox.png}
-\caption{\file{ltspice/task1/Task1_WooferBox.asc}. Top row: electrical part ($R_E$, $L_E$, the back
-voltage $Bl\,u$) and mechanical part (force $Bl\,i$, cone mass, friction, suspension). Bottom: the
-acoustic part. The cone's air flow enters at \file{pD}, splits between the box air $C_{AB}$, the leak
-$R_{AL}$ and the vent ($M_{AP}$, $R_{AP}$), and leaves through the air in front of the cone. The sources on
-the right turn the flows into far-field and near-field pressure. \file{cfg} selects plugged / 160 / 200
-/ 240\,mm.}\label{fig:task1sch}
+\includegraphics[width=\linewidth]{task1/preview/Woofer_Vented_L160.png}
+\caption{\file{ltspice/task1/Woofer_Vented_L160.asc}, the chosen tuning (one vent, $L = \SI{160}{mm}$).
+Top row, left to right: electrical loop ($R_E$, $L_E$, back voltage \file{HBLu} $= Bl\,u$), mechanical
+loop (force \file{HBLi} $= Bl\,i$, cone mass $M_{MD}$, friction $R_{MS}$, suspension $C_{MS}$, air force
+\file{ESdPd} $= S_D\,p$) and acoustic loop: the cone flow \file{FSdud} $= S_D\,u$ passes the air mass in
+front of the cone (\file{Ma1f}) and splits between the box leak \file{Ral}, the box air \file{Cab} and the
+vent \file{Map} (its loss $R_{AP} = \SI{348.9}{}$ is the inductor's series resistance). The rows below turn
+the measured flows into far-field SPL at \SI{1}{m} and near-field pressure.}\label{fig:task1sch}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{task1_ltspice_vented.png}
+\caption{The circuit of Figure~\ref{fig:task1sch} as LTspice computes it, for \SI{1}{V}. Left: far field
+of the cone, the vent and the total, with the plugged box for comparison: the vent adds bass from
+\SI{37}{} down to \SI{33}{Hz} ($f_3$) at the cost of a \SI{1.8}{dB} hump; around $f_B$ the cone nearly stops
+and the vent does the work. Right: the circuit against the Lab D measurements it was not fitted to (near
+field), and against the impedance it was fitted to. The near-field level sits about \SI{2}{dB} high
+(the simple $p = j\omega\rho U/(\pi a)$ formula and the microphone position); the shapes, the dip at
+$f_B$ and the impedance peaks match.}\label{fig:task1lt}
 \end{figure}
 
 % =====================================================================================
@@ -384,6 +413,29 @@ frequency, follows a table of the measured magnitude and phase. Per driver there
 \end{itemize}
 We checked each unit alone first (\file{ltspice/units/Unit_*.asc}): LTspice gives back the measured
 $Z_i$ and $p/V$ to within \SI{0.04}{dB}.
+
+\textbf{How an \file{.inc} file works.} Before simulating, LTspice turns the drawing into a text
+netlist, one line per part. A directive \file{.inc ../data/Zi_mid.txt} means: paste the text of that
+file into the netlist here. The file holds one part written as text instead of drawn as a symbol,
+followed by its table, one row per frequency:
+\begin{Verbatim}[fontsize=\footnotesize]
+BiZin_mid Vspkr_mid 0  I=V(Vspkr_mid,0) DB FREQ=
++(2.0000000000E+01,-1.3586246004E+01,-1.2336498083E+01)
++(2.0250000000E+01,-1.3576014100E+01,-1.2341266325E+01)
+...                                                        (479 rows)
+\end{Verbatim}
+Read left to right: a behavioural current source (\file{Bi}) named \file{BiZin_mid}, connected from
+node \file{Vspkr_mid} to ground, whose current is the voltage across it multiplied by the table. \file{DB}
+says each row is (frequency, dB, phase in degrees); \file{FREQ=} says the multiplier is the table,
+interpolated at each frequency of the sweep. The table holds the admittance $Y = 1/Z_i$: at \SI{20}{Hz},
+$|Y| = 10^{-13.59/20} = \SI{0.209}{S}$, so $|Z_i| = \SI{4.79}{\ohm}$. The response file works the same way
+with a voltage source: \file{BvTF_mid Pout_mid 0 V=V(Vspkr_mid,0) DB FREQ=}. Because these sources have
+no symbol, the course drawings show dashed boxes where they sit. Three things matter:
+the path is relative to the \file{.asc} file; the node names in the first line must match the labels in
+the schematic exactly (a mismatch gives no error, only a source on an unconnected node); and every
+unit needs its own source names, so the first line of each file was renamed per unit
+(\file{BiZin_mid}, \file{BiZin_tw}, \file{BvTF_woof}, \ldots), as the Project Guide asks. After a run,
+the SPICE error log lists the files it loaded.
 
 \textbf{The distance correction.} Sound takes \SI{7}{ms} to travel \SI{2.44}{m}, and at high
 frequencies that delay turns the measured phase into a fast spin that is impossible to read.
@@ -530,11 +582,11 @@ gets better, and stops when nothing helps. The score is lower (better) when:
 The last rule matters. Without it, the search pulled the tweeter crossover down to \SI{2}{kHz}: flat
 on paper, but it would make the tweeter work near its resonance, where it distorts.
 
-\textbf{Checking with LTspice.} The final design was then drawn in LTspice
-(\file{ltspice/System_D_design.asc}, Figure~\ref{fig:syssch}): the two digital E sources per output,
-the passive parts, the measured driver files, and the guide's summing E sources with a polarity
-factor per driver. LTspice and the Python model agree to better than \SI{0.01}{dB} at every measured
-frequency, so the Python search and the course tool give the same answer.
+\textbf{Checking with LTspice.} The final design was then drawn in LTspice the way the course
+examples are drawn (\file{ltspice/System_D_course.asc}, Figure~\ref{fig:syssch}): the two digital E
+sources per output, the passive parts, the measured driver files, and the guide's summing E sources
+with a polarity factor per driver. LTspice and the Python model agree to \SI{0.00}{dB} at every measured
+frequency, so the Python search and the course tool give the same answer (Figure~\ref{fig:syslt}).
 
 \subsection{The result}
 \textbf{The voltage at each driver} (Figure~\ref{fig:filters}, top) shows what the filters do before
@@ -591,12 +643,24 @@ resistance.}\label{fig:tol}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\linewidth]{preview/System_D_design.png}
-\caption{\file{ltspice/System_D_design.asc}, the complete system in LTspice. Top: the two digital
-outputs, each two E sources in a row (the long \file{Laplace=} strings are hidden in LTspice; this
-rendering prints them on top of each other). Middle: the passive low-pass and high-pass with L-pad,
-driving the measured drivers (\file{Yi_mid}, \file{Yi_tw}). Right: the summing sources, on axis and at
-$30^\circ$; \file{V(Psum)} is the system.}\label{fig:syssch}
+\includegraphics[width=\linewidth]{preview/System_D_course.png}
+\caption{\file{ltspice/System_D_course.asc}, the complete system drawn like the course examples: one
+row per driver, each the course template. Signal \file{Vin} $\to$ digital biquads \file{E1}, \file{E2}
+(the \file{Laplace=} strings are hidden) $\to$ passive filter $\to$ ammeter \file{Yi} $\to$ \file{Vspkr}
+$\to$ the measured impedance (Zin) and response (Transfer Func.) from the \file{.inc} files $\to$
+\file{Pout}. Woofer: digital low-pass only, its $Z_i$ left out on purpose. Midrange and tweeter share
+amplifier channel~2 (\file{Vhp}): LP2, and HP2 with L-pad. Right: the series E sources add the three
+outputs with the woofer gain and the polarities; \file{V(Psum)} is the system on axis, \file{V(Psum30)}
+at $30^\circ$.}\label{fig:syssch}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.88\linewidth]{system_ltspice.png}
+\caption{Figure~\ref{fig:syssch} as LTspice computes it: each driver's sound at the microphone (woofer
+including its \SI{-4.5}{dB}) and the sum, with the phase below. The result is the same as
+Figure~\ref{fig:system} from the Python model (they agree to \SI{0.00}{dB}). Below \SI{125}{Hz} the
+anechoic data does not hold; the low end is Task~1's job.}\label{fig:syslt}
 \end{figure}
 
 % =====================================================================================
@@ -704,8 +768,10 @@ File & What it is \\
 \file{design/design.json} & the design: every value in this document \\
 \file{design/xover.py} & the whole system in Python; \file{--plots} makes the Task 2 figures, \file{--export} the MiniDSP text \\
 \file{ltspice/task1/box_model.py} & the Task 1 fit and the tuning table; \file{--plots} makes the Task 1 figures \\
-\file{ltspice/task1/Task1_WooferBox.asc} & the woofer box in LTspice (made by \file{gen_box_ltspice.py}) \\
-\file{ltspice/System_D_design.asc} & the complete system in LTspice (made by \file{gen_system.py}) \\
+\file{ltspice/task1/Woofer_Vented_L160.asc} & the chosen woofer box, lecture style (made by \file{gen_vented_course.py}; \file{plot_vented_ltspice.py} runs it and draws Figure~\ref{fig:task1lt}) \\
+\file{ltspice/task1/Task1_WooferBox.asc} & the woofer box with all tunings as a \file{.step} (made by \file{gen_box_ltspice.py}) \\
+\file{ltspice/System_D_course.asc} & the complete system, course style (made by \file{gen_system_course.py}; \file{plot_system_ltspice.py} runs it and draws Figure~\ref{fig:syslt}) \\
+\file{ltspice/System_D_design.asc} & the same system with the Task 1 box added to the woofer, used for the design search (made by \file{gen_system.py}) \\
 \file{ltspice/units/} & each driver alone with its measured data, no filter \\
 \file{data/} & the LTspice data files, \file{csv/} the same data for the scripts, \file{dsp/} the filter text \\
 \file{app/index.html} & Crossover Studio: change any value and see the response, in the browser \\
