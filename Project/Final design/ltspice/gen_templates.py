@@ -20,7 +20,7 @@ import numpy as np
 
 HERE = pathlib.Path(__file__).resolve().parent
 DATA = HERE.parent / "data"
-COURSE = HERE / "course" / "passive" / "Loudspeaker_with_measurement_files.asc"
+COURSE = HERE.parents[1] / "ltspice" / "course" / "passive" / "Loudspeaker_with_measurement_files.asc"   # the course example, kept in Project/ltspice/course
 sys.path.insert(0, str(HERE.parents[2] / "Lab A" / "LTspice"))
 import gen_ltspice as g                      # noqa: E402
 

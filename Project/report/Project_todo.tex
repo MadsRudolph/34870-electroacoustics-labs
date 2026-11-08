@@ -11,6 +11,7 @@
 \renewcommand{\arraystretch}{1.2}
 \renewcommand{\tabularxcolumn}[1]{>{\raggedright\arraybackslash}p{#1}}
 \newcommand{\file}[1]{\nolinkurl{#1}}
+\newcommand{\cmd}[1]{\texttt{#1}}   % paths with spaces (\nolinkurl drops them)
 \newcommand{\who}{\textcolor{gray}{[who: \rule{1.6cm}{0.4pt}]}}
 \newcommand{\out}[1]{\par\hspace*{1.2em}\textit{Output:} #1}
 \newcommand{\chk}[1]{\par\hspace*{1.2em}\textit{Check:} #1}
@@ -34,8 +35,8 @@ Based on \file{34870_Project_Guide_2026.pdf}. Tick the boxes as we go, and put a
 The project follows the guide's five tasks. Each step below says what goes in (which file we
 already have), what we do with it, what comes out, and how we check it before moving on. Do the
 steps in order inside a task; Tasks~1 and~2 can run in parallel. Every result that ends up in
-the quiz or the report gets a figure in \file{Project/figures/} and a line in
-\file{Project/report/Project_report.tex}.
+the quiz or the report gets a figure in \cmd{Project/Final design/figures/} and a line in
+\cmd{Project/Final design/report/Project\_report.tex}.
 
 \begin{center}
 \begin{tabularx}{\linewidth}{lX}
@@ -69,12 +70,12 @@ One loader for all of it & \file{Project/matlab/load_systemD.m} \\
 LTspice data files, names already unique & \file{Project/data/Zi_mid.txt}, \file{Zi_tw.txt}, \file{TF_\{woof,mid,tw\}.txt},
   \file{TF30_*.txt} (made by \file{matlab/export_systemD.m}, $d = \SI{-1.15}{m}$) \\
 The same data as CSV (Python, Excel) & \file{Project/data/csv/} \\
-One test schematic per unit & \file{Project/ltspice/units/Unit_woof.asc}, \file{Unit_mid.asc}, \file{Unit_tw.asc} \\
-Empty system skeleton (Figure~1) & \file{Project/ltspice/System_template.asc} \\
+One test schematic per unit & \cmd{Project/Final design/ltspice/units/Unit\_woof.asc}, \file{Unit_mid.asc}, \file{Unit_tw.asc} \\
+Empty system skeleton (Figure~1) & \cmd{Project/Final design/ltspice/System\_template.asc} \\
 \bottomrule
 \end{tabularx}
 
-The unit and system files are written by \file{Project/ltspice/gen_templates.py};
+The unit and system files are written by \cmd{Project/Final design/ltspice/gen\_templates.py};
 \file{python3 gen_templates.py --verify} runs LTspice and confirms each unit reproduces the
 measured $Z_i$ and $p/V$ (to \SI{0.04}{dB}). Open them in LTspice straight from the repo:
 the \file{.inc} paths are relative.
@@ -157,7 +158,7 @@ Lecture 9, Lab D and Lab E.
   units (same $d$ for all), then renames the first line of each file (\file{Vspkr_mid},
   \file{Pout_mid}, \dots) because duplicate names break the simulation. Try another $d$ if the
   phase is hard to read, and re-run it. \who
-\item Open \file{ltspice/units/Unit_mid.asc}, \file{Unit_tw.asc}, \file{Unit_woof.asc} and run
+\item Open \cmd{Final design/ltspice/units/Unit\_mid.asc}, \file{Unit_tw.asc}, \file{Unit_woof.asc} and run
   them. \who
   \chk{LTspice $|Z|$ and phase equal Lab D; \file{V(Pout_*)} equals Lab E's $p/V$ (the script
   checks this, but look at the plots yourselves and put one in the report).}
@@ -196,7 +197,7 @@ Lecture 9, Lab D and Lab E.
 
 \subsection*{2.5 Complete system}
 \begin{todo}
-\item Start from \file{ltspice/System_template.asc}: it is Figure~1 already wired, with gain-1
+\item Start from \cmd{Final design/ltspice/System\_template.asc}: it is Figure~1 already wired, with gain-1
   biquad slots and plain wires where the passive filters go. Then wire all three units as in the guide's Figure 1 (digital LPF $\to$ woofer; digital HPF
   $\to$ passive LPF/HPF $\to$ mid/tweeter), and sum the three outputs with series controlled
   sources. Try polarity $\pm1$ per unit. \who
