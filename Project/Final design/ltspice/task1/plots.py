@@ -19,11 +19,11 @@ def zplot(ax_m, ax_p, f, Zm, Zs, c, lab):
     ax_p.semilogx(f, np.degrees(np.angle(Zs)), color=c, lw=1.6, ls="--")
 
 
-def finish(fig, axes, name, xlim=(5, 300)):
+def finish(fig, axes, name, xlim=(5, 300), rect=None):
     for a in axes:
         a.grid(True, which="both", alpha=0.3); a.set_xlim(*xlim)
     axes[-1].set_xlabel("Frequency (Hz)")
-    fig.tight_layout(); bm.FIG.mkdir(exist_ok=True)
+    fig.tight_layout(rect=rect); bm.FIG.mkdir(exist_ok=True)
     fig.savefig(bm.FIG / name, dpi=150); plt.close(fig)
     print("wrote", bm.FIG / name)
 
@@ -57,6 +57,65 @@ def main(drv, RAB, QL, QP, MAP):
         ax.legend(fontsize=8, ncol=4)
     finish(fig, axs, "task1_nearfield.png")
     tuning(drv, RAB, QL, QP, MAP)
+    farfield(drv, RAB, QL, QP, MAP)
+
+
+def contributions(f, r):
+    """Complex far-field pressure (Pa/V, 1 m, half space) of the cone and of the vent.
+
+    box_model.system gives p_1m = j w rho (U_D - U_P) / (2 pi r), so the cone term is
+    +j w rho U_D / (2 pi) and the vent term -j w rho U_P / (2 pi); cone + vent = p_1m exactly.
+    """
+    k = 1j * f * bm.RHO                       # j w rho / (2 pi), r = 1 m
+    return k * r["UD"], -k * r["UP"]
+
+
+def measured_farfield(tag):
+    """Far field (Pa/V, 1 m, half space) of cone and vent rebuilt from the measured near fields.
+
+    p_nf = j w rho U / (pi a)  and  p_1m = j w rho U / (2 pi r)  ->  p_1m = p_nf * a / (2 r), r = 1 m.
+    Cone: +p_nf_cone * a_D / 2.  Vent: -p_nf_vent * a_P / 2 (far field goes with U_D - U_P).
+    Same assumptions as the model: ka << 1, baffled pistons, half space.
+    Returns f, p_cone, p_vent (complex); the vent is interpolated onto the cone frequency grid.
+    """
+    fc, Hc = bm.band(*bm.load(f"NF_cone_{tag}"), 8, 300)
+    fv, Hv = bm.band(*bm.load(f"NF_vent_{tag}"), 8, 300)
+    Hv = np.interp(fc, fv, Hv.real) + 1j * np.interp(fc, fv, Hv.imag)
+    return fc, Hc * bm.AD / 2, -Hv * bm.AP / 2
+
+
+def farfield(drv, RAB, QL, QP, MAP, Vg=2.83):
+    """Far field at 1 m (half space): driver, vent and total per vent length.
+    Model (dashed / thick) against the far field rebuilt from the measured near fields (thin)."""
+    from matplotlib.lines import Line2D
+    f = np.geomspace(10, 400, 1500)
+    spl = lambda p: db(Vg * p / 20e-6)
+    ref = bm.system(f, drv, bm.box_dict(RAB=RAB))["p1m"]
+    fig, axs = plt.subplots(3, 1, figsize=(8, 10), sharex=True)
+    for ax, L in zip(axs, bm.LENGTHS):
+        bx = bm.vent_box(RAB, QL, QP, MAP[L])
+        r = bm.system(f, drv, bx)
+        p_cone, p_vent = contributions(f, r)
+        fb = bm.fb_of(bx["MAP"])
+        f3, rip, _ = bm.f3_and_ripple(f, r["p1m"])
+        fm, pc_m, pv_m = measured_farfield(f"L{int(L*1e3)}")
+        ax.semilogx(f, spl(ref), color="0.65", lw=1.3)
+        ax.semilogx(fm, spl(pc_m), color=COL[0], lw=1, alpha=0.6)
+        ax.semilogx(fm, spl(pv_m), color=COL[1], lw=1, alpha=0.6)
+        ax.semilogx(fm, spl(pc_m + pv_m), color="k", lw=1, alpha=0.6)
+        ax.semilogx(f, spl(p_cone), color=COL[0], ls="--", lw=1.6)
+        ax.semilogx(f, spl(p_vent), color=COL[1], ls="--", lw=1.6)
+        ax.semilogx(f, spl(r["p1m"]), color="k", ls="--", lw=2.0)
+        ax.axvline(fb, color="k", ls=":", lw=1)
+        ax.text(fb * 1.04, 0.03, f"f_B = {fb:.1f} Hz", fontsize=8, va="bottom", transform=ax.get_xaxis_transform())
+        ax.set_ylim(40, 100); ax.set_ylabel(f"SPL at 1 m, {Vg} V (dB)")
+        ax.set_title(f"Vent L = {L*1e3:.0f} mm: model f3 = {f3:.0f} Hz, ripple {rip:+.1f} dB", fontsize=10)
+    h = [Line2D([], [], color=COL[0], lw=2), Line2D([], [], color=COL[1], lw=2),
+         Line2D([], [], color="k", lw=2), Line2D([], [], color="0.65", lw=1.5),
+         Line2D([], [], color="0.3", lw=1, alpha=0.7), Line2D([], [], color="0.3", lw=1.8, ls="--")]
+    fig.legend(h, ["driver (cone)", "vent", "total (cone + vent)", "closed box (model)",
+                   "from measured near field", "model"], loc="lower center", ncol=3, fontsize=8, frameon=False)
+    finish(fig, axs, "task1_farfield.png", xlim=(10, 300), rect=(0, 0.05, 1, 1))
 
 
 def tuning(drv, RAB, QL, QP, MAP, Vg=2.83):
