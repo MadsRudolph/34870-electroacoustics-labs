@@ -84,12 +84,10 @@ def build(drv, box, MA1, plugged=False):
     lines.insert(2, "FLAG 0 -64 eg")
     fb = bm.fb_of(box["MAP"])
     notes = [
-        f"System D woofer (Scan-Speak 26W/8534G00) in the {bm.VB*1e3:.1f} L box, no filling, ONE vent: diameter 65 mm, L = {L*1e3:.0f} mm, the other vent plugged."
-        if not plugged else "REFERENCE: same circuit with both vents plugged (closed box).",
-        "Impedance analogy in all three domains:  electrical (Re, Le)  |  mechanical (Mmd, Rms, Cms)  |  acoustical (front air mass Ma1f, box Cab || leak Ral || vent Map + Rser).",
-        f"Driver values fitted to the Lab D impedances (free air + closed box together, Re measured).  Vent mass Map = {box['MAP']:.1f} kg/m^4 fitted to the measured 160 mm impedance",
-        f"(holds the tube and both end corrections; rho*L/S + ends would give 75 kg/m^4).  f_B = {fb:.1f} Hz.  Vent loss Q_P and leak Q_L from the same fit.",
-        "Outputs for e_g = 1 V:  dB_SPL_Diaph / _Vent / _Total = far field at 1 m, half space, plot in dB (re 20 uPa);  nf_Cone, nf_Vent = near field in Pa/V (Lab D comparison).",
+        f"Woofer in the {bm.VB*1e3:.0f} L box, one vent open (L = {L*1e3:.0f} mm), filling in. Values fitted to our Lab D measurements."
+        if not plugged else "Reference: the same circuit with both vents plugged (closed box).",
+        "Top: electrical part (voice coil)  |  mechanical part (cone)  |  acoustical part (air in the box, the vent).",
+        "Bottom: turns the air flows into sound pressure, far field at 1 m and near field.",
     ]
     lines += [f"TEXT 0 {800 + 40*k} Left 2 ;{n}" for k, n in enumerate(notes)]
     lines = [l.replace("SHEET 1 2600 1000", "SHEET 1 2600 1100") for l in lines]
