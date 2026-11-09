@@ -1,5 +1,8 @@
 # Lab day: build the crossover and measure System D (Task 3)
 
+**Printable guide:** `guide/LabDay_Guide.pdf` walks through the whole day step by step (timeline,
+wiring diagrams, what to run and what the output should say). This README is the same plan as a checklist.
+
 Everything needed for the two project-lab sessions on **Tue 10-Nov-2026** (Group 10, booked in the
 "Loudspeaker project lab schedule"): what to set, what to build, what to measure, and what the
 result should look like. The design itself is `../design/design.json` (unchanged).
@@ -17,6 +20,7 @@ two stations, and Vicente's short briefing on the new equipment (book him for 13
 ```
 lab-day/
   README.md                 this checklist
+  guide/LabDay_Guide.pdf    the printable lab-day guide (source LabDay_Guide.tex + fig_*.tex, build with tectonic)
   model_curves.py           predictions for every switch state (vent plugged) -> model/
   model/expected_on.csv     model p/V, 0 deg, per state (re/im)   + expected_on.png
   model/expected_off30.csv  same at 30 deg                         + expected_off30.png
@@ -87,18 +91,17 @@ flowchart LR
   Rs --> Rp["Rp 3.3 ohm to ground (across tweeter)"]
 ```
 
-| Part | Value | Where | Rating to look for | Source |
-|---|---|---|---|---|
-| L_mid | 0.82 mH | series, amp + -> midrange + | up to ~1.9 A rms at 10 W | lab basket (Parts Bin: buy) |
-| C_mid | 6.8 uF | across the midrange | **non-polarised** (film or bipolar), >= 25 V | lab basket (Parts Bin: shop has only a 50 V electrolytic, not usable) |
-| C_tw | 5.6 uF | series, amp + -> node | non-polarised, >= 25 V | lab basket (Parts Bin: buy) |
-| L_tw | 0.22 mH | node -> ground | | lab basket (Parts Bin: buy) |
-| Rs | 4.7 ohm | node -> tweeter + | **>= 5 W** (13 W worst case with a 10 W sine in the tweeter band; music far less) | lab basket (Parts Bin: shop 4.75 ohm is 1/4 W, not usable) |
-| Rp | 3.3 ohm | across the tweeter | >= 5 W (2.8 W worst case) | lab basket (Parts Bin: shop 3.32 ohm is 1/4 W, not usable) |
+| Part | Value | Where | Check the basket part |
+|---|---|---|---|
+| L_mid | 0.82 mH | series, amp + -> midrange + | carries up to ~1.9 A rms at 10 W |
+| C_mid | 6.8 uF | across the midrange | **non-polarised** (film or bipolar), >= 25 V |
+| C_tw | 5.6 uF | series, amp + -> node | non-polarised, >= 25 V |
+| L_tw | 0.22 mH | node -> ground | |
+| Rs | 4.7 ohm | node -> tweeter + | **>= 5 W** (13 W worst case with a 10 W sine in the tweeter band; music far less) |
+| Rp | 3.3 ohm | across the tweeter | >= 5 W (2.8 W worst case) |
 
-Parts Bin check (9-Nov): nothing is in home stock; the shop's matching values are 1/4 W resistors
-and a polarised electrolytic, so for this board the course basket is the only real source. Only if
-the basket runs out: buy non-polarised film capacitors, air-core coils and 5-10 W resistors.
+All parts from the course baskets (Project Guide 3.2, Appendix 1 Table 1): at least two of each
+value, no combining parts, return unused parts.
 
 Measure each part with the LCR meter if there is one, and each coil's resistance with the
 multimeter, and write the numbers into `matlab/project_dims.m`. Expected effects (model): coil
