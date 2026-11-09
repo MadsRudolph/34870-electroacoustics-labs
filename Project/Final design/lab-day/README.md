@@ -1,0 +1,172 @@
+# Lab day: build the crossover and measure System D (Task 3)
+
+Everything needed for the two project-lab sessions on **Tue 10-Nov-2026** (Group 10, booked in the
+"Loudspeaker project lab schedule"): what to set, what to build, what to measure, and what the
+result should look like. The design itself is `../design/design.json` (unchanged).
+
+| When | Station | What | Script |
+|---|---|---|---|
+| 13:00-15:00 | Anechoic chamber | build the board, set the MiniDSP, measure the system (vents plugged) | `matlab/project_run.m` |
+| 15:00-17:00 | Zi/Nfield (Lab D setup) | impedance of the board and the woofer box, near field at the final tuning | `matlab/zinf_run.m` |
+| Tue 17-Nov 13:00 | IEC listening room | listening test (Task 4) | |
+
+There is **no separate lab description** for these sessions: the instructions are the Project
+Guide, Task 3 (pages 4-5: MiniDSP and passive board) plus the Lab D and Lab E descriptions for the
+two stations, and Vicente's short briefing on the new equipment (book him for 13:00).
+
+```
+lab-day/
+  README.md                 this checklist
+  model_curves.py           predictions for every switch state (vent plugged) -> model/
+  model/expected_on.csv     model p/V, 0 deg, per state (re/im)   + expected_on.png
+  model/expected_off30.csv  same at 30 deg                         + expected_off30.png
+  matlab/project_run.m      the runs, one section each (open on the lab PC)
+  matlab/measure_project.m  one phase-coherent run (1-3 states), saves raw + metadata + design
+  matlab/compare_project.m  measured vs model, level offset, channel gap, sum check, notches
+  matlab/project_dims.m     fill in by hand on the day (stored in every data file)
+  matlab/test_project.m     offline test, no hardware: must print PASS
+  model/expected_zi.csv     model impedance at the board input (Zmid, Ztw, Zboth) + expected_zi.png
+  matlab/zinf_run.m         the Zi/Nfield session, one section per measurement
+  matlab/measure_zinf.m     one Lab D-style measurement (board / woofer / nearfield), saved at once
+  matlab/compare_zinf.m     board vs model, woofer fb vs Lab D, near field vs Lab D
+  matlab/zinf_calc.m        Z or H from the raw spectra; detects the Lab D half-voltage AI0
+  matlab/test_zinf.m        offline test, no hardware: must print PASS
+  data/                     created on the day: project_<tag>.mat, zinf_<tag>.mat
+```
+
+`measure_project` calls the Lab E course routine `meas_mag_spec2_SoundCard_LabE` (from
+`Lab E/matlab/course/` in this repo, or the lab PC's own copy if it is already on the path).
+Copy the whole labs repo to the lab PC so the relative paths work. If the routine stops with
+"beeps.wav not found" or "no Umik", `cd` into the course folder (or copy `Beeps.wav` next to
+`project_run.m`), and start MATLAB only after the UMIK is plugged in.
+
+## 1. Bring
+
+- **First project session in the lab?** Vicente asked (announcement 27-Oct) to be booked for a
+  short briefing on the new equipment (MiniDSP, filter panels) the first time a group uses it.
+
+- Laptop with the repo pulled, USB stick (the lab PCs have no internet).
+- Printed or on screen: this file, `model/expected_on.png`, the board table below.
+- Tape measure, multimeter (coil resistance), an LCR meter if the lab has one (ask).
+- The vent plugs stay with the box; check both vents are plugged before measuring.
+
+## 2. MiniDSP (Output 1 = woofer, Output 2 = midrange + tweeter)
+
+Step by step in `report/Project_report.tex`, section "Setting up the MiniDSP". In short:
+
+| Setting | Value |
+|---|---|
+| Routing | only Input 1 -> Output 1 and Input 1 -> Output 2 |
+| PEQ, Comp, FIR | bypassed on both outputs, only **Xover** active |
+| Output 1 Xover, Advanced | paste `../data/dsp/MiniDSP_woofer_out1.txt` (LR4 low-pass 325 Hz = two identical BW2 biquads), Process |
+| Output 2 Xover, Advanced | paste `../data/dsp/MiniDSP_midtw_out2.txt` (LR4 high-pass 325 Hz), Process |
+| Gain | Output 1 **-4.5 dB**, Output 2 0 dB |
+| Invert / polarity | off on both |
+| Delay | **0 on both.** The "d = -1.15 m" in the report is only the distance correction used to draw the phase plots, not a delay to type in. |
+| Sample rate | the coefficients only hold at **96 kHz**; check the plugin says 96 kHz |
+
+Copy the text from the `.txt` file, not from the PDF (hidden characters). The a1/a2 signs are
+the MiniDSP's own convention (a1 = +1.9699), as `DigitalCrossover.m` prints them.
+
+Electrical check with a 325 Hz sine and the scope: Output 1 = input -10.5 dB (-6 dB filter,
+-4.5 dB gain), Output 2 = input -6.0 dB, the two in phase (LR4). Save the configuration (slot and
+file) so the listening test and the demo on 3 Dec start from the same settings.
+
+## 3. Passive board (amplifier channel 2)
+
+All values are in Appendix 1 of the guide and come from the **course baskets** (guide 3.2): no
+combining parts. Both drivers red to +. Keep the two coils apart and at right angles.
+
+```mermaid
+flowchart LR
+  A["Amp ch. 2 +"] --> Lm["L_mid 0.82 mH (series)"] --> M["Midrange +"]
+  Lm --> Cm["C_mid 6.8 uF to ground"]
+  A --> Ct["C_tw 5.6 uF (series)"] --> N(("node"))
+  N --> Lt["L_tw 0.22 mH to ground"]
+  N --> Rs["Rs 4.7 ohm (series)"] --> T["Tweeter +"]
+  Rs --> Rp["Rp 3.3 ohm to ground (across tweeter)"]
+```
+
+| Part | Value | Where | Rating to look for | Source |
+|---|---|---|---|---|
+| L_mid | 0.82 mH | series, amp + -> midrange + | up to ~1.9 A rms at 10 W | lab basket (Parts Bin: buy) |
+| C_mid | 6.8 uF | across the midrange | **non-polarised** (film or bipolar), >= 25 V | lab basket (Parts Bin: shop has only a 50 V electrolytic, not usable) |
+| C_tw | 5.6 uF | series, amp + -> node | non-polarised, >= 25 V | lab basket (Parts Bin: buy) |
+| L_tw | 0.22 mH | node -> ground | | lab basket (Parts Bin: buy) |
+| Rs | 4.7 ohm | node -> tweeter + | **>= 5 W** (13 W worst case with a 10 W sine in the tweeter band; music far less) | lab basket (Parts Bin: shop 4.75 ohm is 1/4 W, not usable) |
+| Rp | 3.3 ohm | across the tweeter | >= 5 W (2.8 W worst case) | lab basket (Parts Bin: shop 3.32 ohm is 1/4 W, not usable) |
+
+Parts Bin check (9-Nov): nothing is in home stock; the shop's matching values are 1/4 W resistors
+and a polarised electrolytic, so for this board the course basket is the only real source. Only if
+the basket runs out: buy non-polarised film capacitors, air-core coils and 5-10 W resistors.
+
+Measure each part with the LCR meter if there is one, and each coil's resistance with the
+multimeter, and write the numbers into `matlab/project_dims.m`. Expected effects (model): coil
+resistance 0.3 / 0.6 / 1.0 ohm per mH lowers the sum by at most 0.23 / 0.45 / 0.74 dB; 400 random
+boards (coils 5 %, caps 10 %, resistors 5 %) stay inside a 1.7 dB band (report, Tolerances).
+Amplifier channel 2 never sees less than 4.4 ohm.
+
+## 4. Measurement plan (anechoic chamber, vents plugged)
+
+Same placement as Lab E if possible (mic 2.44 m, 1.15 m high, mid/tweeter box at the Lab E spot):
+the model is the Lab E data, so the closer the placement, the better the comparison. The chamber
+is not valid below 125 Hz; the low end is Task 1's job (near field, already done in Lab D).
+
+One run = up to three states with ~30 s of beeps in between (the course routine's `Nmeas <= 3`).
+States inside one run are phase-coherent; separate runs are not (the UMIK has its own USB clock).
+Muting is done in the MiniDSP app, unplugging at the board (it sits outside the chamber).
+
+| Run | Angle | States (switch during the beeps) | What it proves |
+|---|---|---|---|
+| R1 | 0 | woofer (Out 2 muted) -> mid+tw (Out 1 muted) -> all | each channel against the model; channel balance; woofer + mid/tw = all |
+| R2 | 0 | mid (tweeter lead off) -> tw (mid lead off) -> all | the passive board, driver by driver |
+| R3 | 0 | all -> woofer inverted (Out 1 invert) -> tweeter swapped (at the board) | phase alignment: model says notch at **329 Hz, -21 dB** and **3.9 kHz, -14 dB** |
+| R4 | 30 | woofer -> mid+tw -> all | off-axis, against the Lab E 30 deg model |
+| R5 | 0 | repeat of R1 | drift/placement: 'all' must land on R1's within a few tenths of a dB |
+
+After R3: untick the invert and swap the tweeter back. Do not touch the amplifier volume or the
+microphone between runs. `project_run.m` holds these as sections.
+
+**What "good" looks like** (printed by `compare_project` after every run):
+- level offset per state: any value is fine (MiniDSP and amplifier volume), but **woofer and
+  mid+tw within about 1 dB of each other**. If not, the two amplifier channels differ: correct it
+  with the Output 1 gain and note the new value.
+- shape error (1/6 octave, after the offset) about 1-2 dB or less.
+- sum check |woofer + mid/tw| vs |all| under ~0.5 dB.
+- the two polarity notches clearly visible near the predicted frequencies.
+- expected on-axis sum: 4.0 dB spread 150 Hz-15 kHz (vent plugged), 6.3 dB at 30 deg.
+
+## 4b. Zi/Nfield session (15-17, Lab D setup)
+
+The NI card drives the amplifier directly through the series resistor, as in Lab D: no MiniDSP
+in this chain. `measure_zinf` uses the Lab D course routine (`../../../Lab D/matlab/course/`).
+
+| Run | Setup | Expected | Why |
+|---|---|---|---|
+| Z1 `board` | amp -> R -> board input, both drivers on | \|Z\| min 4.4 ohm at ~5.9 kHz, ~6.4 ohm at 50 Hz | the load amp ch. 2 really sees; checks the build |
+| Z2 `board_mid` | tweeter lead off | model Zmid (min 4.8 ohm at ~200 Hz) | mid branch alone |
+| Z3 `board_tw` | midrange lead off | model Ztw | tweeter branch alone |
+| Z4 `woofer_L160` | one vent open at 160 mm, other plugged, filling in | fb ~23.4 Hz (Lab D), model 24.6 | the box is as designed |
+| NF1/NF2 | near field cone / vent mouth, resistor shorted | on top of Lab D's L = 160 mm curves | low end for the report (the chamber stops at 125 Hz) |
+| X (optional) | both vents open | | never measured; quiz 1 only estimated it |
+
+Gotchas from Lab D, now handled in code: `R` is **required** and must be the multimeter value of
+the series resistor (32.9 ohm), never R_E; when AI0 sits on a DC offset (the bridged amplifier
+output), `zinf_calc` switches to V_amp = 2*AI0 and says so; samples on the +-10 V rail are
+flagged. Also measure both vents' inner diameters and the telescope range (`project_dims`).
+
+## 5. Lessons from Labs B and D, applied
+
+- Use the wrapper (`measure_project`), never the bare course routine: it keeps the raw spectra,
+  time signals, states, `project_dims` and a copy of the pasted MiniDSP text in every file.
+- Reference before **and** after: R5 repeats R1.
+- Write down every dimension, the UMIK serial (read the label), the temperature, the amp volume.
+- The Lab D 'R' / AI0 half-voltage problem does not apply here (no series resistor; the reference
+  is the sound card line-out looped to line-in), **but confirm with the TA that the reference is
+  still tapped before the MiniDSP** in the upgraded setup. If it is tapped after the MiniDSP or the
+  amplifier, the measured p/V is not the system response and the plan needs changing.
+
+## 6. Before leaving
+
+Save the MiniDSP config, photograph the board (report todo), copy `data/` to the USB stick, delete
+our files from the lab PC, return unused parts and banana cables to the baskets.
