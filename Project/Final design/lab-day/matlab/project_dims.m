@@ -16,16 +16,16 @@ d.h_mic       = NaN;              % microphone height above the platform
 d.layout      = '';               % where the mid/tweeter box sits on the woofer box
 d.vents       = 'both plugged';   % guide Task 3: cover the vents in the chamber
 d.filling     = 'in';
-d.dust_cover  = '';
+d.dust_cover  = 'off';
 
 % Signal chain
 d.ref_channel = 'line-out looped to line-in (before the MiniDSP)';  % CONFIRM with the TA
-d.amp_volume  = '';               % knob position(s); do NOT touch between runs
+d.amp_volume  = 'about 45 %';     % 10-Nov; do NOT touch between runs
 d.amp_balance = '';               % both channels equal? note how it was checked
 d.panel_no    = NaN;              % which passive filter panel (1-10)
 d.minidsp_cfg = '';               % configuration slot / saved file name
 d.minidsp_in_gain   = NaN;        % dB
-d.minidsp_out1_gain = -4.5;       % dB, woofer (design value)
+d.minidsp_out1_gain = -10.3;      % dB, woofer: design -4.5, plus -5.8 to match the lab amplifier's channels (10-Nov)
 d.minidsp_out2_gain = 0;          % dB, mid + tweeter
 d.minidsp_invert    = 'none';     % the flipW run ticks Out 1 invert: untick afterwards
 d.minidsp_fs  = '';               % check the plugin says 96 kHz

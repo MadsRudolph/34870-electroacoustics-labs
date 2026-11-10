@@ -8,6 +8,12 @@
 % One run = up to 3 states with ~30 s of beeps between them: switch during
 % the beeps. Only states inside one run share a phase reference.
 % Do not touch the amplifier volume or move the microphone between runs.
+% "Mute Out 1/2" = make that channel silent. Muting in the MiniDSP app or
+% pulling that channel's speaker cable at the amplifier does the same job.
+% Every run is plotted and saved to ../figures/<tag>.png automatically.
+% All graphs again at any time:   plot_project
+% One run, renaming a state that was not switched in time:
+%   plot_project('R2_units_0', 'labels', {'mid', 'tw', 'tw (not switched)'})
 
 %% 0. Before the first run
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end
@@ -41,10 +47,10 @@ m = measure_project('R4_split_30', 30, {'woofer', 'midtw', 'all'});
 % Turn back to 0 deg, tweeter polarity normal, no invert. Same switching as R1.
 % The 'all' curve must sit on R1's within a few tenths of a dB.
 m = measure_project('R5_repeat_0', 0, {'woofer', 'midtw', 'all'}, 'note', 'repeat of R1');
-r1 = load(fullfile('..', 'data', 'project_R1_split_0.mat'));
+r1 = load(fullfile('..', 'data', 'project_R1_split_0.mat'));     % the good R1 (try 3, 15:17)
 d = 20*log10(abs(m.H(:,3))) - 20*log10(abs(r1.H(:,3)));
 k = m.fn >= 150 & m.fn <= 15000;
-fprintf('R5 vs R1, all three: median %+.2f dB, worst %.2f dB\n', median(d(k)), max(abs(d(k))));
+fprintf('R5 vs R1, all: median %+.2f dB, worst %.2f dB\n', median(d(k)), max(abs(d(k))));
 
 %% 6. Optional: a design change (e.g. Out 1 gain) -> new tag, note what changed
 % m = measure_project('R6_gain_0', 0, {'woofer', 'midtw', 'all'}, 'note', 'Out 1 gain -3.5 dB');

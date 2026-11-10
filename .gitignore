@@ -26,3 +26,6 @@ Lab B/bem/*.log
 
 # Lab D lab-PC folder as copied off the drive (865 MB of 32 MB .mat files)
 Lab D/raw data/
+
+# Project lab day 10-Nov: untouched files from the lab PC (spectra + time signals, ~6 MB each)
+Project/Final design/lab-day/raw data/

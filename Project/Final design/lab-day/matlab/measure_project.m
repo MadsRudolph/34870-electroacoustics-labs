@@ -103,16 +103,19 @@ if any(m.peak(2,:) < 0.01)
     warning('The UMIK signal is very small: check the mic and the mutes, turn the amplifier up.');
 end
 if o.plot
-    compare_project(m);
+    compare_project(m);                 % numbers + quick overlay
+    [~, stem] = fileparts(file);
+    mp = m; mp.tag = erase(stem, 'project_');
+    plot_project(mp, 'save', isempty(o.datadir));   % saved: ../figures/<tag>.png
 end
 end
 
 function s = describe(state)
 switch state
-    case 'woofer', s = 'woofer only    (MiniDSP: Out 2 MUTED)';
-    case 'midtw',  s = 'mid + tweeter  (MiniDSP: Out 1 MUTED)';
-    case 'mid',    s = 'midrange only  (Out 1 muted, TWEETER lead off at the board)';
-    case 'tw',     s = 'tweeter only   (Out 1 muted, MIDRANGE lead off at the board)';
+    case 'woofer', s = 'woofer only    (mid/tw silent: Out 2 muted OR its amp cable pulled)';
+    case 'midtw',  s = 'mid + tweeter  (woofer silent: Out 1 muted OR its amp cable pulled)';
+    case 'mid',    s = 'midrange only  (woofer silent, TWEETER lead off at the board)';
+    case 'tw',     s = 'tweeter only   (woofer silent, MIDRANGE lead off at the board)';
     case 'all',    s = 'all three      (no mutes, normal polarity)';
     case 'flipW',  s = 'woofer inverted (Out 1 INVERT ticked)';
     case 'flipT',  s = 'tweeter swapped (+/- swapped at the board)';
