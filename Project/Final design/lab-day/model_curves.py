@@ -21,11 +21,18 @@ sys.path.insert(0, str(HERE.parent / "design"))
 import xover as X  # noqa: E402
 
 OUT = HERE / "model"
-STATES = ["woofer", "midtw", "mid", "tw", "all", "flipW", "flipT"]
+STATES = ["woofer", "midtw", "mid", "tw", "all", "flipW", "flipT",
+          "byp_woofer", "byp_mid", "byp_tw", "byp_midtw", "dir_woofer", "dir_mid", "dir_tw"]
 LABEL = {"woofer": "woofer only (Out 2 muted)", "midtw": "mid + tweeter (Out 1 muted)",
          "mid": "midrange only (tweeter lead off)", "tw": "tweeter only (mid lead off)",
          "all": "all three", "flipW": "all, woofer inverted (Out 1 invert)",
-         "flipT": "all, tweeter leads swapped"}
+         "flipT": "all, tweeter leads swapped",
+         # placement check (MiniDSP bypassed): byp_* = through the board as built, dir_* = unit
+         # wired straight to the amplifier (= the Lab E measurement itself)
+         "byp_woofer": "woofer, MiniDSP bypassed", "byp_mid": "midrange via board, MiniDSP bypassed",
+         "byp_tw": "tweeter via board, MiniDSP bypassed", "byp_midtw": "mid+tw via board, MiniDSP bypassed",
+         "dir_woofer": "woofer straight (Lab E)", "dir_mid": "midrange straight (Lab E)",
+         "dir_tw": "tweeter straight (Lab E)"}
 
 
 def states(d, des, angle, Rdcr=None):
@@ -36,6 +43,10 @@ def states(d, des, angle, Rdcr=None):
     w, m, t = out["woof"], out["mid"], out["tw"]
     s = {"woofer": w, "midtw": m + t, "mid": m, "tw": t, "all": w + m + t,
          "flipW": -w + m + t, "flipT": w + m - t}
+    tf = d.tf[angle]
+    s.update({"byp_woofer": tf["woof"], "byp_mid": ex["Tm"] * tf["mid"], "byp_tw": ex["Tt"] * tf["tw"],
+              "byp_midtw": ex["Tm"] * tf["mid"] + ex["Tt"] * tf["tw"],
+              "dir_woofer": tf["woof"], "dir_mid": tf["mid"], "dir_tw": tf["tw"]})
     return s, ex
 
 

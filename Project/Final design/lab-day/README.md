@@ -1,5 +1,9 @@
 # Lab day: build the crossover and measure System D (Task 3)
 
+> **After 10-Nov:** results in `results_2026-11-10/LabDay_Results.pdf`, log in `LOG_2026-11-10.md`.
+> **For the next session use the kit** (`kit/`, `lab P`, `lab S`, ...: a graph and verdict after every measurement, see `kit/README.md`).
+
+
 **Printable guide:** `guide/LabDay_Guide.pdf` walks through the whole day step by step (timeline,
 wiring diagrams, what to run and what the output should say). This README is the same plan as a checklist.
 
