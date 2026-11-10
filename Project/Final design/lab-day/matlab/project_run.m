@@ -11,25 +11,31 @@
 % "Mute Out 1/2" = make that channel silent. Muting in the MiniDSP app or
 % pulling that channel's speaker cable at the amplifier does the same job.
 % Every run is plotted and saved to ../figures/<tag>.png automatically.
+% The functions these sections call live in core/ (no need to open them); the line
+% "addpath core ../kit/core" at the top of each section makes them findable.
+% Easier, with lamps and instructions in one window: ../kit/labgui.m (type: labgui).
 % All graphs again at any time:   plot_project
 % One run, renaming a state that was not switched in time:
 %   plot_project('R2_units_0', 'labels', {'mid', 'tw', 'tw (not switched)'})
 
 %% 0. Before the first run
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end
+addpath core tests ../kit/core
 edit project_dims        % fill in: UMIK label, temperature, distances, panel no.
-test_project             % no hardware: must print PASS
+test_project             % no hardware: must print PASS (tests/test_project.m)
 % Model curves come from `python3 model_curves.py` (already in ../model/).
 return
 
 %% R1. On axis, 0 deg: woofer / mid+tweeter / all  (~4 min)
 % Start: Out 2 MUTED. Beeps 1: unmute Out 2, mute Out 1. Beeps 2: unmute Out 1.
+addpath core ../kit/core
 m = measure_project('R1_split_0', 0, {'woofer', 'midtw', 'all'}, 'note', 'reference run');
 % Check in the printout: woofer - midtw offset within +-1 dB, sum check < 0.5 dB.
 
 %% R2. On axis, 0 deg: midrange / tweeter / all  (~4 min)
 % Start: Out 1 MUTED, TWEETER lead off at the board. Beeps 1: tweeter on,
 % midrange off. Beeps 2: midrange back on, unmute Out 1.
+addpath core ../kit/core
 m = measure_project('R2_units_0', 0, {'mid', 'tw', 'all'});
 
 %% R3. Polarity checks, 0 deg: all / woofer inverted / tweeter swapped  (~4 min)
@@ -37,22 +43,26 @@ m = measure_project('R2_units_0', 0, {'mid', 'tw', 'all'});
 % the tweeter's + and - at the board. AFTERWARDS: swap the tweeter back!
 % Expected (model): woofer inverted -> notch ~329 Hz, about -21 dB;
 %                   tweeter swapped -> notch ~3.9 kHz, about -14 dB.
+addpath core ../kit/core
 m = measure_project('R3_flip_0', 0, {'all', 'flipW', 'flipT'});
 
 %% R4. 30 deg: woofer / mid+tweeter / all  (~4 min)
 % Turn the system 30 deg (same direction as in Lab E). Same switching as R1.
+addpath core ../kit/core
 m = measure_project('R4_split_30', 30, {'woofer', 'midtw', 'all'});
 
 %% R5. Back to 0 deg: repeat of R1 (drift / placement check)  (~4 min)
 % Turn back to 0 deg, tweeter polarity normal, no invert. Same switching as R1.
 % The 'all' curve must sit on R1's within a few tenths of a dB.
+addpath core ../kit/core
 m = measure_project('R5_repeat_0', 0, {'woofer', 'midtw', 'all'}, 'note', 'repeat of R1');
-r1 = load(fullfile('..', 'data', 'project_R1_split_0.mat'));     % the good R1 (try 3, 15:17)
+r1 = load(fullfile(getfield(labpaths, 'data'), 'project_R1_split_0.mat'));     % the good R1 (try 3, 15:17)
 d = 20*log10(abs(m.H(:,3))) - 20*log10(abs(r1.H(:,3)));
 k = m.fn >= 150 & m.fn <= 15000;
 fprintf('R5 vs R1, all: median %+.2f dB, worst %.2f dB\n', median(d(k)), max(abs(d(k))));
 
 %% 6. Optional: a design change (e.g. Out 1 gain) -> new tag, note what changed
+% addpath core ../kit/core
 % m = measure_project('R6_gain_0', 0, {'woofer', 'midtw', 'all'}, 'note', 'Out 1 gain -3.5 dB');
 
 %% 7. Before you leave

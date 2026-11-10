@@ -13,7 +13,7 @@
 
 {\LARGE\bfseries Lab day 10 November: results}\\[2pt]
 {\large 34870 Electroacoustics, loudspeaker project, Group 10 (System D)}\\[2pt]
-{\small Data: \texttt{lab-day/data/} (clean copies) and \texttt{raw data/} (lab-PC files). Figures: \texttt{matlab/results\_labday.m}. Log: \texttt{LOG\_2026-11-10.md}.}
+{\small Data: \texttt{lab-day/data/} (clean copies) and \texttt{raw data/} (lab-PC files). Figures: \texttt{analysis/results\_labday.m}. Log: \texttt{LOG\_2026-11-10.md}.}
 
 \section*{In one paragraph}
 Once the setup was right, the built system does what the design said it would. The woofer and the
@@ -174,7 +174,8 @@ in the tweeter's own response, so the crossover cannot remove it. Measure the ne
 tweeter with the MiniDSP bypassed, each plotted against Lab E).
 \item \textbf{A graph after every measurement, with a clear OK/CHECK/BAD.} The new kit (\texttt{lab-day/kit},
 \texttt{lab P}, \texttt{lab S}, \dots) does exactly that, plus a dashboard that always shows the whole day.
-\item \textbf{Write the settings down before measuring.} They go in \texttt{lab\_setup.m}: Out 1 gain, amplifier, vent, series R, temperature.
+The same kit has a window, \texttt{labgui}: the steps with lamps, what to set up, one Measure button, the graph, the verdict and what to do next.
+\item \textbf{Write the settings down before measuring.} They go in the Settings panel of \texttt{labgui} (or \texttt{lab\_setup.m}): Out 1 gain, amplifier, vent, series R, temperature.
 \item \textbf{Save the MiniDSP configuration as a preset}, so the listening test and the demo start from the same state.
 \item \textbf{Measure the missing pieces}: board impedance Z1--Z3 (the amplifier load, and the best check of
 the board) and 30\textdegree\ (run A).
@@ -234,7 +235,7 @@ brightness, bass, clarity, imaging; 1--5 scale);
 
 \section{Thursday}
 \begin{enumerate}[leftmargin=*]
-\item Set \texttt{lab\_setup.m} (Out 1 $-10.3$\,dB, amplifier, vent 160\,mm, series R).
+\item In MATLAB: \texttt{cd lab-day/kit}, type \texttt{labgui}. Fill in Settings (Out 1 $-10.3$\,dB, amplifier, vent 160\,mm, series R). The steps below are the entries in its list; \texttt{lab P} etc.\ typed in the command window, or the sections of \texttt{lab\_run.m}, do the same.
 \item \texttt{lab P}: placement against Lab E. All three should be OK before going on.
 \item Put \textbf{Rp $= 8.2\,\Omega$} on the board. \texttt{lab S}, \texttt{lab S4}, \texttt{lab S5}: check the tweeter step is gone and the balance is still within $\pm1$\,dB.
 \item \texttt{lab F}, \texttt{lab A} (30\textdegree), and at the Zi station \texttt{lab Z1}--\texttt{Z4}, \texttt{lab N1}, \texttt{N2}.

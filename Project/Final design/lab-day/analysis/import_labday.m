@@ -16,8 +16,9 @@ function import_labday()
 %   (amplifier ~45 %, placement as in Lab E, filters from the .txt files) are added.
 
 here = fileparts(mfilename('fullpath'));
-raw = fullfile(here, '..', 'raw data');
-out = fullfile(here, '..', 'data');
+addpath(fullfile(here, '..', 'kit', 'core')); L = labpaths;   % all folders + the called code
+raw = L.raw;
+out = L.data;
 if ~exist(out, 'dir'), mkdir(out); end
 
 %  raw file                       saved as                 used   Out1 dB  problem

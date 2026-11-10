@@ -32,12 +32,13 @@ p.addParameter('plot', true);
 p.parse(varargin{:});
 o = p.Results;
 
-here = fileparts(mfilename('fullpath'));
+if ~exist('labpaths', 'file'), addpath(fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'kit', 'core')); end
+L = labpaths;
 if ~exist('meas_mag_spec2_LabD', 'file')
-    addpath(fullfile(here, '..', '..', '..', '..', 'Lab D', 'matlab', 'course'));
+    addpath(L.labDcourse);
 end
 datadir = o.datadir;
-if isempty(datadir), datadir = fullfile(here, '..', 'data'); end
+if isempty(datadir), datadir = L.data; end
 if ~exist(datadir, 'dir'), mkdir(datadir); end
 
 switch kind

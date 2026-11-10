@@ -1,7 +1,13 @@
 # Lab day: build the crossover and measure System D (Task 3)
 
 > **After 10-Nov:** results in `results_2026-11-10/LabDay_Results.pdf`, log in `LOG_2026-11-10.md`.
-> **For the next session use the kit** (`kit/`, `lab P`, `lab S`, ...: a graph and verdict after every measurement, see `kit/README.md`).
+> **For the next session use the GUI**: in MATLAB `cd kit`, type `labgui` (at home: `labgui demo`). Steps with lamps, what to set up,
+> one Measure button, the graph and a verdict after every measurement, and what to do next. See `kit/README.md`.
+> The same without a window: `lab P`, `lab S`, ... or the Run Section file `kit/lab_run.m`.
+>
+> **Folders, one rule:** the top of a folder holds only what you open, run or edit; what is only called is in `core/`, tests in `tests/`.
+> `kit/` (labgui, lab_run, lab, lab_setup, lab_plan) | `matlab/` (project_run, zinf_run, project_dims: the 10-Nov scripts) |
+> `analysis/` (after the lab: import, results, pad prediction). Each has a short README.
 
 
 **Printable guide:** `guide/LabDay_Guide.pdf` walks through the whole day step by step (timeline,
@@ -28,23 +34,21 @@ lab-day/
   model_curves.py           predictions for every switch state (vent plugged) -> model/
   model/expected_on.csv     model p/V, 0 deg, per state (re/im)   + expected_on.png
   model/expected_off30.csv  same at 30 deg                         + expected_off30.png
-  matlab/project_run.m      the runs, one section each (open on the lab PC)
-  matlab/measure_project.m  one phase-coherent run (1-3 states), saves raw + metadata + design
-  matlab/compare_project.m  measured vs model, level offset, channel gap, sum check, notches
+  kit/                      THE LAB KIT: labgui (GUI), lab_run (Run Section), lab (command), lab_setup, lab_plan
+  kit/core/, kit/tests/     what the kit calls; test_lab + test_labgui (offline, must print PASS)
+  matlab/project_run.m      10-Nov scripts: the chamber runs, one section each
+  matlab/zinf_run.m         10-Nov scripts: the Zi/Nfield session, one section per measurement
   matlab/project_dims.m     fill in by hand on the day (stored in every data file)
-  matlab/test_project.m     offline test, no hardware: must print PASS
+  matlab/core/              measure_project, compare_project, plot_project, measure_zinf, compare_zinf, zinf_calc
+  matlab/tests/             test_project, test_zinf: offline tests, must print PASS
+  analysis/                 after the lab: import_labday, labday_to_kit, results_labday, pad_predict
   model/expected_zi.csv     model impedance at the board input (Zmid, Ztw, Zboth) + expected_zi.png
-  matlab/zinf_run.m         the Zi/Nfield session, one section per measurement
-  matlab/measure_zinf.m     one Lab D-style measurement (board / woofer / nearfield), saved at once
-  matlab/compare_zinf.m     board vs model, woofer fb vs Lab D, near field vs Lab D
-  matlab/zinf_calc.m        Z or H from the raw spectra; detects the Lab D half-voltage AI0
-  matlab/test_zinf.m        offline test, no hardware: must print PASS
-  data/                     created on the day: project_<tag>.mat, zinf_<tag>.mat
+  data/                     project_<tag>.mat, zinf_<tag>.mat (10-Nov scripts); data/<date>/ (kit and GUI)
 ```
 
-`measure_project` calls the Lab E course routine `meas_mag_spec2_SoundCard_LabE` (from
+`measure_project` (in `matlab/core/`) calls the Lab E course routine `meas_mag_spec2_SoundCard_LabE` (from
 `Lab E/matlab/course/` in this repo, or the lab PC's own copy if it is already on the path).
-Copy the whole labs repo to the lab PC so the relative paths work. If the routine stops with
+Copy the whole labs repo to the lab PC so the paths work (they all come from `kit/core/labpaths.m`). If the routine stops with
 "beeps.wav not found" or "no Umik", `cd` into the course folder (or copy `Beeps.wav` next to
 `project_run.m`), and start MATLAB only after the UMIK is plugged in.
 
@@ -146,7 +150,7 @@ microphone between runs. `project_run.m` holds these as sections.
 ## 4b. Zi/Nfield session (15-17, Lab D setup)
 
 The NI card drives the amplifier directly through the series resistor, as in Lab D: no MiniDSP
-in this chain. `measure_zinf` uses the Lab D course routine (`../../../Lab D/matlab/course/`).
+in this chain. `measure_zinf` uses the Lab D course routine (`Lab D/matlab/course/` in this repo).
 
 | Run | Setup | Expected | Why |
 |---|---|---|---|

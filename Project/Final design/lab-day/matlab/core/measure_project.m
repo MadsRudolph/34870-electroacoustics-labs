@@ -52,10 +52,11 @@ assert(numel(states) >= 1 && numel(states) <= 3, ...
 bad = setdiff(states, valid);
 assert(isempty(bad), 'Unknown state(s): %s. Use: %s', strjoin(bad, ', '), strjoin(valid, ', '));
 
-here = fileparts(mfilename('fullpath'));
-course = fullfile(here, '..', '..', '..', '..', 'Lab E', 'matlab', 'course');
+if ~exist('labpaths', 'file'), addpath(fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'kit', 'core')); end
+L = labpaths;
+course = L.labEcourse;
 if isempty(which('meas_mag_spec2_SoundCard_LabE')), addpath(course); end
-datadir = fullfile(here, '..', 'data');
+datadir = L.data;
 if ~isempty(o.datadir), datadir = o.datadir; end
 if ~exist(datadir, 'dir'), mkdir(datadir); end
 
@@ -83,7 +84,7 @@ m = struct('tag', tag, 'angle_deg', angle_deg, 'states', {states}, ...
     'fn', fn(:), 'specn', specn, 'f', f(:), 'spec', spec, 'ch', ch, 'dims', dims);
 m.H = reshape(specn(:,2,:) ./ specn(:,1,:), numel(fn), Nmeas);   % Pa per volt
 m.peak = reshape(max(abs(ch), [], 1), 2, Nmeas);                  % line-in, UMIK
-m.design = snapshot(here);
+m.design = snapshot(L.design);
 
 file = fullfile(datadir, ['project_' tag '.mat']);
 k = 2;
@@ -122,8 +123,7 @@ switch state
 end
 end
 
-function d = snapshot(here)
-fd = fullfile(here, '..', '..');
+function d = snapshot(fd)
 d = struct();
 d.design_json = readtext(fullfile(fd, 'design', 'design.json'));
 d.minidsp_out1 = readtext(fullfile(fd, 'data', 'dsp', 'MiniDSP_woofer_out1.txt'));

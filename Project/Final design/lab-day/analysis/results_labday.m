@@ -1,8 +1,9 @@
 function results_labday()
 % RESULTS_LABDAY  Figures + numbers for the 10-Nov results write-up -> ../results_2026-11-10/
-here = fileparts(mfilename('fullpath')); addpath(fullfile(here, '..', 'kit'));
+here = fileparts(mfilename('fullpath'));
+addpath(fullfile(here, '..', 'kit', 'core')); LP = labpaths;   % all folders + the called code
 set(groot, 'DefaultFigureVisible', 'off'); try, set(groot, 'DefaultFigureTheme', 'light'); catch, end
-dd = fullfile(here, '..', 'data'); out = fullfile(here, '..', 'results_2026-11-10');
+dd = LP.data; out = LP.results;
 if ~exist(out, 'dir'), mkdir(out); end
 L = @(f) load(fullfile(dd, [f '.mat']));
 r1 = L('project_R1_split_0'); r2 = L('project_R2_units_0'); r3 = L('project_R3_flip_0');
@@ -18,7 +19,7 @@ all1 = r1.H(:,3); ma = mod('all');
 offm = median(20*log10(abs(all1(b))) - ma(b));     % one level shift for every model curve
 yA = sm(all1); yM = lab_smooth(fn, ma); yM = yM + median(yA(b) - yM(b));
 mid = r2.H(:,1); tw = r2.H(:,2); woof = r2.H(:,3) - mid - tw;
-T = readmatrix(fullfile(here, '..', 'model', 'pad_ratio.csv'), 'NumHeaderLines', 1);
+T = readmatrix(fullfile(LP.model, 'pad_ratio.csv'), 'NumHeaderLines', 1);
 G = interp1(T(:,1), T(:,14) + 1j*T(:,15), fn, 'linear', 'extrap');    % column pair 7 = 4.7/8.2
 yN = sm(woof + mid + tw .* G);
 ref = median(yA(b));

@@ -20,10 +20,11 @@ function r = compare_project(m)
 %     -21 dB and ~3.9 kHz, -14 dB re the normal sum).
 
 if ischar(m) || isstring(m), m = load(m); end
-here = fileparts(mfilename('fullpath'));
+if ~exist('labpaths', 'file'), addpath(fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'kit', 'core')); end
+L = labpaths;
 switch m.angle_deg
-    case 0,  csvf = fullfile(here, '..', 'model', 'expected_on.csv');
-    case 30, csvf = fullfile(here, '..', 'model', 'expected_off30.csv');
+    case 0,  csvf = fullfile(L.model, 'expected_on.csv');
+    case 30, csvf = fullfile(L.model, 'expected_off30.csv');
     otherwise, csvf = '';
 end
 r = struct('tag', m.tag, 'states', {m.states}, 'offset_dB', nan(1, numel(m.states)), ...

@@ -8,7 +8,8 @@ function test_zinf()
 %   nothing is overwritten. Must print PASS.
 
 here = fileparts(mfilename('fullpath'));
-labD = fullfile(here, '..', '..', '..', '..', 'Lab D', 'data');
+addpath(fullfile(here, '..', '..', 'kit', 'core')); L = labpaths;   % all folders + the called code
+labD = L.labDdata;
 set(groot, 'DefaultFigureVisible', 'off');
 tmp = tempname; mkdir(tmp); dd = fullfile(tmp, 'data');
 fid = fopen(fullfile(tmp, 'meas_mag_spec2_LabD.m'), 'w');
@@ -26,7 +27,7 @@ addpath(tmp);
 ok = true;
 
 % 1. board, AI0 half voltage on a DC offset
-csvf = fullfile(here, '..', 'model', 'expected_zi.csv');
+csvf = fullfile(L.model, 'expected_zi.csv');
 assert(exist(csvf, 'file') == 2, 'run python3 model_curves.py first');
 T = readmatrix(csvf, 'NumHeaderLines', 1);
 stub(tmp, T(:,1), T(:,6) + 1j*T(:,7), false, 32.9, 2, 9.4);

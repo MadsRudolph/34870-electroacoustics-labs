@@ -19,14 +19,15 @@ p.parse(varargin{:});
 o = p.Results;
 if ischar(m) || isstring(m), m = load(m); end
 
-here = fileparts(mfilename('fullpath'));
-labD = fullfile(here, '..', '..', '..', '..', 'Lab D');
+if ~exist('labpaths', 'file'), addpath(fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'kit', 'core')); end
+L = labpaths;
+labD = L.labD;
 r = struct('tag', m.tag, 'kind', m.kind);
 fn = m.fn(:);
 
 switch m.kind
 case 'board'
-    csvf = fullfile(here, '..', 'model', 'expected_zi.csv');
+    csvf = fullfile(L.model, 'expected_zi.csv');
     T = readmatrix(csvf, 'NumHeaderLines', 1);
     fid = fopen(csvf); hdr = strsplit(strtrim(fgetl(fid)), ','); fclose(fid);
     if contains(m.tag, 'mid'), col = 'Zmid'; elseif contains(m.tag, 'tw'), col = 'Ztw'; else, col = 'Zboth'; end

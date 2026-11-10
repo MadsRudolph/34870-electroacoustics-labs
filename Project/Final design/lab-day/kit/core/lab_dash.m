@@ -15,9 +15,9 @@ p.addParameter('focus', 'Plan');
 p.addParameter('save', true);
 p.parse(varargin{:});
 o = p.Results;
-here = fileparts(mfilename('fullpath'));
+L = labpaths;
 S = lab_setup();
-if nargin < 1 || isempty(datadir), datadir = fullfile(here, '..', 'data', S.date); end
+if nargin < 1 || isempty(datadir), datadir = fullfile(L.data, S.date); end
 [~, day] = fileparts(datadir);
 P = lab_plan();
 

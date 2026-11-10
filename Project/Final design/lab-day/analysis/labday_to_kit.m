@@ -4,10 +4,10 @@ function labday_to_kit()
 %   Left out: R1 try 1 and R2 try 1 (their 'all' state was not what it says).
 
 here = fileparts(mfilename('fullpath'));
-src = fullfile(here, '..', 'data');
+addpath(fullfile(here, '..', 'kit', 'core')); L = labpaths;   % all folders + the called code
+src = L.data;
 out = fullfile(src, '2026-11-10');
 if ~exist(out, 'dir'), mkdir(out); end
-addpath(fullfile(here, '..', 'kit'));
 S0 = lab_setup(); S0.date = '2026-11-10'; S0.amp_volume = 'about 45 %';
 
 %  file                    label         ids                     note

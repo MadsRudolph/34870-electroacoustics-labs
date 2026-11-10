@@ -27,9 +27,10 @@ p.addParameter('save', true);
 p.parse(varargin{:});
 o = p.Results;
 
-here = fileparts(mfilename('fullpath'));
-datadir = fullfile(here, '..', 'data');
-figdir = fullfile(here, '..', 'figures');
+if ~exist('labpaths', 'file'), addpath(fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'kit', 'core')); end
+L = labpaths;
+datadir = L.data;
+figdir = L.figures;
 if o.save && ~exist(figdir, 'dir'), mkdir(figdir); end
 
 if nargin < 1 || isempty(which)
@@ -39,7 +40,7 @@ if nargin < 1 || isempty(which)
     for i = 1:numel(d)
         m = load(fullfile(d(i).folder, d(i).name));
         m.tag = erase(erase(d(i).name, 'project_'), '.mat');   % keeps the _2, _3
-        one_run(m, o, here, figdir);
+        one_run(m, o, figdir);
         allruns{end+1} = m; %#ok<AGROW>
     end
     overview(allruns, o, figdir);
@@ -52,16 +53,16 @@ else
     m = load(f);
     m.tag = char(which);
 end
-one_run(m, o, here, figdir);
+one_run(m, o, figdir);
 end
 
 % ---------------------------------------------------------------------------
-function one_run(m, o, here, figdir)
+function one_run(m, o, figdir)
 fn = m.fn(:);
 ns = numel(m.states);
 labels = m.states;
 if ~isempty(o.labels), labels = o.labels; end
-[T, hdr, fmod] = model_table(here, m.angle_deg);
+[T, hdr, fmod] = model_table(m.angle_deg);
 
 fig = figure('Name', m.tag, 'Color', 'w', 'Position', [100 100 900 700]);
 try, theme(fig, 'light'); end
@@ -167,11 +168,11 @@ end
 end
 
 % ---------------------------------------------------------------------------
-function [T, hdr, fmod] = model_table(here, ang)
-T = []; hdr = {}; fmod = [];
+function [T, hdr, fmod] = model_table(ang)
+T = []; hdr = {}; fmod = []; L = labpaths;
 switch ang
-    case 0,  f = fullfile(here, '..', 'model', 'expected_on.csv');
-    case 30, f = fullfile(here, '..', 'model', 'expected_off30.csv');
+    case 0,  f = fullfile(L.model, 'expected_on.csv');
+    case 30, f = fullfile(L.model, 'expected_off30.csv');
     otherwise, return
 end
 if ~exist(f, 'file'), return; end
