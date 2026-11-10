@@ -15,10 +15,10 @@ function m = measure_zinf(tag, kind, varargin)
 %     'note'         free text (vent setting, mic position, which leads are off ...)
 %     'NexusVperPa'  Nexus output setting (default 1 V/Pa)
 %     'k'            true V_amp = k*AI0; 'auto' (default) decides from AI0's DC offset
-%     'datadir'      default ../data      'plot'  default true
+%     'datadir'      default lab-day/data      'plot'  default true
 %
 %   Uses the Lab D course routine meas_mag_spec2_LabD (Lab D/matlab/course in this
-%   repo). Saves ../data/zinf_<tag>.mat with the raw spectra, time signals, the
+%   repo). Saves lab-day/data/zinf_<tag>.mat with the raw spectra, time signals, the
 %   derived Z or H, project_dims and a timestamp; never overwrites (_2, _3 ...).
 
 p = inputParser;
@@ -32,12 +32,11 @@ p.addParameter('plot', true);
 p.parse(varargin{:});
 o = p.Results;
 
-here = fileparts(mfilename('fullpath'));
-if ~exist('meas_mag_spec2_LabD', 'file')
-    addpath(fullfile(here, '..', '..', '..', '..', 'Lab D', 'matlab', 'course'));
-end
+L = labpaths();                         % kit/core/labpaths.m: every folder in one place
+if isempty(which('project_dims')), addpath(L.manual); end
+if ~exist('meas_mag_spec2_LabD', 'file'), addpath(L.labDcourse); end
 datadir = o.datadir;
-if isempty(datadir), datadir = fullfile(here, '..', 'data'); end
+if isempty(datadir), datadir = L.data; end
 if ~exist(datadir, 'dir'), mkdir(datadir); end
 
 switch kind

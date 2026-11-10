@@ -6,9 +6,11 @@ function test_lab()
 %   tabs) must be drawn and saved.
 
 here = fileparts(mfilename('fullpath'));
+kit = fileparts(here); addpath(kit, fullfile(kit, 'core'));
+L = labpaths();
 set(groot, 'DefaultFigureVisible', 'off');
 tmp = tempname; mkdir(tmp); dd = fullfile(tmp, '2026-11-12');
-labD = fullfile(here, '..', '..', '..', '..', 'Lab D', 'data');
+labD = L.labDdata;
 w = @(name, lines) writestub(fullfile(tmp, [name '.m']), lines);
 w('meas_mag_spec2_SoundCard_LabE', {
  'function [fn,specn,f,spec,ch]=meas_mag_spec2_SoundCard_LabE(f1,f2,n_oct,fres,Nav,UmikSN,IncAngle,Nmeas)'
@@ -28,7 +30,7 @@ w('meas_mag_spec2_LabD', {
  'specn = [Va, V1]; f = (0:9)''; spec = zeros(10,2); ch = [0.3*sin((1:4800)''/50), 0.1*sin((1:4800)''/50)];'
  'end'});
 addpath(tmp);
-csv = @(a) fullfile(here, '..', 'model', a);
+csv = @(a) fullfile(L.model, a);
 [T0, h0] = readcsv(csv('expected_on.csv'));
 col = @(T, h, s) T(:, strcmp(h, [s '_re'])) + 1j*T(:, strcmp(h, [s '_im']));
 chamber = @(states, gain) savestub(tmp, struct('f', T0(:,1), ...

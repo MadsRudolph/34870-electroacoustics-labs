@@ -13,7 +13,7 @@
 
 {\LARGE\bfseries Lab day 10 November: results}\\[2pt]
 {\large 34870 Electroacoustics, loudspeaker project, Group 10 (System D)}\\[2pt]
-{\small Data: \texttt{lab-day/data/} (clean copies) and \texttt{raw data/} (lab-PC files). Figures: \texttt{matlab/results\_labday.m}. Log: \texttt{LOG\_2026-11-10.md}.}
+{\small Data: \texttt{lab-day/data/} (clean copies) and \texttt{raw data/} (lab-PC files). Figures: \texttt{analysis/results\_labday.m}. Log: \texttt{LOG\_2026-11-10.md}.}
 
 \section*{In one paragraph}
 Once the setup was right, the built system does what the design said it would. The woofer and the
@@ -233,11 +233,14 @@ brightness, bass, clarity, imaging; 1--5 scale);
 \end{enumerate*}
 
 \section{Thursday}
+Easiest with buttons: in MATLAB \texttt{cd lab-day/kit}, then \texttt{labgui} (every step below is a button, with the
+instructions, the graph and the verdict on one screen; \texttt{labgui('demo')} rehearses it without hardware).
+The same steps as commands:
 \begin{enumerate}[leftmargin=*]
-\item Set \texttt{lab\_setup.m} (Out 1 $-10.3$\,dB, amplifier, vent 160\,mm, series R).
+\item Set \texttt{lab\_setup.m} or the GUI's settings (Out 1 $-10.3$\,dB, amplifier, vent 160\,mm, series R).
 \item \texttt{lab P}: placement against Lab E. All three should be OK before going on.
 \item Put \textbf{Rp $= 8.2\,\Omega$} on the board. \texttt{lab S}, \texttt{lab S4}, \texttt{lab S5}: check the tweeter step is gone and the balance is still within $\pm1$\,dB.
 \item \texttt{lab F}, \texttt{lab A} (30\textdegree), and at the Zi station \texttt{lab Z1}--\texttt{Z4}, \texttt{lab N1}, \texttt{N2}.
-\item The dashboard shows everything as you go. Copy \texttt{data/<date>/} (including its \texttt{figures/}) to the stick.
+\item The dashboard shows everything as you go. Copy \texttt{data/<date>/} (including its \texttt{figures/}) to the stick (GUI: \emph{Copy day to USB}).
 \end{enumerate}
 \end{document}

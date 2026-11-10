@@ -1,7 +1,28 @@
 # Lab day: build the crossover and measure System D (Task 3)
 
 > **After 10-Nov:** results in `results_2026-11-10/LabDay_Results.pdf`, log in `LOG_2026-11-10.md`.
-> **For the next session use the kit** (`kit/`, `lab P`, `lab S`, ...: a graph and verdict after every measurement, see `kit/README.md`).
+> **For the next session (Thu 12-Nov) use the kit:** in MATLAB `cd lab-day/kit`, then **`labgui`** (buttons, a graph
+> and a verdict after every measurement; `labgui('demo')` to rehearse without hardware). Details: `kit/README.md`.
+
+## Which folder is what
+
+One rule: **a folder's top level holds only what you open, run or edit; everything that is only
+called by other scripts is in its `core/` subfolder** (and the offline tests in `tests/`).
+
+| Folder | Open / run | Edit | Don't touch |
+|---|---|---|---|
+| `kit/` | `labgui` (GUI), `lab_run.m` (section by section), `lab` (commands) | `lab_setup.m`, `lab_plan.m` | `core/`, `tests/` |
+| `manual/` | Tuesday's `project_run.m`, `zinf_run.m` | `project_dims.m` | `core/`, `tests/` |
+| `analysis/` | after the lab: `results_labday`, `pad_predict`, `import_labday`, `labday_to_kit` | | |
+| `data/` | `data/<date>/` = one kit/GUI day; `project_*.mat`, `zinf_*.mat` = Tuesday-script runs | | the files (never edited, only added) |
+| `model/`, `model_curves.py` | expected curves (`python3 model_curves.py`) | | |
+
+Three ways to measure, all saving data the GUI and the dashboard show: (a) `kit/labgui`,
+(b) `kit/lab_run.m` or the `lab` commands, (c) Tuesday's `manual/project_run.m` and `manual/zinf_run.m`
+(the GUI's *Load manual runs...* shows those runs too).
+
+> The printed guide (`guide/LabDay_Guide.pdf`) and the plan below were written for 10-Nov: where they
+> say `matlab/`, read `manual/` (the scripts were moved on 11-Nov; nothing else changed in them).
 
 
 **Printable guide:** `guide/LabDay_Guide.pdf` walks through the whole day step by step (timeline,
@@ -13,8 +34,8 @@ result should look like. The design itself is `../design/design.json` (unchanged
 
 | When | Station | What | Script |
 |---|---|---|---|
-| 13:00-15:00 | Anechoic chamber | build the board, set the MiniDSP, measure the system (vents plugged) | `matlab/project_run.m` |
-| 15:00-17:00 | Zi/Nfield (Lab D setup) | impedance of the board and the woofer box, near field at the final tuning | `matlab/zinf_run.m` |
+| 13:00-15:00 | Anechoic chamber | build the board, set the MiniDSP, measure the system (vents plugged) | `manual/project_run.m` |
+| 15:00-17:00 | Zi/Nfield (Lab D setup) | impedance of the board and the woofer box, near field at the final tuning | `manual/zinf_run.m` |
 | Tue 17-Nov 13:00 | IEC listening room | listening test (Task 4) | |
 
 There is **no separate lab description** for these sessions: the instructions are the Project
@@ -24,29 +45,28 @@ two stations, and Vicente's short briefing on the new equipment (book him for 13
 ```
 lab-day/
   README.md                 this checklist
-  guide/LabDay_Guide.pdf    the printable lab-day guide (source LabDay_Guide.tex + fig_*.tex, build with tectonic)
+  guide/LabDay_Guide.pdf    the printable 10-Nov guide (source LabDay_Guide.tex + fig_*.tex; old paths: matlab/ = manual/)
   model_curves.py           predictions for every switch state (vent plugged) -> model/
   model/expected_on.csv     model p/V, 0 deg, per state (re/im)   + expected_on.png
   model/expected_off30.csv  same at 30 deg                         + expected_off30.png
-  matlab/project_run.m      the runs, one section each (open on the lab PC)
-  matlab/measure_project.m  one phase-coherent run (1-3 states), saves raw + metadata + design
-  matlab/compare_project.m  measured vs model, level offset, channel gap, sum check, notches
-  matlab/project_dims.m     fill in by hand on the day (stored in every data file)
-  matlab/test_project.m     offline test, no hardware: must print PASS
   model/expected_zi.csv     model impedance at the board input (Zmid, Ztw, Zboth) + expected_zi.png
-  matlab/zinf_run.m         the Zi/Nfield session, one section per measurement
-  matlab/measure_zinf.m     one Lab D-style measurement (board / woofer / nearfield), saved at once
-  matlab/compare_zinf.m     board vs model, woofer fb vs Lab D, near field vs Lab D
-  matlab/zinf_calc.m        Z or H from the raw spectra; detects the Lab D half-voltage AI0
-  matlab/test_zinf.m        offline test, no hardware: must print PASS
-  data/                     created on the day: project_<tag>.mat, zinf_<tag>.mat
+  kit/                      THE WAY FOR 12-NOV: labgui, lab_run.m, lab (see kit/README.md)
+  manual/project_run.m      Tuesday's chamber runs, one section each
+  manual/zinf_run.m         Tuesday's Zi/Nfield session, one section per measurement
+  manual/project_dims.m     fill in by hand on the day (stored in every data file)
+  manual/core/              measure_project, compare_project, plot_project, measure_zinf, compare_zinf, zinf_calc
+  manual/tests/             test_project, test_zinf: offline, no hardware, must print PASS
+  analysis/                 results_labday, pad_predict, import_labday, labday_to_kit (after the lab)
+  data/                     project_<tag>.mat, zinf_<tag>.mat (Tuesday scripts), <date>/ (kit / GUI days)
+  demo_data/                labgui('demo') only, not in git
 ```
 
 `measure_project` calls the Lab E course routine `meas_mag_spec2_SoundCard_LabE` (from
 `Lab E/matlab/course/` in this repo, or the lab PC's own copy if it is already on the path).
 Copy the whole labs repo to the lab PC so the relative paths work. If the routine stops with
 "beeps.wav not found" or "no Umik", `cd` into the course folder (or copy `Beeps.wav` next to
-`project_run.m`), and start MATLAB only after the UMIK is plugged in.
+`project_run.m`), and start MATLAB only after the UMIK is plugged in. (The kit and the GUI now
+do the `cd` themselves when `beeps.wav` sits next to the routine.)
 
 ## 1. Bring
 
@@ -108,7 +128,7 @@ All parts from the course baskets (Project Guide 3.2, Appendix 1 Table 1): at le
 value, no combining parts, return unused parts.
 
 Measure each part with the LCR meter if there is one, and each coil's resistance with the
-multimeter, and write the numbers into `matlab/project_dims.m`. Expected effects (model): coil
+multimeter, and write the numbers into `manual/project_dims.m`. Expected effects (model): coil
 resistance 0.3 / 0.6 / 1.0 ohm per mH lowers the sum by at most 0.23 / 0.45 / 0.74 dB; 400 random
 boards (coils 5 %, caps 10 %, resistors 5 %) stay inside a 1.7 dB band (report, Tolerances).
 Amplifier channel 2 never sees less than 4.4 ohm.

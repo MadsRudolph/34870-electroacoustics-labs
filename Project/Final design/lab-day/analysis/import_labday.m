@@ -15,9 +15,9 @@ function import_labday()
 %   project_dims was not filled in on the day; the values the group gave afterwards
 %   (amplifier ~45 %, placement as in Lab E, filters from the .txt files) are added.
 
-here = fileparts(mfilename('fullpath'));
-raw = fullfile(here, '..', 'raw data');
-out = fullfile(here, '..', 'data');
+here = fileparts(mfilename('fullpath')); addpath(fullfile(here, '..', 'kit', 'core')); LP = labpaths('all');
+raw = fullfile(LP.root, 'raw data');
+out = LP.data;
 if ~exist(out, 'dir'), mkdir(out); end
 
 %  raw file                       saved as                 used   Out1 dB  problem

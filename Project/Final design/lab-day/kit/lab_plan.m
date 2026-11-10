@@ -17,7 +17,7 @@ c = {
 'P3'  'P'  'chamber'  'byp_tw'       0  'bypass'  [2000 18000] 'Placement: tweeter (via board)'  'MiniDSP BYPASSED. Amp ch. 1 cable pulled. MIDRANGE lead off, tweeter lead on.'
 'P2d' ''   'chamber'  'dir_mid'      0  'bypass'  [200 5000]   'Midrange wired straight (no board)' 'MiniDSP BYPASSED. Amp ch. 1 pulled. Midrange wired DIRECTLY to amp ch. 2 (board out of the path).'
 'P3d' ''   'chamber'  'dir_tw'       0  'bypass'  [2000 18000] 'Tweeter wired straight (no board)'  'MiniDSP BYPASSED. Amp ch. 1 pulled. Tweeter wired DIRECTLY to amp ch. 2 (board out of the path).'
-'S1'  'S'  'chamber'  'woofer'       0  'on'      [100 250]    'System: woofer only'             'MiniDSP ON (filters pasted, Out 1 gain as in lab_setup). Pull the amp ch. 2 cable.'
+'S1'  'S'  'chamber'  'woofer'       0  'on'      [100 250]    'System: woofer only'             'MiniDSP ON (filters pasted, Out 1/Out 2 gains as in today''s settings). Pull the amp ch. 2 cable.'
 'S2'  'S'  'chamber'  'midtw'        0  'on'      [600 15000]  'System: mid + tweeter'           'Plug ch. 2 back, pull the amp ch. 1 cable.'
 'S3'  'S'  'chamber'  'all'          0  'on'      [150 15000]  'System: all three'               'Plug ch. 1 back. Everything on, normal polarity.'
 'S4'  ''   'chamber'  'mid'          0  'on'      [600 2500]   'System: midrange only'           'MiniDSP ON. Amp ch. 1 pulled. TWEETER lead off at the board.'

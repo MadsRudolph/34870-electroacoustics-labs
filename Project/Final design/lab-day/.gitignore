@@ -1,0 +1,5 @@
+# labgui('demo') rehearsal data: never mixed with real data, not shared
+demo_data/
+
+# labgui test screenshots: rewritten on every test run (curated copies in kit/screenshots/)
+kit/tests/screenshots/

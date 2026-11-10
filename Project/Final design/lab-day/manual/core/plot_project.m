@@ -1,7 +1,7 @@
 function plot_project(which, varargin)
 % PLOT_PROJECT  Graphs of the anechoic measurements, one figure per run, saved as PNG + FIG.
 %
-%   plot_project                    every ../data/project_*.mat, plus an overview figure
+%   plot_project                    every lab-day/data/project_*.mat, plus an overview figure
 %   plot_project('R1_split_0_3')    one run (file name without 'project_' and '.mat')
 %   plot_project(m)                 a struct straight from measure_project
 %
@@ -10,7 +10,7 @@ function plot_project(which, varargin)
 %     'smooth'  0 (default, raw) or e.g. 6 for 1/6-octave smoothing of the magnitude
 %     'labels'  cell array overriding the state names in the legend, e.g. when a
 %               state was not switched in time: {'mid','tw','tw (not switched)'}
-%     'save'    true (default): ../figures/<tag>.png and .fig
+%     'save'    true (default): lab-day/figures/<tag>.png and .fig
 %
 % Each run figure: top = |p/V| in dB for every state of the run (dashed = model),
 % bottom = phase DIFFERENCE between the two drivers of the run (woofer - midtw,
@@ -27,9 +27,10 @@ p.addParameter('save', true);
 p.parse(varargin{:});
 o = p.Results;
 
-here = fileparts(mfilename('fullpath'));
-datadir = fullfile(here, '..', 'data');
-figdir = fullfile(here, '..', 'figures');
+L = labpaths();
+here = L.model;                  % model_table() reads the expected curves from here
+datadir = L.data;
+figdir = L.figures;
 if o.save && ~exist(figdir, 'dir'), mkdir(figdir); end
 
 if nargin < 1 || isempty(which)
@@ -167,11 +168,11 @@ end
 end
 
 % ---------------------------------------------------------------------------
-function [T, hdr, fmod] = model_table(here, ang)
+function [T, hdr, fmod] = model_table(modeldir, ang)
 T = []; hdr = {}; fmod = [];
 switch ang
-    case 0,  f = fullfile(here, '..', 'model', 'expected_on.csv');
-    case 30, f = fullfile(here, '..', 'model', 'expected_off30.csv');
+    case 0,  f = fullfile(modeldir, 'expected_on.csv');
+    case 30, f = fullfile(modeldir, 'expected_off30.csv');
     otherwise, return
 end
 if ~exist(f, 'file'), return; end

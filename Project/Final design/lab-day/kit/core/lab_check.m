@@ -37,7 +37,7 @@ for k = 1:numel(m.ids)
                 r.offset, r.shape, zmin, fb(i));
         case 'woofer'
             S = m.setup;
-            addpath(fullfile(fileparts(mfilename('fullpath')), '..', '..', '..', '..', 'Lab D', 'matlab'));
+            L = labpaths(); addpath(L.labDmatlab);
             v = fb_from_Z(fn, m.Z);
             [ref, okr] = lab_model('woofer', '', S.vent_mm, []);
             r.x = [v.fL v.fb v.fH];

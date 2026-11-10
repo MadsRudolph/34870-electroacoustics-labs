@@ -14,4 +14,5 @@ s.NexusVperPa = 1;               % Zi station, near field
 s.placement   = 'as Lab E: mic 2.44 m, 1.15 m high';
 s.T_celsius   = NaN;
 s.notes       = '';
+s.gui_theme   = 'light';         % labgui colours, 'light' or 'dark' (the GUI's Colours menu sets it)
 end

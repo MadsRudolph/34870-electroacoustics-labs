@@ -25,10 +25,10 @@ function m = measure_project(tag, angle_deg, states, varargin)
 %     'Nav'     periods to average (default 64, as Lab E part 2)
 %     'n_oct'   tones per octave (default 48, same grid as the Lab E data)
 %     'note'    free text
-%     'datadir' where to save (default ../data)
+%     'datadir' where to save (default lab-day/data)
 %     'plot'    true/false, default true (measured vs. model, level-matched)
 %
-% Saves ../data/project_<tag>.mat with everything the course routine returns
+% Saves lab-day/data/project_<tag>.mat with everything the course routine returns
 % (fn, specn, f, spec, ch), H(:,k) = specn(:,2,k)./specn(:,1,k) (p per volt at
 % the sound card line-out, as in Lab E), the states, a timestamp, the
 % hand-measured values from project_dims.m, and a snapshot of the design
@@ -52,10 +52,10 @@ assert(numel(states) >= 1 && numel(states) <= 3, ...
 bad = setdiff(states, valid);
 assert(isempty(bad), 'Unknown state(s): %s. Use: %s', strjoin(bad, ', '), strjoin(valid, ', '));
 
-here = fileparts(mfilename('fullpath'));
-course = fullfile(here, '..', '..', '..', '..', 'Lab E', 'matlab', 'course');
-if isempty(which('meas_mag_spec2_SoundCard_LabE')), addpath(course); end
-datadir = fullfile(here, '..', 'data');
+L = labpaths();                         % kit/core/labpaths.m: every folder in one place
+if isempty(which('project_dims')), addpath(L.manual); end
+if isempty(which('meas_mag_spec2_SoundCard_LabE')), addpath(L.labEcourse); end
+datadir = L.data;
 if ~isempty(o.datadir), datadir = o.datadir; end
 if ~exist(datadir, 'dir'), mkdir(datadir); end
 
@@ -83,7 +83,7 @@ m = struct('tag', tag, 'angle_deg', angle_deg, 'states', {states}, ...
     'fn', fn(:), 'specn', specn, 'f', f(:), 'spec', spec, 'ch', ch, 'dims', dims);
 m.H = reshape(specn(:,2,:) ./ specn(:,1,:), numel(fn), Nmeas);   % Pa per volt
 m.peak = reshape(max(abs(ch), [], 1), 2, Nmeas);                  % line-in, UMIK
-m.design = snapshot(here);
+m.design = snapshot(L.final);
 
 file = fullfile(datadir, ['project_' tag '.mat']);
 k = 2;
@@ -122,8 +122,8 @@ switch state
 end
 end
 
-function d = snapshot(here)
-fd = fullfile(here, '..', '..');
+function d = snapshot(fd)
+% fd = the 'Final design' folder
 d = struct();
 d.design_json = readtext(fullfile(fd, 'design', 'design.json'));
 d.minidsp_out1 = readtext(fullfile(fd, 'data', 'dsp', 'MiniDSP_woofer_out1.txt'));

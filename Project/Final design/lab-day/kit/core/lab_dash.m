@@ -9,30 +9,20 @@ function fig = lab_dash(datadir, varargin)
 %       the two channels) | Flips (F) | 30 deg (A) | Impedance (Z) | Near field (N).
 % Measured = solid, expected = dashed (shifted by the fitted level), difference underneath.
 % Every tab is also saved as <datadir>/figures/<tab>.png.
+% (In normal use it is opened by labgui's 'Open dashboard' button or by the 'lab' command.)
 
 p = inputParser;
 p.addParameter('focus', 'Plan');
 p.addParameter('save', true);
 p.parse(varargin{:});
 o = p.Results;
-here = fileparts(mfilename('fullpath'));
 S = lab_setup();
-if nargin < 1 || isempty(datadir), datadir = fullfile(here, '..', 'data', S.date); end
+if nargin < 1 || isempty(datadir), L = labpaths(); datadir = fullfile(L.data, S.date); end
 [~, day] = fileparts(datadir);
 P = lab_plan();
 
 % ---- load every run, newest last
-runs = {};
-d = dir(fullfile(datadir, '*.mat'));
-if ~isempty(d)
-    for i = 1:numel(d)
-        m = load(fullfile(d(i).folder, d(i).name));
-        [~, m.file] = fileparts(d(i).name);
-        m.R = lab_check(m);
-        runs{end+1} = m; %#ok<AGROW>
-    end
-    [~, i] = sort(cellfun(@(m) datenum(m.time), runs)); runs = runs(i); %#ok<DATNM>
-end
+runs = lab_runs(datadir);          % skips files that are not kit runs
 
 % latest run per step id
 latest = containers.Map();
@@ -111,33 +101,15 @@ end
 end
 
 function run_tab(tab, m, ttl)
-% one run: every step against its expectation + difference
+% one run: every step against its expectation + difference (drawn by lab_plot, like labgui)
 if strcmp(m.station, 'zinf')
     z_one(tab, m, ttl); return
 end
-P = lab_plan(); fn = m.fn(:);
-a1 = subplot(3, 1, [1 2], 'Parent', tab); hold(a1, 'on');
-a2 = subplot(3, 1, 3, 'Parent', tab); hold(a2, 'on');
-c = lines(numel(m.ids)); vt = {}; ytop = -Inf;
-for k = 1:numel(m.ids)
-    s = P(strcmp({P.id}, m.ids{k})); r = m.R(strcmp({m.R.id}, s.id));
-    y = 20*log10(abs(m.H(:,k)));
-    ymod = lab_model('chamber', s.model, s.angle, fn);
-    semilogx(a1, fn, y, 'Color', c(k,:), 'LineWidth', 1.3, 'DisplayName', sprintf('%s %s', s.id, s.title));
-    semilogx(a1, fn, ymod + r.offset, '--', 'Color', c(k,:), 'HandleVisibility', 'off');
-    rr = lab_smooth(fn, y - ymod - r.offset); rr(fn < s.band(1) | fn > s.band(2)) = NaN; ytop = max([ytop; y(fn > 50)]);
-    semilogx(a2, fn, rr, 'Color', c(k,:), 'LineWidth', 1.2);
-    vt{end+1} = sprintf('\\color[rgb]{%g,%g,%g}%s %s', vcol(r.verdict), s.id, r.verdict); %#ok<AGROW>
-end
-for e = m.R(ismember({m.R.id}, {'bal', 'sum', 'F1n', 'F2n'}))
-    vt{end+1} = sprintf('\\color[rgb]{%g,%g,%g}%s %s', vcol(e.verdict), e.id, e.verdict); %#ok<AGROW>
-end
-style(a1, [50 20000]); ylabel(a1, '|p/V| (dB re 1 Pa/V)');
-legend(a1, 'Location', 'southwest', 'Interpreter', 'none');
-ylim(a1, [ytop - 40, ytop + 5]);
-title(a1, {ttl, strjoin(vt, '   ')}, 'Interpreter', 'tex');
-style(a2, [50 20000]); ylim(a2, [-6 6]); yline(a2, [-1.5 1.5], ':k', 'HandleVisibility', 'off');
-ylabel(a2, {'meas - expected', '(dB, 1/6 oct, in band)'}); xlabel(a2, 'frequency (Hz)');
+a1 = subplot(3, 1, [1 2], 'Parent', tab);
+a2 = subplot(3, 1, 3, 'Parent', tab);
+lab_plot('run', a1, a2, m);
+t = cellstr(a1.Title.String); t{1} = strrep(ttl, '_', '\_');
+title(a1, t, 'Interpreter', 'tex');
 txt = strjoin(arrayfun(@(e) sprintf('%s: %s', e.id, e.msg), m.R, 'UniformOutput', false), newline);
 annotation(tab, 'textbox', [0.13 0.005 0.8 0.04], 'String', txt, 'EdgeColor', 'none', ...
     'FontSize', 7, 'Interpreter', 'none', 'VerticalAlignment', 'bottom');

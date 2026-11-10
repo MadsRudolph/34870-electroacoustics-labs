@@ -1,16 +1,18 @@
 function test_project()
 % TEST_PROJECT  Check measure_project + compare_project without the sound card or UMIK.
 %   A stand-in for the course routine "measures" the model curves themselves
-%   (../model/expected_on.csv, on its own grid), scaled by 0.5 (-6.0 dB) and with one random
+%   (lab-day/model/expected_on.csv, on its own grid), scaled by 0.5 (-6.0 dB) and with one random
 %   delay per run, shaped exactly like the real routine's output. Then:
 %   H recovered, offset -6.0 dB for every state, no shape error, the sum
 %   check and the polarity notches as the model says, nothing overwritten,
 %   design snapshot and dims saved, more than 3 states refused.
 
 here = fileparts(mfilename('fullpath'));
+addpath(fullfile(here, '..', '..', 'kit', 'core'));    % labpaths
+L = labpaths(); addpath(L.manual, L.manualcore);
 set(groot, 'DefaultFigureVisible', 'off');
 tmp = tempname; mkdir(tmp); dd = fullfile(tmp, 'data'); mkdir(dd);
-csvf = fullfile(here, '..', 'model', 'expected_on.csv');
+csvf = fullfile(L.model, 'expected_on.csv');
 assert(exist(csvf, 'file') == 2, 'run python3 model_curves.py first');
 fid = fopen(fullfile(tmp, 'meas_mag_spec2_SoundCard_LabE.m'), 'w');
 fprintf(fid, '%s\n', ...

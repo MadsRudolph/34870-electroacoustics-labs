@@ -4,13 +4,13 @@ function r = compare_zinf(m, varargin)
 %   r = compare_zinf(m)          m = output of measure_zinf, or a saved zinf_*.mat
 %   r = compare_zinf('zinf_board.mat')
 %
-%   board       vs ../model/expected_zi.csv (Lab D driver impedances through the
+%   board       vs lab-day/model/expected_zi.csv (Lab D driver impedances through the
 %               design board): |Z| min and where, level ratio, worst deviation.
 %               Which column: tag containing 'mid' -> Zmid, 'tw' -> Ztw, else Zboth.
 %   woofer      vs Lab D labD_vent_L160 (same box, one vent 160 mm): fL, fb, fH.
 %   nearfield   vs Lab D labD_nf_cone_L160 / labD_nf_vent_L160 (tag contains 'cone'
 %               or 'vent'): level difference 10-200 Hz.
-%   Lab D reference files are read from ../../../../Lab D/data.
+%   Lab D reference files are read from Labs/Lab D/data (see labpaths).
 
 p = inputParser;
 p.addParameter('plot', true);
@@ -19,14 +19,14 @@ p.parse(varargin{:});
 o = p.Results;
 if ischar(m) || isstring(m), m = load(m); end
 
-here = fileparts(mfilename('fullpath'));
-labD = fullfile(here, '..', '..', '..', '..', 'Lab D');
+L = labpaths();
+labD = L.labD;
 r = struct('tag', m.tag, 'kind', m.kind);
 fn = m.fn(:);
 
 switch m.kind
 case 'board'
-    csvf = fullfile(here, '..', 'model', 'expected_zi.csv');
+    csvf = fullfile(L.model, 'expected_zi.csv');
     T = readmatrix(csvf, 'NumHeaderLines', 1);
     fid = fopen(csvf); hdr = strsplit(strtrim(fgetl(fid)), ','); fclose(fid);
     if contains(m.tag, 'mid'), col = 'Zmid'; elseif contains(m.tag, 'tw'), col = 'Ztw'; else, col = 'Zboth'; end

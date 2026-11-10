@@ -1,13 +1,14 @@
 function labday_to_kit()
-% LABDAY_TO_KIT  10-Nov runs (../data/*.mat, made by import_labday) -> the kit's format in
-%   ../data/2026-11-10/, so  lab_dash('../data/2026-11-10')  shows that day like any kit session.
+% LABDAY_TO_KIT  10-Nov runs (lab-day/data/*.mat, made by import_labday) -> the kit's format in
+%   lab-day/data/2026-11-10/, so the GUI / lab_dash show that day like any kit session.
+%   (The general version for any day is kit/core/lab_import.m, the GUI's "Load manual runs".)
 %   Left out: R1 try 1 and R2 try 1 (their 'all' state was not what it says).
 
 here = fileparts(mfilename('fullpath'));
-src = fullfile(here, '..', 'data');
+addpath(fullfile(here, '..', 'kit', 'core')); LP = labpaths('all');
+src = LP.data;
 out = fullfile(src, '2026-11-10');
 if ~exist(out, 'dir'), mkdir(out); end
-addpath(fullfile(here, '..', 'kit'));
 S0 = lab_setup(); S0.date = '2026-11-10'; S0.amp_volume = 'about 45 %';
 
 %  file                    label         ids                     note
