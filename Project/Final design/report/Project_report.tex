@@ -93,7 +93,7 @@ The project guide fixes \emph{how} each one is made (Figure~\ref{fig:xcircuit}):
 \begin{center}
 \begin{tabular}{ll}
 \toprule
-Woofer box & one vent open, length $L = \SI{160}{mm}$, box tuned to $f_B = \SI{\bfBA}{Hz}$, no extra filling \\
+Woofer box & one vent open, length $L = \SI{160}{mm}$, box tuned to $f_B = \SI{\bfBA}{Hz}$, filling left in \\
 Digital crossover & \xalignDig\ (Linkwitz--Riley, 4th order) at \SI{\xfcDig}{Hz}; woofer turned down \SI{\xgWoof}{dB} \\
 Midrange filter & 2nd-order low-pass: coil \xMidLa\ in series, capacitor \xMidCa\ across the driver \\
 Tweeter filter & 2nd-order high-pass: capacitor \xTwCa\ in series, coil \xTwLa\ across; \\
@@ -130,9 +130,9 @@ their own effects.
 \toprule
 Measurement & What it tells us & Where we use it \\
 \midrule
-Lab D: woofer impedance, free air and in the closed box & the driver's mechanical properties (how heavy, how stiff, how strong the motor is) & Task 1: the values in the box circuit \\
-Lab D: woofer impedance with one vent at 160/200/240 mm & how the vent changes the box & Task 1: the vent's air mass \\
-Lab D: near-field pressure at cone and vent & how loud cone and vent really are at low frequencies & Task 1: checking the box circuit \\
+Lab D: woofer impedance, free air and in the closed box (no filling, as the lab brief asks) & the driver's mechanical properties (how heavy, how stiff, how strong the motor is) & Task 1: the values in the box circuit \\
+Lab D: woofer impedance with one vent at 160/200/240 mm (filling put back in) & how the vent changes the box & Task 1: the vent's air mass \\
+Lab D: near-field pressure at cone and vent (same setup as the vented runs) & how loud cone and vent really are at low frequencies & Task 1: checking the box circuit \\
 Lab D: midrange and tweeter impedance $Z_i$ & the load the passive filters drive & Task 2: loading the filters correctly \\
 Lab E: $p/V$ of all three units, straight on and at $30^\circ$ & what each driver sounds like in its box, magnitude and phase & Task 2: the drivers in the crossover simulation \\
 \bottomrule
@@ -281,8 +281,14 @@ length the air actually sees, or that the inner tube is narrower than \SI{65}{mm
 
 A second thing the fit showed: with the vents plugged the box has almost no losses (the closed-box
 peak reaches \SI{121}{\ohm}), but with a vent open the curves need extra losses
-($Q_L = \bQL$, $Q_P = \bQP$). The losses come from the air rushing through the vent, not from leaks in
-the box. So the model uses different losses for the plugged and the vented box.
+($Q_L = \bQL$, $Q_P = \bQP$). Part of this is the air rushing through the vent, but the two box states
+were not the same: following the lab brief, the free-air and closed-box runs were made \emph{without}
+filling (so that the box volume is exactly the physical one), and the filling was put back before the
+vented runs. The filling absorbs sound and makes the box act slightly larger, so its effect ends up in
+the fitted vent mass and losses. That is fine for the design, because the box will be used with the
+filling in, but it means the vented model describes the filled box, and it may also be part of why
+$f_B$ moves less with the vent length than the tube formula says. So the model uses different losses
+for the plugged (empty) and the vented (filled) box.
 
 \subsection{Checking the model against the near field}
 Fitting the impedance only proves the circuit gets the \emph{electrical} side right. To check that
@@ -307,7 +313,9 @@ predicted by the circuit (dashed), for the three vent lengths. Predicted, not fi
 \subsection{Trying the options and choosing one}
 With a model we trust, we tried every option in LTspice. One run with \file{.step} goes through the
 plugged box, the three vent lengths, and a free value for experimenting
-(Figure~\ref{fig:task1sch}). Figure~\ref{fig:tuning} shows the result.
+(\file{ltspice/task1/Task1_WooferBox.asc}). Figure~\ref{fig:tuning} shows the result. The first four
+rows are settings we measured in Lab D; we never measured with both vents open, so the last row is
+the model only, with an estimated vent mass.
 
 \begin{center}
 \begin{tabular}{lccc}
@@ -318,7 +326,7 @@ Vents plugged (closed box) & -- & \bfthreeCl & \brippleCl \\
 One vent, $L = \SI{160}{mm}$ & \bfBA & \bfthreeA & \brippleA \\
 One vent, $L = \SI{200}{mm}$ & \bfBB & \bfthreeB & \brippleB \\
 One vent, $L = \SI{240}{mm}$ & \bfBC & \bfthreeC & \brippleC \\
-Both vents ($M_{AP} \approx 52$) & 28.0 & 32.7 & +2.4 \\
+Both vents, model only ($M_{AP} \approx 52$, estimated) & 28.0 & 32.7 & +2.4 \\
 \bottomrule
 \end{tabular}\\[2pt]
 {\footnotesize $f_3$ relative to the average level at \SIrange{150}{300}{Hz}, half space, no room. Ripple = how far the response rises above that level below \SI{150}{Hz} (a ``hump'').}
@@ -338,8 +346,9 @@ How to read it:
 
 \textbf{Choice: one vent at \SI{160}{mm}.} It gives the same $f_3$ as the longer settings, cuts the
 cone excursion, and it is a setting we actually measured, so the near field checks it directly.
-Opening both vents gives no deeper bass and a bigger hump. Filling would add a few hertz, but we have no
-measurement with filling to check the model against. A room adds bass of its own, so a hump under
+Opening both vents (simulated only, not measured) gives no deeper bass and a bigger hump. The filling stays in: it damps the box's
+own resonances at higher frequencies, and since the vented measurements were made with it, the fitted
+vent mass and losses (and so this tuning) already include it. A room adds bass of its own, so a hump under
 \SI{2}{dB} in this free-space model is on the safe side.
 
 \begin{figure}[htbp]

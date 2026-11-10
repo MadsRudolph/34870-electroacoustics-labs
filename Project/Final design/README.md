@@ -28,6 +28,7 @@ data/                     LTspice data files (Zi, TF, TF30, Box_woof), csv/ for 
 figures/                  report figures
 app/index.html            Crossover Studio: change any value and see the result in the browser
 report/                   Project_report.tex + generated results_*.tex
+lab-day/                  Task 3 session: checklist, measurement wrapper + plan (MATLAB), model curves
 ```
 
 ## Rerun

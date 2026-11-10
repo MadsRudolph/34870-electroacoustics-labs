@@ -36,33 +36,41 @@ repo holds the shared work behind it.
 
 ```
 Project/
+  Final design/    THE design: report, LTspice circuits, figures, design scripts (see its README)
+    report/Project_report.tex   the project report (Overleaf main document)
+    ltspice/                    System_D_course.asc (Q10 circuit), task1/Woofer_Vented_L160.asc (Q5),
+                                units/ (each unit with our data, no filter), System_template.asc
+    figures/, design/, data/    report figures, design.json + xover.py, data files used by the design
+  report/Project_todo.tex   the group's work plan (PDF next to it)
   data/            LTspice text files Zi_{mid,tw}.txt, TF_{woof,mid,tw}.txt, TF30_*.txt
                    (export_systemD.m), csv/ = the same data as f,re,im for scripts
-  ltspice/units/   Unit_woof/mid/tw.asc: one unit with our measured data, no filter
-  ltspice/System_template.asc   Figure 1 wired up, filter slots empty (gen_templates.py)
   matlab/
     load_systemD.m     loads every Lab D/E file the project needs (see below)
     export_systemD.m   writes data/ from it
+    extract_ltspice.m, ts_from_Z.m, labD_dims.m   Louis's T/S extraction for the box circuits
     course/            course files: DigitalCrossover.m, Matlab2LTspice.m, phaseunwrap.m
     course/ventedbox/  Lecture 8 ventbox.m (+ QB3, cheby2)
   ltspice/
+    closed box/, open box/, vented box/   Louis's woofer circuits (the Q5 drawing starts from vented box/)
+    midrange dali/, tweeter dali/         Louis's midrange and tweeter impedance models
     course/passive/    course example: one unit with Zi + TF, plus the example 2nd-order filter
     course/digital/    course example: woofer with two cascaded biquad E-sources
-  figures/         plots for the report
-  report/Project_report.tex   write-up skeleton (sections follow tasks 1–4)
+  figures/         check plots from 5 Nov (woofer model vs Lab D)
 ```
 
 ## Start here
 
-1. Work plan: `report/Project_todo.tex` (PDF next to it). It goes through the guide task by task,
-   with a tick box and a name on every step.
-2. The measured data is already exported for LTspice in `data/` (run `matlab -batch export_systemD`
+1. The report: `Final design/report/Project_report.tex` (PDF next to it). In Overleaf, set it as
+   the main document (Menu → Main document).
+2. Work plan: `report/Project_todo.tex` (PDF next to it), task by task with a tick box and a name
+   on every step.
+3. The measured data is already exported for LTspice in `data/` (run `matlab -batch export_systemD`
    in `matlab/` to redo it, e.g. with another distance `d`).
-3. Open `ltspice/units/Unit_mid.asc` (or `_tw`, `_woof`) and run it: that is each unit with our
-   own Zi and TF, no filter. `ltspice/System_template.asc` is the whole of Figure 1 wired up with
-   empty filter slots.
-4. `python3 ltspice/gen_templates.py --verify` regenerates those files and checks them against
-   the measurements in LTspice (needs LTspice under wine, as for the labs).
+4. Open `Final design/ltspice/units/Unit_mid.asc` (or `_tw`, `_woof`) and run it: that is each unit
+   with our own Zi and TF, no filter. `Final design/ltspice/System_template.asc` is the whole of
+   Figure 1 wired up with empty filter slots; `System_D_course.asc` next to it is the finished design.
+5. `python3 "Final design/ltspice/gen_templates.py" --verify` regenerates those files and checks them
+   against the measurements in LTspice (needs LTspice under wine, as for the labs).
 
 ## Getting the measured data into LTspice
 

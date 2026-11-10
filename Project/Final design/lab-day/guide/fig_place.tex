@@ -1,0 +1,50 @@
+% Placement in the anechoic chamber, as in Lab E (side view roughly to scale, 1 m = 3.2 cm)
+\begin{tikzpicture}[x=1cm,y=1cm,
+  lbl/.style={font=\scriptsize, inner sep=1pt},
+  dim/.style={{Latex[length=1.6mm]}-{Latex[length=1.6mm]}, thin},
+  every node/.style={font=\footnotesize}]
+  % ---------- side view
+  \node[font=\footnotesize\bfseries, anchor=west] at (0,4.6) {Side view};
+  \fill[pattern=north east lines, pattern color=gray] (0,-0.25) rectangle (10.4,0);
+  \draw[thick] (0,0) -- (10.4,0);
+  \node[lbl, anchor=north west] at (0,-0.3) {platform (wooden base on the net)};
+  \draw[thick, fill=brown!15] (0.4,0) rectangle (1.84,1.44);
+  \node[lbl, rotate=90] at (1.1,0.72) {woofer box};
+  \fill (1.84,0.25) circle (0.07);
+  \node[lbl, anchor=west, align=left] at (1.95,0.3) {vents\\plugged};
+  \draw[thick, fill=gray!5] (0.9,1.44) rectangle (1.67,2.37);
+  \node[lbl, rotate=90] at (1.28,1.9) {mid/tw};
+  \draw[thick] (1.84,0.72) -- (1.92,0.72);
+  % microphone on a stand
+  \draw[thick] (9.65,0) -- (9.65,3.68);
+  \draw[thick] (9.3,0) -- (10.0,0);
+  \draw[fill=black!70] (9.65,3.6) -- (9.15,3.6) -- (9.05,3.68) -- (9.15,3.76) -- (9.65,3.76) -- cycle;
+  \node[lbl, anchor=west] at (9.75,3.68) {UMIK};
+  % dimensions
+  \draw[dim] (1.84,3.25) -- (9.05,3.25) node[lbl, midway, above, fill=white] {$r_\mathrm{mic} = \SI{2.44}{m}$, front of the boxes $\to$ microphone};
+  \draw[thin, gray] (1.84,2.4) -- (1.84,3.4);
+  \draw[dim] (8.6,0) -- (8.6,3.68) node[lbl, midway, left, fill=white, align=right] {$h_\mathrm{mic} = \SI{1.15}{m}$\\above the platform};
+  \draw[thin, gray] (8.5,3.68) -- (9.05,3.68);
+  \node[lbl, align=left, anchor=west, text width=4.0cm] at (2.3,2.0) {As in Lab E: same box layout and dust cover; mic aimed at the system (IncAngle 0).};
+  % ---------- top view
+  \begin{scope}[xshift=11.8cm, yshift=1.9cm]
+  \node[font=\footnotesize\bfseries, anchor=west] at (-1.2,2.7) {Top view};
+  \draw[thick, fill=brown!5] (0,0) circle (1.45);
+  \node[lbl, anchor=north] at (0,-1.5) {rotating wooden base};
+  % 0 deg
+  \draw[thick, fill=brown!15] (-0.72,-0.72) rectangle (0.72,0.72);
+  \draw[very thick] (0.72,-0.4) -- (0.72,0.4);
+  \draw[-{Latex[length=2mm]}, thick] (0,0) -- (3.9,0);
+  \node[lbl, anchor=north] at (3.0,-0.08) {\ang{0}: axis to the mic};
+  % 30 deg (dashed)
+  \begin{scope}[rotate=30]
+    \draw[dashed, thick] (-0.72,-0.72) rectangle (0.72,0.72);
+    \draw[dashed, -{Latex[length=2mm]}] (0,0) -- (3.0,0);
+  \end{scope}
+  \draw[-{Latex[length=1.6mm]}] (2.2,0) arc (0:30:2.2);
+  \node[lbl, anchor=west, align=left] at (2.75,1.15) {\ang{30} for R4\\(same direction\\as in Lab E)};
+  \draw[fill=black!70] (4.0,-0.12) rectangle (4.4,0.12);
+  \node[lbl, anchor=south] at (4.2,0.2) {UMIK};
+  \node[lbl, align=left, anchor=north west] at (1.5,-0.55) {mark the \ang{0} position\\so R5 comes back to it};
+  \end{scope}
+\end{tikzpicture}

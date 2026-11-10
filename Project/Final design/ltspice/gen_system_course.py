@@ -173,13 +173,11 @@ def build(des):
     LP = X.ltspice_text(dg["fc"], "LPF", dg["align"]); HP = X.ltspice_text(dg["fc"], "HPF", dg["align"])
     LP += ["1"] * (2 - len(LP)); HP += ["1"] * (2 - len(HP))
     sh = Sheet()
-    sh.text(-336, -160, "System D, Task 2: digital crossover (MiniDSP) + passive crossover, drawn as the course examples. "
-                        "Zi and TF are the Lab D / Lab E measurements, included from text files (Matlab2LTspice format, same distance d = -1.15 m for all TFs).")
-    sh.text(-336, -112, "The controlled sources come from the .inc files; the dashed boxes only show where they sit. "
-                        "E1/E2 = DigitalCrossover.m biquads (n = 2, used twice = LR4), Value hidden: Ctrl+right-click to read it.")
-    rows = (("woof", "woofer: MiniDSP output 1, LR4 low-pass 325 Hz, -4.5 dB -> amplifier ch. 1 -> woofer (no passive filter)"),
-            ("mid", "midrange: MiniDSP output 2, LR4 high-pass 325 Hz -> amplifier ch. 2 -> Vhp -> passive LP2"),
-            ("tw", "tweeter: same Vhp (amplifier ch. 2) -> passive HP2 + L-pad"))
+    sh.text(-336, -160, "System D crossover. The speakers are our own measurements, loaded from the .inc files: impedance (Lab D) and response at the mic (Lab E).")
+    sh.text(-336, -112, "E1, E2 = the digital filter in the MiniDSP. The dashed boxes show where the measured speaker data sits.")
+    rows = (("woof", "Woofer: digital low-pass at 325 Hz, turned down 4.5 dB, no passive filter"),
+            ("mid", "Midrange: digital high-pass at 325 Hz, then a passive low-pass"),
+            ("tw", "Tweeter: same digital high-pass, then a passive high-pass and an L-pad"))
     for k, (u, lab) in enumerate(rows):
         dy = k * ROW
         sh.text(-336, dy - 16, lab)
@@ -205,8 +203,8 @@ def build(des):
     summer(sh, xs, 80, "", "on axis")
     summer(sh, xs + 480, 80, "30", "30 deg")
     sh.text(xs - 160, 640, f".param g_woof={gw:.6g} g_mid=1 g_tw=1  p_woof={des['pol']['woof']} p_mid={des['pol']['mid']} p_tw={des['pol']['tw']}", d=True)
-    sh.text(xs - 160, 680, f"g_woof = {dg['g_woof_dB']:+.1f} dB = MiniDSP output 1 gain;  p_ = polarity (+1 / -1)")
-    sh.text(xs - 160, 720, "V(Psum) = the whole box on axis, V(Psum30) = 30 deg, as the mic at 2.44 m sees it, for 1 V in")
+    sh.text(xs - 160, 680, f"g_woof = woofer level ({dg['g_woof_dB']:+.1f} dB),  p = polarity (+1 or -1)")
+    sh.text(xs - 160, 720, "Psum = the whole box on axis, Psum30 = at 30 degrees")
     sh.text(-336, 3 * ROW + 32, ".ac dec 1000 20 20000", d=True)
     p = HERE / f"{NAME}.asc"
     sh.dump(p)

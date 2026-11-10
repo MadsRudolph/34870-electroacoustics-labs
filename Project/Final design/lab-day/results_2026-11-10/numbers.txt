@@ -1,0 +1,4 @@
+spread 150-15k (1/6 oct): measured 7.1 dB, model 4.0 dB, with Rp 8.2: 5.3 dB
+rms re own median: measured 1.60 dB, Rp 8.2: 1.20 dB
+re the common shift: woofer -0.1, mid +1.5, tweeter -2.7 dB
+R5-R1: median +0.07, worst 0.16 dB; sum check worst 0.10 dB (150-15k)
