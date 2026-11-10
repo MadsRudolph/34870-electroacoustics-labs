@@ -2,7 +2,7 @@ function import_labday()
 % IMPORT_LABDAY  Lab day 10-Nov-2026: raw lab-PC files -> small, annotated files in ../data/.
 %
 %   ../raw data/anechoic/project_*.mat and ../raw data/nearfield/zinf_*.mat are the
-%   untouched files from the USB stick (gitignored, ~100 MB: full spectra and time
+%   untouched files from the USB stick (~100 MB, in git: full spectra and time
 %   signals). This keeps what the analysis needs (fn, specn, H, states, metadata),
 %   drops spec/ch, and adds what was only known afterwards:
 %     - the MiniDSP Out 1 gain was lowered by 5.8 dB to -10.3 dB before R1 try 3
