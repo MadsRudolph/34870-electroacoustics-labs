@@ -29,7 +29,7 @@ only from the model.
 \begin{tabular}{@{}>{\raggedright}p{6.2cm}>{\raggedright}p{6.6cm}l@{}}\toprule
 Quantity & Result & Verdict\\\midrule
 On-axis spread 150\,Hz--15\,kHz (1/6 oct) & 7.1\,dB (model 4.0\,dB) & \fix\\
-Woofer vs mid+tweeter level & $-0.1$\,dB (after Out 1 $= -10.3$\,dB) & \good\\
+Woofer vs mid+tweeter level & $-0.1$\,dB (after Out 1 $= -5.8$\,dB) & \good\\
 Woofer / midrange / tweeter vs model & $-0.1$ / $+1.5$ / $-2.7$\,dB & \fix\ (tweeter)\\
 Woofer-flip notch & 315\,Hz, $-32$\,dB (model 329\,Hz, $-21$\,dB) & \good\\
 Tweeter-flip notch & 4161\,Hz, $-28.6$\,dB (model 3928\,Hz, $-14$\,dB) & \good\\
@@ -41,8 +41,8 @@ Board impedance, 30\textdegree, Lab E placement re-check & not measured / not sa
 \end{center}
 
 \section{What was measured}
-Settings: MiniDSP filters pasted from \texttt{data/dsp/MiniDSP\_*.txt} (LR4, 325\,Hz), \textbf{Out 1 $= -10.3$\,dB}
-(design $-4.5$\,dB, then another $-5.8$\,dB to balance this lab's amplifier channels), Out 2 $= 0$\,dB,
+Settings: MiniDSP filters pasted from \texttt{data/dsp/MiniDSP\_*.txt} (LR4, 325\,Hz), \textbf{Out 1 $= -5.8$\,dB}
+(design $-4.5$\,dB; it was at 0\,dB in the first two tries and was then set to $-5.8$\,dB to balance this lab's chain), Out 2 $= 0$\,dB,
 amplifier about 45\,\%, placement as in Lab E (mic 2.44\,m, 1.15\,m high), vents plugged. A channel was
 muted by pulling its speaker cable at the amplifier.
 
@@ -50,7 +50,7 @@ muted by pulling its speaker cable at the amplifier.
 \begin{tabular}{@{}lll>{\raggedright\arraybackslash}p{6.2cm}@{}}\toprule
 Time & Run & Settings in the run & Used?\\\midrule
 14:28 & R1 try 1 & woofer / mid+tw / all & no: woofer silent in ``all''\\
-15:02 & R1 try 2 & woofer / mid+tw / all & no: woofer 6.4\,dB too loud (Out 1 still $-4.5$)\\
+15:02 & R1 try 2 & woofer / mid+tw / all & no: woofer 6.4\,dB too loud (Out 1 still at 0\,dB)\\
 15:17 & \textbf{R1} & woofer / mid+tw / all & \textbf{yes}\\
 15:24 & R2 try 1 & mid / tw / all & no: ``all'' not switched in time\\
 15:31 & \textbf{R2} & mid / tw / all & \textbf{yes}\\
@@ -182,7 +182,7 @@ the board) and 30\textdegree\ (run A).
 \item \textbf{Vent at 160\,mm} for listening and the demo. That is the design ($f_B$ 24.6\,Hz). The 200\,mm setting came from a
 memory of Lab D, where 200 was simply measured first.
 \item \textbf{The IEC room has its own amplifier}: check the woofer/mid balance there before listening
-(one run S). The $-10.3$\,dB on Out 1 may not be right in that room.
+(one run S). The $-5.8$\,dB on Out 1 may not be right in that room.
 \end{itemize}
 
 \section{What makes a loudspeaker sound good}
@@ -235,7 +235,7 @@ brightness, bass, clarity, imaging; 1--5 scale);
 
 \section{Thursday}
 \begin{enumerate}[leftmargin=*]
-\item In MATLAB: \texttt{cd lab-day/kit}, type \texttt{labgui}. Fill in Settings (Out 1 $-10.3$\,dB, amplifier, vent 160\,mm, series R). The steps below are the entries in its list; \texttt{lab P} etc.\ typed in the command window, or the sections of \texttt{lab\_run.m}, do the same.
+\item In MATLAB: \texttt{cd lab-day/kit}, type \texttt{labgui}. Fill in Settings (Out 1 $-5.8$\,dB, amplifier, vent 160\,mm, series R). The steps below are the entries in its list; \texttt{lab P} etc.\ typed in the command window, or the sections of \texttt{lab\_run.m}, do the same.
 \item \texttt{lab P}: placement against Lab E. All three should be OK before going on.
 \item Put \textbf{Rp $= 8.2\,\Omega$} on the board. \texttt{lab S}, \texttt{lab S4}, \texttt{lab S5}: check the tweeter step is gone and the balance is still within $\pm1$\,dB.
 \item \texttt{lab F}, \texttt{lab A} (30\textdegree), and at the Zi station \texttt{lab Z1}--\texttt{Z4}, \texttt{lab N1}, \texttt{N2}.

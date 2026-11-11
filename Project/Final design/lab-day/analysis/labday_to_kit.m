@@ -12,8 +12,8 @@ S0 = lab_setup(); S0.date = '2026-11-10'; S0.amp_volume = 'about 45 %';
 
 %  file                    label         ids                     note
 c = {
-  'project_R1_try2_0',   'S_try2',     {'S1','S2','S3'},       'R1 try 2: Out 1 still -4.5 dB (woofer 6 dB loud)'
-  'project_R1_split_0',  'S',          {'S1','S2','S3'},       'R1 try 3: Out 1 -10.3 dB'
+  'project_R1_try2_0',   'S_try2',     {'S1','S2','S3'},       'R1 try 2: Out 1 still 0 dB (woofer 6 dB loud)'
+  'project_R1_split_0',  'S',          {'S1','S2','S3'},       'R1 try 3: Out 1 -5.8 dB'
   'project_R2_units_0',  'S4+S5+S3',   {'S4','S5','S3'},       'R2: mid / tweeter / all'
   'project_R3_flip_0',   'F',          {'F0','F1','F2'},       'R3: polarity flips'
   'project_R5_repeat_0', 'S_repeat',   {'S1','S2','S3'},       'R5: repeat of R1'

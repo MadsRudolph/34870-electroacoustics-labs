@@ -5,9 +5,9 @@ function import_labday()
 %   untouched files from the USB stick (~100 MB, in git: full spectra and time
 %   signals). This keeps what the analysis needs (fn, specn, H, states, metadata),
 %   drops spec/ch, and adds what was only known afterwards:
-%     - the MiniDSP Out 1 gain was lowered by 5.8 dB to -10.3 dB before R1 try 3
-%       (R1 try 2 showed the woofer 6.4 dB too loud against mid+tweeter);
-%       tries 1 and 2 ran at -4.5 dB
+%     - the MiniDSP Out 1 gain was at 0 dB in R1 tries 1 and 2 (try 2 showed the
+%       woofer 6.4 dB too loud against mid+tweeter) and was then set TO -5.8 dB
+%       for every later run (design: -4.5 dB)
 %     - mutes were made by pulling the amplifier speaker cable, not in the app
 %     - the near field was measured with the vent at 200 mm (not 160), and the
 %       vent file was saved as 'L1200' by a typo -> renamed nf_vent_L200
@@ -23,13 +23,13 @@ if ~exist(out, 'dir'), mkdir(out); end
 
 %  raw file                       saved as                 used   Out1 dB  problem
 runs = {
-  'project_R1_split_0.mat',     'project_R1_try1_0',     false, -4.5,  'woofer silent in the ''all'' state (cable not back in time); mid+tw far too loud'
-  'project_R1_split_0_2.mat',   'project_R1_try2_0',     false, -4.5,  'woofer 6.4 dB too loud against mid+tw: Out 1 lowered by 5.8 dB afterwards'
-  'project_R1_split_0_3.mat',   'project_R1_split_0',    true,  -10.3, ''
-  'project_R2_units_0.mat',     'project_R2_try1_0',     false, -10.3, '''all'' state not switched in time (still tweeter only)'
-  'project_R2_units_0_2.mat',   'project_R2_units_0',    true,  -10.3, ''
-  'project_R3_flip_0.mat',      'project_R3_flip_0',     true,  -10.3, ''
-  'project_R5_repeat_0.mat',    'project_R5_repeat_0',   true,  -10.3, ''
+  'project_R1_split_0.mat',     'project_R1_try1_0',     false, 0,     'woofer silent in the ''all'' state (cable not back in time); mid+tw far too loud'
+  'project_R1_split_0_2.mat',   'project_R1_try2_0',     false, 0,     'woofer 6.4 dB too loud against mid+tw (Out 1 at 0 dB): set to -5.8 dB afterwards'
+  'project_R1_split_0_3.mat',   'project_R1_split_0',    true,  -5.8,  ''
+  'project_R2_units_0.mat',     'project_R2_try1_0',     false, -5.8,  '''all'' state not switched in time (still tweeter only)'
+  'project_R2_units_0_2.mat',   'project_R2_units_0',    true,  -5.8,  ''
+  'project_R3_flip_0.mat',      'project_R3_flip_0',     true,  -5.8,  ''
+  'project_R5_repeat_0.mat',    'project_R5_repeat_0',   true,  -5.8,  ''
 };
 for i = 1:size(runs, 1)
     [src, tag, used, g1, prob] = runs{i, :};

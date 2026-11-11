@@ -7,20 +7,20 @@ function [fn, specn, f, spec, ch] = lab_demo(st, S, D, Nav)
 %
 %   D.speed     how many times faster than real (default 15; a run S then takes 15 s)
 %   D.fault     what goes wrong (default 'none'):
-%                 'woofer loud'   the channels balance at Out 1 = -12.6 dB instead of -10.3
-%                                 (set Out 1 to -12.6 in Settings and the run turns OK)
+%                 'woofer loud'   the channels balance at Out 1 = -8.1 dB instead of -5.8
+%                                 (set Out 1 to -8.1 in Settings and the run turns OK)
 %                 'placement'     the box/mic is not where it was in Lab E (ripple)
 %                 'not switched'  state 2 was not switched in time (= state 1 again)
 %                 'quiet'         almost no UMIK signal      'clipping'  near full scale
 %                 'dc offset'     Zi: AI0 on 9.4 V DC, reading half the voltage (Lab D)
 %                 'no umik'       the course routine fails: UMIK not found
 %                 'no beeps'      the course routine fails: beeps.wav not found
-%   D.balanced  Out 1 gain at which woofer and mid+tweeter are level (default -10.3)
+%   D.balanced  Out 1 gain at which woofer and mid+tweeter are level (default -5.8)
 
 if ~isfield(D, 'speed') || isempty(D.speed), D.speed = 15; end
 if ~isfield(D, 'fault') || isempty(D.fault), D.fault = 'none'; end
-if ~isfield(D, 'balanced') || isempty(D.balanced), D.balanced = -10.3; end
-if strcmp(D.fault, 'woofer loud'), D.balanced = -12.6; end
+if ~isfield(D, 'balanced') || isempty(D.balanced), D.balanced = -5.8; end
+if strcmp(D.fault, 'woofer loud'), D.balanced = -8.1; end
 chamber = strcmp(st(1).station, 'chamber');
 
 if chamber

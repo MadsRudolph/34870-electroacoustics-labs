@@ -17,11 +17,13 @@ In MATLAB: `cd` into this folder and type `labgui`. Rehearsal without hardware: 
   time it was measured. Click one step, or a run heading (P, S, F, A) to measure its three steps
   in one go. Ctrl+click picks up to three chamber steps of your own (e.g. S4 + S5 + S3).
 - **Middle, top: What to set up.** What to do NOW, what to switch during beeps 1 and beeps 2,
-  MiniDSP bypass/on, the gains, the angle. Then the big **Measure** button. While it measures the
+  MiniDSP bypass/on, the gains, the angle. The **switchboard** is drawn for each of the three
+  states: WOOFER / MID / TWEETER, green = ON, grey = OFF. The units are selected there (as in
+  Lab E): no cable is pulled, nothing is muted in the MiniDSP, no lead is lifted. Then the big **Measure** button. While it measures the
   button is off, a bar shows elapsed / expected time, and the instruction that applies right now
   is highlighted ("BEEPS 1: SWITCH NOW").
 - **Middle, bottom: verdict and plots.** OK / CHECK / BAD in colour and, when it is not OK, what
-  to do in plain words ("change Out 1 gain by -2.3 dB: set it to -12.6 dB ..."). Tabs: *This run*
+  to do in plain words ("change Out 1 gain by -2.3 dB: set it to -8.1 dB ..."). Tabs: *This run*
   (measured vs expected, level-matched, difference underneath; earlier runs in the "Show run"
   list), *All runs today* (every "all" curve overlaid), *Impedance*, *Near field*.
 - **Right.** *Settings of the day* (stored in every measurement and in
@@ -71,7 +73,7 @@ the model; woofer fb within 1.5 Hz of Lab D; near field within 1 dB of Lab D ove
 | `lab_run.m` | Run Section file: one section per step, with what to set up |
 | `lab.m` | the command |
 | `lab_setup.m` | **edit at the start** (or in the GUI): Out 1 gain, amplifier, vent, series R, UMIK |
-| `lab_plan.m` | every step: one line each (add a step = add a line; the GUI picks it up) |
+| `lab_plan.m` | every step: one line each, with its switchboard state (add a step = add a line; the GUI picks it up) |
 | `core/lab_measure.m` | one run: course routine (or demo stand-in), save, warnings. Used by GUI and command |
 | `core/lab_check.m`, `lab_judge.m`, `lab_advice.m` | the verdicts, and what to do next in plain words |
 | `core/lab_view.m`, `lab_palette.m` | the GUI's plots and its colours (light / dark) |

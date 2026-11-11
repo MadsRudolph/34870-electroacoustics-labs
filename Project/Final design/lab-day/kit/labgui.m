@@ -9,7 +9,8 @@ function app = labgui(varargin)
 %   Left:    every step with a lamp (grey not done, green OK, orange CHECK, red BAD) and the
 %            time it was measured. Click a step, or a run (P, S, F, A) to measure its three
 %            steps in one go; Ctrl+click picks up to three chamber steps of your own.
-%   Middle:  what to set up NOW and what to switch during the beeps; the Measure button;
+%   Middle:  what to set up NOW and what to switch during the beeps, with the switchboard
+%            (Woofer / Mid / Tweeter ON or OFF) drawn for each state; the Measure button;
 %            the verdict and what to do next; the plots (this run, every "all" run of the
 %            day, impedance, near field). Earlier runs: the "Show run" list.
 %   Right:   the settings of the day (stored in every measurement, kept after a restart),
@@ -50,7 +51,7 @@ C = lab_palette(G.theme);
 D = struct('speed', opt.speed, 'fault', 'none');     % demo only
 
 runs = {}; status = struct(); manual = {};
-sel = {}; selErr = 'Pick a step or a run on the left.';
+sel = {}; selErr = 'Pick a step or a run on the left.'; swstate = cell(1, 3);
 measuring = false; tmr = []; t0 = []; TL = []; viewIdx = 0;
 loglines = {}; h = struct(); lastAdvice = struct('verdict', '', 'lines', {{}});
 titles = struct('P', 'Placement check (bypassed)', 'S', 'System (MiniDSP on)', ...
@@ -130,23 +131,32 @@ if nargout == 0, clear app; end
             'Ctrl+click = your own run of up to 3 chamber steps.'], 'FontSize', 11, 'Tag', 'muted', 'WordWrap', 'on');
 
         % ---- middle
-        mid = uigridlayout(h.main, [4 1], 'RowHeight', {218, 58, 104, '1x'}, 'Padding', [0 0 0 0], 'RowSpacing', 8, 'Tag', 'bg');
+        mid = uigridlayout(h.main, [4 1], 'RowHeight', {236, 58, 104, '1x'}, 'Padding', [0 0 0 0], 'RowSpacing', 8, 'Tag', 'bg');
         mid.Layout.Row = 2; mid.Layout.Column = 2;
 
         p = uipanel(mid, 'Title', 'What to set up', 'FontSize', 14, 'FontWeight', 'bold');
-        g = uigridlayout(p, [5 2], 'RowHeight', {28, '1x', '1x', '1x', 28}, 'ColumnWidth', {150, '1x'}, ...
+        g = uigridlayout(p, [5 3], 'RowHeight', {28, '1x', '1x', '1x', 28}, 'ColumnWidth', {150, 320, '1x'}, ...
             'Padding', [8 4 8 6], 'RowSpacing', 3, 'ColumnSpacing', 8);
         h.runTitle = uilabel(g, 'Text', '', 'FontSize', 18, 'FontWeight', 'bold');
-        h.runTitle.Layout.Row = 1; h.runTitle.Layout.Column = [1 2];
+        h.runTitle.Layout.Row = 1; h.runTitle.Layout.Column = [1 3];
+        unit = {'WOOFER', 'MID', 'TWEETER'};
         for k = 1:3
             h.when(k) = uilabel(g, 'Text', '', 'FontSize', 15, 'FontWeight', 'bold', 'Tag', 'instr', ...
                 'HorizontalAlignment', 'center', 'WordWrap', 'on');
             h.when(k).Layout.Row = k + 1; h.when(k).Layout.Column = 1;
-            h.what(k) = uilabel(g, 'Text', '', 'FontSize', 16, 'WordWrap', 'on', 'Tag', 'instr');
-            h.what(k).Layout.Row = k + 1; h.what(k).Layout.Column = 2;
+            % the switchboard for this step: three ON/OFF indicators
+            h.swgrid(k) = uigridlayout(g, [1 3], 'Padding', [2 8 2 8], 'ColumnSpacing', 5, 'Tag', 'sw');
+            h.swgrid(k).Layout.Row = k + 1; h.swgrid(k).Layout.Column = 2;
+            for u = 1:3
+                h.sw(k, u) = uilabel(h.swgrid(k), 'Text', unit{u}, 'FontSize', 12, 'FontWeight', 'bold', ...
+                    'HorizontalAlignment', 'center', 'Tag', 'swlamp', 'UserData', unit{u}, ...
+                    'Tooltip', 'The switchboard in the chamber: set this unit ON or OFF');
+            end
+            h.what(k) = uilabel(g, 'Text', '', 'FontSize', 14, 'WordWrap', 'on', 'Tag', 'instr');
+            h.what(k).Layout.Row = k + 1; h.what(k).Layout.Column = 3;
         end
         h.facts = uilabel(g, 'Text', '', 'FontSize', 14, 'FontWeight', 'bold', 'Tag', 'facts');
-        h.facts.Layout.Row = 5; h.facts.Layout.Column = [1 2];
+        h.facts.Layout.Row = 5; h.facts.Layout.Column = [1 3];
 
         g = uigridlayout(mid, [1 3], 'ColumnWidth', {250, '1x', 330}, 'Padding', [0 0 0 0], 'ColumnSpacing', 10, 'Tag', 'bg');
         h.go = uibutton(g, 'Text', 'Measure', 'FontSize', 24, 'FontWeight', 'bold', 'Tag', 'go', ...
@@ -293,7 +303,7 @@ if nargout == 0, clear app; end
         h.facts.BackgroundColor = tern(isempty(sel), C.panel, C.facts);
         h.barDone.BackgroundColor = C.go; h.barLeft.BackgroundColor = C.field;
         lampIcons();
-        refreshTree(); refreshGo(); highlight(0); refreshVerdict(); redraw();
+        refreshTree(); refreshSwitchboard(); refreshGo(); highlight(0); refreshVerdict(); redraw();
     end
 
     function setTheme(mode)
@@ -377,6 +387,7 @@ if nargout == 0, clear app; end
 
     function refreshInstr()
         for k = 1:3, h.when(k).Text = ''; h.what(k).Text = ''; end
+        swstate = cell(1, 3);
         if isempty(sel)
             h.runTitle.Text = selErr; h.facts.Text = ''; TL = [];
         else
@@ -388,11 +399,32 @@ if nargout == 0, clear app; end
             for k = 1:numel(st)
                 h.when(k).Text = upper(I.when{k});
                 h.what(k).Text = sprintf('%s:  %s', st(k).id, I.what{k});
+                h.what(k).Tooltip = h.what(k).Text;
+                swstate{k} = I.sw{k};
             end
             h.facts.Text = ['  ' I.facts];
         end
         h.facts.BackgroundColor = tern(isempty(sel), C.panel, C.facts);
+        refreshSwitchboard();
         highlight(0); refreshGo();
+    end
+
+    function refreshSwitchboard()
+        % Woofer / Mid / Tweeter ON or OFF for the state to set NOW and after each beep
+        for k = 1:3
+            on = swstate{k};
+            for u = 1:3
+                l = h.sw(k, u);
+                if isempty(on)
+                    l.Visible = 'off';
+                else
+                    l.Visible = 'on';
+                    l.Text = sprintf('%s %s', l.UserData, tern(on(u), 'ON', 'OFF'));
+                    l.BackgroundColor = tern(on(u), C.swon, C.swoff);
+                    l.FontColor = tern(on(u), C.swontext, C.swofftext);
+                end
+            end
+        end
     end
 
     function refreshGo()
@@ -412,6 +444,7 @@ if nargout == 0, clear app; end
             on = i == k;
             h.when(i).BackgroundColor = tern(on, C.now, C.panel);
             h.what(i).BackgroundColor = tern(on, C.now, C.panel);
+            h.swgrid(i).BackgroundColor = tern(on, C.now, C.panel);
             h.what(i).FontWeight = tern(on, 'bold', 'normal');
         end
     end
@@ -489,7 +522,7 @@ if nargout == 0, clear app; end
             [~, i] = ismember(ids, {P.id}); i = sort(i); ids = {P(i).id};
             g = unique({P(i).grp});
             whole = numel(g) == 1 && ~isempty(g{1}) && sum(strcmp({P.grp}, g{1})) == numel(ids);
-            if ~whole                                                 % a run of your own: "all" last (cables go back at the end)
+            if ~whole                                                 % a run of your own: "all" last (everything is switched back ON at the end)
                 last = ismember({P(i).model}, {'all'});
                 ids = [ids(~last) ids(last)];
             end
@@ -610,7 +643,7 @@ if nargout == 0, clear app; end
     end
 
     function ok = setSetting(name, value)
-        % from a settings field or from code: setSetting('out1_gain', -12.6)
+        % from a settings field or from code: setSetting('out1_gain', -8.1)
         ok = false;
         if ~isfield(S, name) || strcmp(name, 'date'), logmsg(['No such setting: ' name]); return; end
         old = S.(name);
@@ -760,6 +793,13 @@ if nargout == 0, clear app; end
             'status', status, 'nruns', numel(runs), 'viewed', '', 'verdict', '', 'advice', {lastAdvice.lines}, ...
             'log', {loglines}, 'settings', S, 'theme', G.theme, 'goEnabled', strcmp(char(h.go.Enable), 'on'), ...
             'instructions', {[{h.runTitle.Text}, arrayfun(@(k) [h.when(k).Text ' ' h.what(k).Text], 1:3, 'UniformOutput', false), {h.facts.Text}]});
+        wmt = 'WMT';
+        s.switchboard = cell(1, 3);                       % per instruction row: e.g. 'W on, M off, T off'
+        for q = 1:3
+            if ~isempty(swstate{q})
+                s.switchboard{q} = strjoin(arrayfun(@(u) sprintf('%s %s', wmt(u), tern(swstate{q}(u), 'on', 'off')), 1:3, 'UniformOutput', false), ', ');
+            end
+        end
         s.lamp = struct();
         for q = P', s.lamp.(q.id) = 'grey'; end
         for q = fieldnames(status)'

@@ -61,8 +61,8 @@ P('re the common shift: woofer %+.1f, mid %+.1f, tweeter %+.1f dB\n', lv(r1.H(:,
 % ---- 3. trust: repeatability and the sum check
 f3 = lightfig('Position', [0 0 1000 520]);
 ax = subplot(2,1,1); hold on
-semilogx(fn, sm(t2.H(:,3)), 'Color', [0.6 0.6 0.6], 'LineWidth', 1.2, 'DisplayName', 'R1 try 2 (Out 1 -4.5 dB)');
-semilogx(fn, sm(r1.H(:,3)), 'k', 'LineWidth', 1.6, 'DisplayName', 'R1 15:17 (Out 1 -10.3 dB)');
+semilogx(fn, sm(t2.H(:,3)), 'Color', [0.6 0.6 0.6], 'LineWidth', 1.2, 'DisplayName', 'R1 try 2 (Out 1 0 dB)');
+semilogx(fn, sm(r1.H(:,3)), 'k', 'LineWidth', 1.6, 'DisplayName', 'R1 15:17 (Out 1 -5.8 dB)');
 semilogx(fn, sm(r2.H(:,3)), 'Color', c(1,:), 'DisplayName', 'R2 15:31');
 semilogx(fn, sm(r3.H(:,1)), 'Color', c(2,:), 'DisplayName', 'R3 15:40');
 semilogx(fn, sm(r5.H(:,3)), 'Color', c(3,:), 'DisplayName', 'R5 15:48');

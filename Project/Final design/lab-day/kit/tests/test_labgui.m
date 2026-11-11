@@ -25,7 +25,21 @@ shot(app, '01_start_light');
 % ---- 2. run P: instructions, measurement, file, lamps, advice
 app.select('P'); s = app.state();
 ok = rep(isequal(s.selected, {'P1', 'P2', 'P3'}) && s.goEnabled && has(s.instructions, 'BYPASSED') && ...
-    has(s.instructions, 'DURING BEEPS 2') && has(s.instructions, 'Out 1 -10.3 dB'), 'select P: three steps, NOW / beeps 1 / beeps 2, MiniDSP bypass, gains') && ok;
+    has(s.instructions, 'DURING BEEPS 2') && has(s.instructions, 'Out 1 -5.8 dB'), 'select P: three steps, NOW / beeps 1 / beeps 2, MiniDSP bypass, gains') && ok;
+ok = rep(isequal(s.switchboard, {'W on, M off, T off', 'W off, M on, T off', 'W off, M off, T on'}) && ...
+    has(s.instructions, 'Switchboard: Woofer ON, Mid OFF, Tweeter OFF') && has(s.instructions, 'switch Woofer OFF, Mid ON') && ...
+    ~has(s.instructions, 'cable') && ~has(s.instructions, 'lead off'), 'P: switchboard W / M / T for now, beeps 1, beeps 2; no cable pulling in the text') && ok;
+Cl0 = lab_palette('light'); sw = app.h.sw;
+ok = rep(isequal(sw(1,1).BackgroundColor, Cl0.swon) && isequal(sw(1,2).BackgroundColor, Cl0.swoff) && isequal(sw(3,3).BackgroundColor, Cl0.swon) && ...
+    contains(sw(1,1).Text, 'ON') && contains(sw(1,2).Text, 'OFF') && strcmp(char(sw(2,2).Visible), 'on'), 'switchboard indicators: WOOFER ON green, MID OFF grey (light)') && ok;
+P = lab_plan(); ch = P(strcmp({P.station}, 'chamber'));
+want = struct('P1','W','P2','M','P3','T','P2d','M','P3d','T','S1','W','S2','MT','S3','WMT','S4','M','S5','T','F0','WMT','F1','WMT','F2','WMT','A1','W','A2','MT','A3','WMT');
+ok = rep(all(arrayfun(@(q) strcmp(q.sw, want.(q.id)), ch)) && ~any(contains(lower({P.setup}), {'pull', 'cable'})), 'every chamber step has its switchboard state in the plan') && ok;
+app.select('S'); s = app.state();
+ok = rep(isequal(s.switchboard, {'W on, M off, T off', 'W off, M on, T on', 'W on, M on, T on'}), 'S: W -> M+T -> W+M+T') && ok;
+app.select('Z1'); s = app.state();
+ok = rep(all(cellfun(@isempty, s.switchboard)) && strcmp(char(app.h.sw(1,1).Visible), 'off'), 'Zi station: no switchboard indicators') && ok;
+app.select('P');
 m = app.measure(); s = app.state();
 ok = rep(~isempty(m) && exist(fullfile(dd, 'P.mat'), 'file') == 2 && isfield(m, 'demo'), 'P measured and saved as P.mat (marked demo)') && ok;
 ok = rep(all(strcmp({s.lamp.P1, s.lamp.P2, s.lamp.P3}, 'green')) && strcmp(s.lamp.S1, 'grey') && strcmp(s.verdict, 'OK'), 'P1-P3 lamps green, verdict OK, others still grey') && ok;
@@ -41,19 +55,19 @@ ok = rep(exist(fullfile(dd, 'P_2.mat'), 'file') == 2 && strcmp(s.lamp.P1, 'green
 
 % ---- 4. run S with the woofer too loud -> advice gives the new Out 1 gain -> fixed
 app.fault('woofer loud'); app.select('S'); app.measure(); s = app.state();
-ok = rep(~strcmp(s.lamp.S1, 'green') && has(s.advice, 'Change Out 1 gain by -2.3 dB') && has(s.advice, '-12.6'), ...
-    ['woofer 2.3 dB loud: lamp ' s.lamp.S1 ', advice "change Out 1 gain by -2.3 dB: set it to -12.6"']) && ok;
+ok = rep(~strcmp(s.lamp.S1, 'green') && has(s.advice, 'Change Out 1 gain by -2.3 dB') && has(s.advice, '-8.1'), ...
+    ['woofer 2.3 dB loud: lamp ' s.lamp.S1 ', advice "change Out 1 gain by -2.3 dB: set it to -8.1"']) && ok;
 shot(app, '03_S_woofer_loud_light');
-app.set('out1_gain', '-12,6'); s = app.state();        % typed with a decimal comma
-ok = rep(s.settings.out1_gain == -12.6 && has(s.instructions, 'Out 1 -12.6 dB') && exist(fullfile(dd, 'settings.json'), 'file') == 2, ...
-    'setting Out 1 = -12.6 (decimal comma accepted): shown in the instructions, stored in settings.json') && ok;
+app.set('out1_gain', '-8,1'); s = app.state();        % typed with a decimal comma
+ok = rep(s.settings.out1_gain == -8.1 && has(s.instructions, 'Out 1 -8.1 dB') && exist(fullfile(dd, 'settings.json'), 'file') == 2, ...
+    'setting Out 1 = -8.1 (decimal comma accepted): shown in the instructions, stored in settings.json') && ok;
 m = app.measure(); s = app.state();
-ok = rep(all(strcmp({s.lamp.S1, s.lamp.S2, s.lamp.S3}, 'green')) && m.setup.out1_gain == -12.6 && exist(fullfile(dd, 'S_2.mat'), 'file') == 2, ...
+ok = rep(all(strcmp({s.lamp.S1, s.lamp.S2, s.lamp.S3}, 'green')) && m.setup.out1_gain == -8.1 && exist(fullfile(dd, 'S_2.mat'), 'file') == 2, ...
     'S again: all green, the new gain is stored in the measurement, saved as S_2.mat') && ok;
 
 % ---- 5. flips, a run of our own, and "not switched in time"
 app.select('F'); s = app.state();
-ok = rep(isequal(s.selected, {'F0', 'F1', 'F2'}) && has(s.instructions, 'NOW F0'), 'select F: F0, F1, F2 in the plan''s order') && ok;
+ok = rep(isequal(s.selected, {'F0', 'F1', 'F2'}) && has(s.instructions, 'NOW F0') && isequal(s.switchboard, repmat({'W on, M on, T on'}, 1, 3)), 'select F: F0, F1, F2 in the plan''s order') && ok;
 app.measure(); s = app.state();
 ok = rep(all(strcmp({s.lamp.F0, s.lamp.F1, s.lamp.F2}, 'green')) && has(s.advice, 'swap the tweeter'), 'F: green, reminder to swap the tweeter back') && ok;
 app.select({'S3', 'S5', 'S4'}); s = app.state();
@@ -100,9 +114,9 @@ ok = rep(~isvalid(app.fig), 'window closes when not measuring') && ok;
 % ---- 9. restart: settings, lamps and the colour mode come back from the day's folder
 app = labgui('demo', 'datadir', dd, 'speed', 40);
 s = app.state();
-ok = rep(s.settings.out1_gain == -12.6 && s.settings.R_series == 32.9, 'restart: settings are back (Out 1 -12.6, R 32.9)') && ok;
+ok = rep(s.settings.out1_gain == -8.1 && s.settings.R_series == 32.9, 'restart: settings are back (Out 1 -8.1, R 32.9)') && ok;
 ok = rep(strcmp(s.lamp.S1, 'green') && strcmp(s.lamp.Z1, 'green') && strcmp(s.lamp.A2, 'red') && strcmp(s.lamp.P2d, 'grey'), 'restart: lamps are back from the files') && ok;
-app.fault('woofer loud'); app.select('S');            % (Out 1 is -12.6 now: this is the balanced case)
+app.fault('woofer loud'); app.select('S');            % (Out 1 is -8.1 now: this is the balanced case)
 if isappdata(0, 'labgui_mid'), rmappdata(0, 'labgui_mid'); end
 t = timer('StartDelay', 2.5, 'TimerFcn', @(~, ~) midshot(app, fullfile(shotdir, '08_measuring_light.png')));
 start(t); app.measure(); stop(t); delete(t); app.fault('none');
@@ -118,6 +132,11 @@ ok = rep(strcmp(s.theme, 'dark') && isequal(app.fig.Color, Cd.bg) && isequal(app
 ok = rep(contrast(Cd.ok, Cd.field) > 4.5 && contrast(Cd.check, Cd.field) > 4.5 && contrast(Cd.bad, Cd.field) > 4.5 && ...
     contrast(Cl.ok, Cl.field) > 3 && contrast(Cl.check, Cl.field) > 3 && contrast(Cl.bad, Cl.field) > 3 && ...
     min(arrayfun(@(i) contrast(Cd.curves(i,:), Cd.axbg), 1:size(Cd.curves, 1))) > 4.5, 'OK / CHECK / BAD and the curve colours stand out on both backgrounds') && ok;
+app.select('S'); s = app.state();
+ok = rep(isequal(app.h.sw(1,1).BackgroundColor, Cd.swon) && isequal(app.h.sw(1,2).BackgroundColor, Cd.swoff) && ...
+    contrast(Cd.swontext, Cd.swon) > 4.5 && contrast(Cd.swofftext, Cd.swoff) > 4.5 && contrast(Cl.swontext, Cl.swon) > 4.5 && contrast(Cl.swofftext, Cl.swoff) > 4.5 && ...
+    contrast(Cd.swon, Cd.swoff) > 3 && contrast(Cl.swon, Cl.swoff) > 3, 'switchboard indicators in dark: palette colours, ON and OFF readable and distinct in both modes') && ok;
+shot(app, '09_S_switchboard_dark');
 app.select('F'); shot(app, '09_F_ok_dark');
 app.h.tabs.SelectedTab = app.h.tabZ; shot(app, '10_impedance_dark');
 app.h.tabs.SelectedTab = app.h.tabAll; shot(app, '11_all_runs_dark');

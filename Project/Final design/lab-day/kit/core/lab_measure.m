@@ -81,7 +81,7 @@ if strcmp(station, 'chamber')
     if any(m.peak(2,:) < 0.01)
         q = find(m.peak(2,:) < 0.01);
         W(end+1) = struct('level', 'warn', 'msg', sprintf('Very small UMIK signal in %s (peak %.4f).', strjoin(ids(q), ', '), min(m.peak(2,:))), ...
-            'fix', 'Is a speaker cable still pulled or a lead off? Is the UMIK the recording device? Check, then redo this run.');
+            'fix', 'Is that unit switched ON on the switchboard? Is the amplifier on? Is the UMIK the recording device? Check, then redo this run.');
     end
 else
     if any(m.clip > 0)

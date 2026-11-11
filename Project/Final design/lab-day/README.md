@@ -72,7 +72,7 @@ Step by step in `report/Project_report.tex`, section "Setting up the MiniDSP". I
 | PEQ, Comp, FIR | bypassed on both outputs, only **Xover** active |
 | Output 1 Xover, Advanced | paste `../data/dsp/MiniDSP_woofer_out1.txt` (LR4 low-pass 325 Hz = two identical BW2 biquads), Process |
 | Output 2 Xover, Advanced | paste `../data/dsp/MiniDSP_midtw_out2.txt` (LR4 high-pass 325 Hz), Process |
-| Gain | Output 1 **-4.5 dB**, Output 2 0 dB |
+| Gain | Output 1 **-4.5 dB** (design; **-5.8 dB** balanced the lab chain on 10-Nov and is the default for 12-Nov), Output 2 0 dB |
 | Invert / polarity | off on both |
 | Delay | **0 on both.** The "d = -1.15 m" in the report is only the distance correction used to draw the phase plots, not a delay to type in. |
 | Sample rate | the coefficients only hold at **96 kHz**; check the plugin says 96 kHz |

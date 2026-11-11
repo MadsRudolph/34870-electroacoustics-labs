@@ -7,6 +7,8 @@
 % Easier: type  labgui  (the same steps with lamps, instructions and plots in one window).
 % Plug the UMIK into USB BEFORE starting MATLAB. Do not touch the amplifier volume or
 % move the microphone between runs. A run of 3 steps: switch during the ~30 s of beeps.
+% The units are selected on the SWITCHBOARD in the chamber (Woofer / Mid / Tweeter ON or OFF,
+% as in Lab E): no cable is pulled, nothing is muted in the MiniDSP, no lead is lifted.
 
 %% 0. Before the first run: go to this folder, check the settings, test without hardware
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end
@@ -17,62 +19,63 @@ return
 %% -------- ANECHOIC CHAMBER (UMIK + sound card) --------
 
 %% P. Placement check: P1 + P2 + P3 in one run (~4 min). MiniDSP BYPASSED.
-% NOW: pull the amp ch. 2 speaker cable (woofer only).
-% Beeps 1: plug ch. 2 back, pull ch. 1, TWEETER lead off at the board (midrange only).
-% Beeps 2: MIDRANGE lead off, tweeter lead on (tweeter only).
+% NOW: switchboard Woofer ON, Mid OFF, Tweeter OFF.
+% Beeps 1: Woofer OFF, Mid ON (midrange only).
+% Beeps 2: Mid OFF, Tweeter ON (tweeter only).
 % All three must be OK (= same placement as Lab E). If not: move the box/mic, redo P.
 lab P
 
-%% P1. Placement: woofer only (~1 min). MiniDSP BYPASSED, amp ch. 2 cable pulled.
+%% P1. Placement: woofer only (~1 min). MiniDSP BYPASSED. Switchboard: Woofer ON, Mid OFF, Tweeter OFF.
 lab P1
 
-%% P2. Placement: midrange via the board. MiniDSP BYPASSED, amp ch. 1 pulled, TWEETER lead off.
+%% P2. Placement: midrange via the board. MiniDSP BYPASSED. Switchboard: Woofer OFF, Mid ON, Tweeter OFF.
 lab P2
 
-%% P3. Placement: tweeter via the board. MiniDSP BYPASSED, amp ch. 1 pulled, MIDRANGE lead off.
+%% P3. Placement: tweeter via the board. MiniDSP BYPASSED. Switchboard: Woofer OFF, Mid OFF, Tweeter ON.
 lab P3
 
-%% P2d. Optional: midrange wired STRAIGHT to amp ch. 2 (board out of the path). MiniDSP BYPASSED.
+%% P2d. Optional, only if the board can be bypassed: midrange wired STRAIGHT to the amplifier. MiniDSP BYPASSED. Switchboard: Mid ON only.
 lab P2d
 
-%% P3d. Optional: tweeter wired STRAIGHT to amp ch. 2 (board out of the path). MiniDSP BYPASSED.
+%% P3d. Optional, only if the board can be bypassed: tweeter wired STRAIGHT to the amplifier. MiniDSP BYPASSED. Switchboard: Tweeter ON only.
 lab P3d
 
 %% S. The system: S1 + S2 + S3 in one run (~4 min). MiniDSP ON (filters pasted, Out 1 gain as in lab_setup).
-% NOW: pull the amp ch. 2 cable (woofer only).
-% Beeps 1: plug ch. 2 back, pull ch. 1 (mid + tweeter).
-% Beeps 2: plug ch. 1 back (all three, normal polarity).
+% NOW: switchboard Woofer ON, Mid OFF, Tweeter OFF.
+% Beeps 1: Woofer OFF, Mid ON, Tweeter ON.
+% Beeps 2: Woofer ON (all three, normal polarity).
 % Verdict "bal" says how much to change the Out 1 gain; "sum" must be OK (nothing moved).
 lab S
 
-%% S1. System: woofer only. MiniDSP ON, amp ch. 2 cable pulled.
+%% S1. System: woofer only. MiniDSP ON. Switchboard: Woofer ON, Mid OFF, Tweeter OFF.
 lab S1
 
-%% S2. System: mid + tweeter. MiniDSP ON, amp ch. 1 cable pulled.
+%% S2. System: mid + tweeter. MiniDSP ON. Switchboard: Woofer OFF, Mid ON, Tweeter ON.
 lab S2
 
-%% S3. System: all three. MiniDSP ON, both cables in, normal polarity.
+%% S3. System: all three. MiniDSP ON, normal polarity. Switchboard: all ON.
 lab S3
 
-%% S4. System: midrange only. MiniDSP ON, amp ch. 1 pulled, TWEETER lead off at the board.
+%% S4. System: midrange only. MiniDSP ON. Switchboard: Woofer OFF, Mid ON, Tweeter OFF.
 lab S4
 
-%% S5. System: tweeter only. MiniDSP ON, amp ch. 1 pulled, MIDRANGE lead off, tweeter lead on.
+%% S5. System: tweeter only. MiniDSP ON. Switchboard: Woofer OFF, Mid OFF, Tweeter ON.
 lab S5
 
 %% S4+S5+S3. Midrange / tweeter / all in ONE run (shared phase, as R2 on 10-Nov) (~4 min).
-% NOW: amp ch. 1 pulled, TWEETER lead off. Beeps 1: tweeter on, MIDRANGE off.
-% Beeps 2: midrange back on, plug ch. 1 back.
+% NOW: switchboard Mid ON only. Beeps 1: Mid OFF, Tweeter ON.
+% Beeps 2: Woofer ON, Mid ON (all three).
 lab({'S4', 'S5', 'S3'})
 
 %% F. Polarity flips: F0 + F1 + F2 in one run (~4 min). MiniDSP ON.
-% NOW: everything on, normal polarity.
+% Switchboard: all three ON the whole run.
+% NOW: normal polarity (Out 1 invert not ticked).
 % Beeps 1: tick Out 1 INVERT in the MiniDSP app.
 % Beeps 2: UNtick it, swap the tweeter + and - at the board.
 % AFTERWARDS: swap the tweeter back! Deep notches (329 Hz, 3.9 kHz) = in phase at the crossovers.
 lab F
 
-%% F0. Flip reference: everything on, normal polarity.
+%% F0. Flip reference: all three ON, normal polarity.
 lab F0
 
 %% F1. Woofer inverted: Out 1 INVERT ticked. (Alone it has no reference: prefer the run F.)
@@ -82,16 +85,16 @@ lab F1
 lab F2
 
 %% A. 30 degrees: A1 + A2 + A3 in one run (~4 min). Turn the system 30 deg (as Lab E). MiniDSP ON.
-% NOW: pull the amp ch. 2 cable. Beeps 1: plug ch. 2 back, pull ch. 1. Beeps 2: plug ch. 1 back.
+% NOW: switchboard Woofer ON only. Beeps 1: Woofer OFF, Mid ON, Tweeter ON. Beeps 2: Woofer ON.
 lab A
 
-%% A1. 30 deg: woofer only (amp ch. 2 cable pulled).
+%% A1. 30 deg: woofer only. Switchboard: Woofer ON, Mid OFF, Tweeter OFF.
 lab A1
 
-%% A2. 30 deg: mid + tweeter (amp ch. 1 cable pulled).
+%% A2. 30 deg: mid + tweeter. Switchboard: Woofer OFF, Mid ON, Tweeter ON.
 lab A2
 
-%% A3. 30 deg: all three.
+%% A3. 30 deg: all three. Switchboard: all ON.
 lab A3
 
 %% S again. Back at 0 deg: repeat S at the end (drift check: "all" must lie on the first one).
@@ -103,10 +106,10 @@ lab('S', 'note', 'repeat at the end')
 %% Z1. Impedance, board input: amp -> series R -> board input, both drivers connected.
 lab Z1
 
-%% Z2. Impedance, board, mid branch: TWEETER lead off at the board.
+%% Z2. Impedance, board, mid branch: TWEETER switched OFF on the switchboard (or its lead lifted).
 lab Z2
 
-%% Z3. Impedance, board, tweeter branch: MIDRANGE lead off (tweeter lead back on).
+%% Z3. Impedance, board, tweeter branch: MIDRANGE switched OFF (or its lead lifted), tweeter back ON.
 lab Z3
 
 %% Z4. Impedance, woofer in the box: series R -> woofer. One vent open (lab_setup: vent_mm), the other plugged.

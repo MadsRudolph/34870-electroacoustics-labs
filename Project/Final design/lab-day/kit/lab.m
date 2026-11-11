@@ -7,7 +7,8 @@ function m = lab(what, varargin)
 %   lab({'S1','S3'})    any 1-3 chamber steps in one run
 %   lab list            the step list only
 %
-%   Before measuring, a box shows what to set up; press Measure (or Cancel).
+%   Before measuring, a box shows what to set up (the switchboard state: which of
+%   Woofer / Mid / Tweeter are ON, MiniDSP bypass or on); press Measure (or Cancel).
 %   After measuring, the data are saved to ../data/<date>/ and the dashboard
 %   opens on the "Latest" tab: measured (solid) vs expected (dashed, shifted by
 %   the fitted level), the difference underneath, and a verdict in the title
