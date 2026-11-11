@@ -16,7 +16,19 @@ Overleaf or locally.
 
 Quizzes are answered individually; this repo is for the shared work behind them.
 
+## New to Git? Start here
+
+Open [the interactive GitHub Desktop guide](https://labs.madsrudolph.dev/).
+It covers access, installation, cloning, a first practice commit, the daily workflow,
+and Overleaf sync. Share that link with new teammates.
+
+The guide source is `docs/getting-started.html`; hosting details are in
+`docs/hosting/README.md`.
+
 ## Working with Overleaf
+
+[Open our Overleaf project](https://www.overleaf.com/project/6aaff1032e7b434d4389c28f).
+Ask Mads for an invitation if you need access.
 
 - In Overleaf: **Menu → GitHub** shows *Pull GitHub changes into Overleaf* and *Push Overleaf
   changes to GitHub*. The sync is manual in both directions: push from Overleaf when you stop
