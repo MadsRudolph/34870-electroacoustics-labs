@@ -28,6 +28,8 @@ case 'dark'
     P.grid    = [0.80 0.82 0.85];
     P.ink     = [0.96 0.96 0.96];        % "measured" when there is one curve
     P.model   = [1 0.42 0.42];           % "model / Lab D" dashed
+    P.swon    = [0.13 0.58 0.25]; P.swonfg = [1 1 1];       % switchboard indicator ON
+    P.swoff   = [0.30 0.31 0.34]; P.swofffg = [0.62 0.64 0.67]; % ... OFF
     P.lines   = [0.35 0.70 1.00; 1.00 0.56 0.25; 1.00 0.86 0.30; 0.80 0.56 1.00; 0.45 0.90 0.55; 0.40 0.90 0.95; 1.00 0.50 0.75];
 otherwise
     P.name    = 'light';
@@ -51,6 +53,8 @@ otherwise
     P.grid    = [0.15 0.15 0.15];
     P.ink     = [0 0 0];
     P.model   = [0.90 0 0];
+    P.swon    = [0 0.58 0.15];    P.swonfg = [1 1 1];
+    P.swoff   = [0.86 0.86 0.86]; P.swofffg = [0.45 0.45 0.45];
     P.lines   = [0 0.447 0.741; 0.850 0.325 0.098; 0.929 0.694 0.125; 0.494 0.184 0.556; 0.466 0.674 0.188; 0.301 0.745 0.933; 0.635 0.078 0.184];
 end
 P.vtext = P.lamp;                        % verdict colour for text on the axes background

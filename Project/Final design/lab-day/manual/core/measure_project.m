@@ -9,10 +9,11 @@ function m = measure_project(tag, angle_deg, states, varargin)
 %   states     cell array of 1 to 3 switch states, measured in ONE run
 %              (the course routine plays beeps between them; use the ~30 s
 %              to switch). Names, matching model_curves.py:
-%                'woofer'  Out 2 muted in the MiniDSP app
-%                'midtw'   Out 1 muted (midrange + tweeter through the board)
-%                'mid'     Out 1 muted, tweeter lead unplugged at the board
-%                'tw'      Out 1 muted, midrange lead unplugged at the board
+%                (selected on the chamber's switchboard, woofer/mid/tweeter ON/OFF)
+%                'woofer'  switchboard: woofer ON, mid OFF, tweeter OFF
+%                'midtw'   woofer OFF, mid ON, tweeter ON (through the board)
+%                'mid'     woofer OFF, mid ON, tweeter OFF
+%                'tw'      woofer OFF, mid OFF, tweeter ON
 %                'all'     everything on, normal polarity
 %                'flipW'   everything on, Out 1 'Invert' ticked in the app
 %                'flipT'   everything on, tweeter + and - swapped at the board
@@ -100,7 +101,7 @@ if any(m.peak(:) > 0.95)
     warning('A time signal is near full scale (1): turn the amplifier or the MiniDSP input down.');
 end
 if any(m.peak(2,:) < 0.01)
-    warning('The UMIK signal is very small: check the mic and the mutes, turn the amplifier up.');
+    warning('The UMIK signal is very small: check the mic and the switchboard, turn the amplifier up.');
 end
 if o.plot
     compare_project(m);                 % numbers + quick overlay
@@ -112,13 +113,13 @@ end
 
 function s = describe(state)
 switch state
-    case 'woofer', s = 'woofer only    (mid/tw silent: Out 2 muted OR its amp cable pulled)';
-    case 'midtw',  s = 'mid + tweeter  (woofer silent: Out 1 muted OR its amp cable pulled)';
-    case 'mid',    s = 'midrange only  (woofer silent, TWEETER lead off at the board)';
-    case 'tw',     s = 'tweeter only   (woofer silent, MIDRANGE lead off at the board)';
-    case 'all',    s = 'all three      (no mutes, normal polarity)';
-    case 'flipW',  s = 'woofer inverted (Out 1 INVERT ticked)';
-    case 'flipT',  s = 'tweeter swapped (+/- swapped at the board)';
+    case 'woofer', s = 'woofer only    (switchboard: woofer ON, mid OFF, tweeter OFF)';
+    case 'midtw',  s = 'mid + tweeter  (switchboard: woofer OFF, mid ON, tweeter ON)';
+    case 'mid',    s = 'midrange only  (switchboard: woofer OFF, mid ON, tweeter OFF)';
+    case 'tw',     s = 'tweeter only   (switchboard: woofer OFF, mid OFF, tweeter ON)';
+    case 'all',    s = 'all three      (switchboard: all three ON, normal polarity)';
+    case 'flipW',  s = 'woofer inverted (all ON, Out 1 INVERT ticked)';
+    case 'flipT',  s = 'tweeter swapped (all ON, +/- swapped at the board)';
 end
 end
 

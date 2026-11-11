@@ -25,16 +25,20 @@ More: `screenshots/gui_during_beeps.png` (the orange "switch now" line), `screen
   A1-A3: switch during the beeps). Two tabs: *Anechoic chamber* and *Zi / near field*. The check
   rows (balance, sum, flip notches) have their own lamps.
 - **Centre top, "What to do":** what to set up NOW, what to switch during beeps 1 and 2, MiniDSP
-  bypassed/on with the Out 1/Out 2 gains, the angle, and a timeline with clock times. The big
+  bypassed/on with the Out 1/Out 2 gains, the angle, and a timeline with clock times. Under it the
+  **switchboard**, drawn: three big WOOFER / MID / TWEETER indicators (green ON, grey OFF) for the
+  state to set now, and small ones for the state after beeps 1 and after beeps 2. The states are
+  always made on the chamber's switchboard (as in Lab E), never by pulling cables. The big
   **Measure** button. Under it the status line: while measuring it says which state is being
-  measured and turns **orange with "BEEPS 1 - SWITCH NOW to ..."** during the beeps.
+  measured and turns **orange with "BEEPS 1 - SWITCH NOW to [S2]: switch woofer OFF, mid ON,
+  tweeter ON"** during the beeps; the big indicators then show the state to switch to.
   A note field: saved with the next measurement.
 - **Centre, "Graphs":** measured (solid) vs expected (dashed, shifted by the fitted level), the
   difference underneath. *Show:* every "all" run of the day (drift), the phase woofer vs mid/tw,
   board impedance Z1-Z3, woofer Z4, near field. *Run:* any earlier run of the day.
 - **Centre bottom, "Verdict":** OK / CHECK / BAD in colour, every check in words, and **DO:**
-  lines when something is off (e.g. "change the MiniDSP Out 1 gain by -2.3 dB (from -10.3 to
-  -12.6 dB)", "the placement differs from Lab E: ... then redo P"), and the next step of the plan.
+  lines when something is off (e.g. "change the MiniDSP Out 1 gain by -2.3 dB (from -5.8 to
+  -8.1 dB)", "the placement differs from Lab E: ... then redo P"), and the next step of the plan.
 - **Right:** the settings of the day (Out 1/Out 2 gain, vent, series R, UMIK, temperature, ...):
   type a value and it is saved at once to `data/<today>/session.json` (a restart keeps it, and
   the `lab` commands use it too) and stored in every measurement file. **Colours: Light / Dark.**
@@ -49,7 +53,7 @@ More: `screenshots/gui_during_beeps.png` (the orange "switch now" line), `screen
   stop a real measurement press Ctrl+C in the Command Window (nothing is saved).
 - **Demo mode** (`labgui('demo')`): the same flow with stand-ins for the course routines (the
   expected curves, level -6 dB, random latency, a little noise; a 4-minute run takes 10 s). The
-  MiniDSP gains act like the real knobs (Out 1 = -10.3 dB is balanced). The *Demo fault* menu
+  MiniDSP gains act like the real knobs (Out 1 = -5.8 dB is balanced). The *Demo fault* menu
   rehearses problems: placement off, a state not switched in time, no UMIK, beeps.wav missing,
   clipping, no NI card. Demo data never go into `data/`.
 
@@ -94,7 +98,7 @@ Signal checks: near full scale (clipping) = BAD, a very small UMIK signal or the
 | `labgui.m` | the GUI |
 | `lab_run.m` | the same, section by section in the editor |
 | `lab.m` | the commands |
-| `lab_setup.m` | **edit at the start** (or use the GUI's settings): Out 1 gain (-10.3 dB on 10-Nov), amplifier, vent (160 mm), series R, UMIK |
+| `lab_setup.m` | **edit at the start** (or use the GUI's settings): Out 1 gain (-5.8 dB balanced the lab amplifier on 10-Nov; design -4.5), amplifier, vent (160 mm), series R, UMIK |
 | `lab_plan.m` | every step, one line each (add a step = add a line) |
 | `core/` | `lab_measure` (calls the course routine, saves; no plots), `lab_check` (verdicts), `lab_advice` (DO lines), `lab_plot` + `lab_dash` (graphs, dashboard), `lab_model` (expected curves), `lab_settings` (session.json), `lab_import` (manual runs), `lab_demo` (stand-ins), `gui_palette` (light/dark colours), `labpaths` (every folder, in one place) |
 | `tests/` | `test_lab` (the commands) and `test_labgui` (the GUI in demo mode; screenshots in `tests/screenshots/`): both must print PASS |

@@ -29,7 +29,7 @@ only from the model.
 \begin{tabular}{@{}>{\raggedright}p{6.2cm}>{\raggedright}p{6.6cm}l@{}}\toprule
 Quantity & Result & Verdict\\\midrule
 On-axis spread 150\,Hz--15\,kHz (1/6 oct) & 7.1\,dB (model 4.0\,dB) & \fix\\
-Woofer vs mid+tweeter level & $-0.1$\,dB (after Out 1 $= -10.3$\,dB) & \good\\
+Woofer vs mid+tweeter level & $-0.1$\,dB (after Out 1 $= -5.8$\,dB) & \good\\
 Woofer / midrange / tweeter vs model & $-0.1$ / $+1.5$ / $-2.7$\,dB & \fix\ (tweeter)\\
 Woofer-flip notch & 315\,Hz, $-32$\,dB (model 329\,Hz, $-21$\,dB) & \good\\
 Tweeter-flip notch & 4161\,Hz, $-28.6$\,dB (model 3928\,Hz, $-14$\,dB) & \good\\
@@ -41,16 +41,18 @@ Board impedance, 30\textdegree, Lab E placement re-check & not measured / not sa
 \end{center}
 
 \section{What was measured}
-Settings: MiniDSP filters pasted from \texttt{data/dsp/MiniDSP\_*.txt} (LR4, 325\,Hz), \textbf{Out 1 $= -10.3$\,dB}
-(design $-4.5$\,dB, then another $-5.8$\,dB to balance this lab's amplifier channels), Out 2 $= 0$\,dB,
-amplifier about 45\,\%, placement as in Lab E (mic 2.44\,m, 1.15\,m high), vents plugged. A channel was
-muted by pulling its speaker cable at the amplifier.
+Settings: MiniDSP filters pasted from \texttt{data/dsp/MiniDSP\_*.txt} (LR4, 325\,Hz), \textbf{Out 1 $= -5.8$\,dB}
+from R1 try~3 on (in tries 1 and 2 it was still at 0\,dB: the design's $-4.5$\,dB had not been typed in), Out 2 $= 0$\,dB,
+amplifier about 45\,\%, placement as in Lab E (mic 2.44\,m, 1.15\,m high), vents plugged. The states were
+selected on the chamber's switchboard (woofer, midrange, tweeter each ON/OFF, as in Lab E).
+Since $-5.8$\,dB instead of the design's $-4.5$\,dB balanced the two channels, this lab's amplifier chain makes the
+woofer path only about 1.3\,dB hotter than the model assumes.
 
 \begin{center}\small
 \begin{tabular}{@{}lll>{\raggedright\arraybackslash}p{6.2cm}@{}}\toprule
 Time & Run & Settings in the run & Used?\\\midrule
 14:28 & R1 try 1 & woofer / mid+tw / all & no: woofer silent in ``all''\\
-15:02 & R1 try 2 & woofer / mid+tw / all & no: woofer 6.4\,dB too loud (Out 1 still $-4.5$)\\
+15:02 & R1 try 2 & woofer / mid+tw / all & no: woofer 6.4\,dB too loud (Out 1 still 0\,dB)\\
 15:17 & \textbf{R1} & woofer / mid+tw / all & \textbf{yes}\\
 15:24 & R2 try 1 & mid / tw / all & no: ``all'' not switched in time\\
 15:31 & \textbf{R2} & mid / tw / all & \textbf{yes}\\
@@ -130,7 +132,7 @@ fight, and there is no hole or peak at either crossover.
 \section{Why we can trust these measurements}
 \begin{itemize}[leftmargin=*]
 \item \textbf{They repeat.} R5 was the same measurement as R1, 31 minutes later, after three other runs and a lot of
-cable pulling and polarity swapping. It lands within 0.16\,dB everywhere (Figure~\ref{fig:trust}). Nothing
+switching on the switchboard and polarity swapping. It lands within 0.16\,dB everywhere (Figure~\ref{fig:trust}). Nothing
 moved and nothing drifted: not the microphone, the temperature or the amplifier.
 \item \textbf{They are self-consistent.} Within one run the woofer state plus the mid/tweeter state must
 add up, as complex numbers, to the ``all'' state. They do to within 0.10\,dB. That can only happen if the
@@ -181,7 +183,8 @@ the board) and 30\textdegree\ (run A).
 \item \textbf{Vent at 160\,mm} for listening and the demo. That is the design ($f_B$ 24.6\,Hz). The 200\,mm setting came from a
 memory of Lab D, where 200 was simply measured first.
 \item \textbf{The IEC room has its own amplifier}: check the woofer/mid balance there before listening
-(one run S). The $-10.3$\,dB on Out 1 may not be right in that room.
+(one run S). Start from the design's $-4.5$\,dB on Out 1 there: the $-5.8$\,dB only made up for the
+1.3\,dB channel difference of the chamber's amplifier.
 \end{itemize}
 
 \section{What makes a loudspeaker sound good}
@@ -237,7 +240,7 @@ Easiest with buttons: in MATLAB \texttt{cd lab-day/kit}, then \texttt{labgui} (e
 instructions, the graph and the verdict on one screen; \texttt{labgui('demo')} rehearses it without hardware).
 The same steps as commands:
 \begin{enumerate}[leftmargin=*]
-\item Set \texttt{lab\_setup.m} or the GUI's settings (Out 1 $-10.3$\,dB, amplifier, vent 160\,mm, series R).
+\item Set \texttt{lab\_setup.m} or the GUI's settings (Out 1 $-5.8$\,dB, amplifier, vent 160\,mm, series R).
 \item \texttt{lab P}: placement against Lab E. All three should be OK before going on.
 \item Put \textbf{Rp $= 8.2\,\Omega$} on the board. \texttt{lab S}, \texttt{lab S4}, \texttt{lab S5}: check the tweeter step is gone and the balance is still within $\pm1$\,dB.
 \item \texttt{lab F}, \texttt{lab A} (30\textdegree), and at the Zi station \texttt{lab Z1}--\texttt{Z4}, \texttt{lab N1}, \texttt{N2}.

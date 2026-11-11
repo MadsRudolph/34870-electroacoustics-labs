@@ -8,8 +8,8 @@
 % One run = up to 3 states with ~30 s of beeps between them: switch during
 % the beeps. Only states inside one run share a phase reference.
 % Do not touch the amplifier volume or move the microphone between runs.
-% "Mute Out 1/2" = make that channel silent. Muting in the MiniDSP app or
-% pulling that channel's speaker cable at the amplifier does the same job.
+% The states are selected on the chamber's SWITCHBOARD: woofer, midrange and
+% tweeter each ON/OFF (as in Lab E). Not the MiniDSP mute, not the cables.
 % Every run is plotted and saved to ../figures/<tag>.png automatically.
 % All graphs again at any time:   plot_project
 % One run, renaming a state that was not switched in time:
@@ -28,14 +28,15 @@ test_project             % no hardware: must print PASS
 return
 
 %% R1. On axis, 0 deg: woofer / mid+tweeter / all  (~4 min)
-% Start: Out 2 MUTED. Beeps 1: unmute Out 2, mute Out 1. Beeps 2: unmute Out 1.
+% Switchboard: start woofer ON, mid OFF, tweeter OFF. Beeps 1: woofer OFF, mid ON,
+% tweeter ON. Beeps 2: woofer ON (all three ON).
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end, addpath('core', fullfile('..', 'kit', 'core'))   % finds the helpers
 m = measure_project('R1_split_0', 0, {'woofer', 'midtw', 'all'}, 'note', 'reference run');
 % Check in the printout: woofer - midtw offset within +-1 dB, sum check < 0.5 dB.
 
 %% R2. On axis, 0 deg: midrange / tweeter / all  (~4 min)
-% Start: Out 1 MUTED, TWEETER lead off at the board. Beeps 1: tweeter on,
-% midrange off. Beeps 2: midrange back on, unmute Out 1.
+% Switchboard: start woofer OFF, mid ON, tweeter OFF. Beeps 1: mid OFF, tweeter ON.
+% Beeps 2: woofer ON, mid ON (all three ON).
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end, addpath('core', fullfile('..', 'kit', 'core'))   % finds the helpers
 m = measure_project('R2_units_0', 0, {'mid', 'tw', 'all'});
 

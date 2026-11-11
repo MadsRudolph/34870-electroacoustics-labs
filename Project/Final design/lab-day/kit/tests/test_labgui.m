@@ -17,10 +17,10 @@ tmp = tempname; dd = fullfile(tmp, '2026-11-12');
 shot = @(app, name) app.screenshot(fullfile(shotdir, [name '.png']));
 ok = true;
 
-app = labgui('demo', 'datadir', dd, 'speed', 0, 'quiet', true, 'position', [40 40 1560 950]);
+app = labgui('demo', 'datadir', dd, 'speed', 0, 'quiet', true, 'visible', false, 'position', [40 40 1560 950]);
 c = onCleanup(@() delete(app));
 ok = rep(app.Demo && strcmp(app.Sel, 'P'), 'demo app starts on step P (nothing measured yet)') && ok;
-ok = rep(app.S.out1_gain == -10.3, 'settings from lab_setup.m (Out 1 -10.3 dB)') && ok;
+ok = rep(app.S.out1_gain == -5.8, 'settings from lab_setup.m (Out 1 -5.8 dB)') && ok;
 shot(app, '00_start');
 
 % ---- P: placement
@@ -30,16 +30,18 @@ ok = rep(exist(fullfile(dd, 'P.mat'), 'file') == 2 && exist(fullfile(dd, 'figure
     'P.mat saved + its graph figures/P.png') && ok;
 shot(app, '01_after_P');
 
-% ---- S: balanced
-app.select('S'); app.measure();
+% ---- S: balanced; the drawn switchboard shows the state to set now
+app.select('S');
+ok = rep(strcmp(app.switchboard(), 'WOOFER ON, MID OFF, TWEETER OFF'), ['switchboard for S1: ' app.switchboard()]) && ok;
+app.measure();
 v = cellfun(@app.verdict, {'S1', 'S2', 'S3', 'S:bal', 'S:sum'}, 'UniformOutput', false);
 ok = rep(all(strcmp(v, 'OK')), ['S1-S3, balance and sum check green: ' strjoin(v, ' ')]) && ok;
 ok = rep(strcmp(app.LastVerdict, 'OK'), 'verdict panel says OK') && ok;
 shot(app, '02_after_S');
 
 % ---- S with Out 1 4 dB too hot: the GUI must say what to change
-app.setSetting('out1_gain', -6.3);
-ok = rep(contains(fileread(fullfile(dd, 'session.json')), '-6.3'), 'setting saved to session.json at once') && ok;
+app.setSetting('out1_gain', -1.8);
+ok = rep(contains(fileread(fullfile(dd, 'session.json')), '-1.8'), 'setting saved to session.json at once') && ok;
 app.select('S'); app.measure();
 adv = strjoin(app.LastAdvice, newline);
 ok = rep(strcmp(app.verdict('S:bal'), 'BAD') && contains(adv, 'Out 1 gain by -4.0 dB'), ...
@@ -47,9 +49,9 @@ ok = rep(strcmp(app.verdict('S:bal'), 'BAD') && contains(adv, 'Out 1 gain by -4.
 ok = rep(exist(fullfile(dd, 'S_2.mat'), 'file') == 2 && exist(fullfile(dd, 'S.mat'), 'file') == 2, ...
     'second S saved as S_2.mat (nothing overwritten)') && ok;
 s2 = load(fullfile(dd, 'S_2.mat'), 'setup', 'demo');
-ok = rep(s2.setup.out1_gain == -6.3 && s2.demo, 'settings + demo flag stored in the file') && ok;
+ok = rep(s2.setup.out1_gain == -1.8 && s2.demo, 'settings + demo flag stored in the file') && ok;
 shot(app, '03_balance_BAD');
-app.setSetting('out1_gain', -10.3);
+app.setSetting('out1_gain', -5.8);
 
 % ---- F: flips
 app.select('F'); app.measure();
@@ -61,8 +63,10 @@ seen = containers.Map();
 app.setSpeed(0.02); app.select('S');
 tm = timer('StartDelay', 1.7, 'TimerFcn', @(~, ~) grab(app, seen, fullfile(shotdir, '02b_during_beeps.png')));
 start(tm); app.measure(); stop(tm); delete(tm); app.setSpeed(0);
-ok = rep(isKey(seen, 'status') && contains(seen('status'), 'BEEPS 1 - SWITCH NOW to [S2]'), ...
+ok = rep(isKey(seen, 'status') && contains(seen('status'), 'BEEPS 1 - SWITCH NOW to [S2]: switch woofer OFF, mid ON, tweeter ON'), ...
     sprintf('live status during beeps 1: "%s"', strtrim(char(seen.values({'status'}))))) && ok;
+ok = rep(isKey(seen, 'sw') && strcmp(seen('sw'), 'WOOFER OFF, MID ON, TWEETER ON'), ...
+    sprintf('during beeps 1 the indicators show the state to switch to: %s', char(seen.values({'sw'})))) && ok;
 
 % ---- a state not switched in time (demo fault) -> sum check
 app.setFault('switch'); app.select('S'); app.measure(); app.setFault('none');
@@ -85,6 +89,7 @@ ok = rep(strcmp(app.verdict('S4'), 'OK') && strcmp(app.verdict('S5'), 'OK') && .
 
 % ---- Zi station: Z1 without, then with the series resistor
 app.select('Z1'); app.measure();
+ok = rep(isempty(app.switchboard()), 'Zi station: no chamber switchboard indicators') && ok;
 ok = rep(contains(strjoin(app.LastAdvice, ' '), 'multimeter') && strcmp(app.verdict('Z1'), ''), ...
     'Z1 without R_series refused, with the fix') && ok;
 app.setSetting('R_series', 32.9); app.select('Z1'); app.measure();
@@ -115,7 +120,7 @@ ok = rep(contains(fileread(fullfile(dd, 'session.json')), '"gui_theme": "dark"')
 
 % ---- restart: settings and lamps come back
 delete(app);
-app = labgui('demo', 'datadir', dd, 'speed', 0, 'quiet', true, 'position', [40 40 1560 950]);
+app = labgui('demo', 'datadir', dd, 'speed', 0, 'quiet', true, 'visible', false, 'position', [40 40 1560 950]);
 c = onCleanup(@() delete(app)); %#ok<NASGU>
 ok = rep(app.S.R_series == 32.9 && strcmp(app.verdict('P1'), 'OK') && strcmp(app.Sel, 'A') && strcmp(app.Theme, 'dark'), ...
     'restart: R_series and dark mode kept (session.json), lamps restored, opens on the next step (A)') && ok;
@@ -136,7 +141,7 @@ src = [dir(fullfile(L.data, 'project_*.mat')); dir(fullfile(L.data, 'zinf_*.mat'
 files = fullfile({src.folder}, {src.name});
 before = cellfun(@filehash, files, 'UniformOutput', false);
 d10 = fullfile(tmp, '2026-11-10');
-app10 = labgui('demo', 'datadir', d10, 'speed', 0, 'quiet', true, 'position', [40 40 1560 950]);
+app10 = labgui('demo', 'datadir', d10, 'speed', 0, 'quiet', true, 'visible', false, 'position', [40 40 1560 950]);
 made = app10.importManual(files);
 again = app10.importManual(files);
 after = cellfun(@filehash, files, 'UniformOutput', false);
@@ -163,6 +168,7 @@ end
 
 function grab(app, seen, png)
 seen('status') = app.StatusText;
+seen('sw') = app.switchboard();
 try, app.screenshot(png); catch, end
 end
 

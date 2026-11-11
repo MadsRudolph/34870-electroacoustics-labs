@@ -2,6 +2,7 @@ function I = lab_instructions(st, S, Nav)
 % LAB_INSTRUCTIONS  What to do for a run, as text, plus its timeline.
 %
 %   I.lines    cellstr: NOW ..., During beeps 1 ..., the MiniDSP/station settings
+%   I.sw       chamber: one row per state, the switchboard [woofer mid tweeter] (1 = ON)
 %   I.chain    one line: MiniDSP + gains + angle (chamber) or series R + vent (Zi)
 %   I.phases   struct array: name ('measure' | 'beeps'), k (state number), t0, t1 (s),
 %              text (what is happening / what to switch NOW)
@@ -14,10 +15,18 @@ function I = lab_instructions(st, S, Nav)
 if nargin < 3 || isempty(Nav), Nav = 64; end
 chamber = strcmp(st(1).station, 'chamber');
 n = numel(st);
-I.lines = {};
+I.lines = {}; I.sw = zeros(0, 3); act = cell(1, n);
 for k = 1:n
-    if k == 1, pre = 'NOW'; else, pre = sprintf('During beeps %d', k-1); end
-    I.lines{end+1} = sprintf('%s:  [%s] %s.  %s', pre, st(k).id, st(k).title, st(k).setup);
+    if chamber && ~isempty(st(k).sw), I.sw(k, :) = st(k).sw; end
+    if k == 1
+        act{k} = lab_switch(st(k).sw);
+        I.lines{end+1} = strtrim(sprintf('NOW:  [%s] %s.  %s.  %s', st(k).id, st(k).title, act{k}, st(k).setup));
+    else
+        act{k} = lab_switch(st(k).sw, st(k-1).sw);
+        I.lines{end+1} = strtrim(sprintf('During beeps %d:  [%s] %s.  %s.  %s', k-1, st(k).id, st(k).title, ...
+            upper1(act{k}), st(k).setup));
+    end
+    I.lines{end} = strrep(I.lines{end}, '.  .', '.');
 end
 if chamber
     if strcmp(st(1).dsp, 'bypass')
@@ -53,7 +62,7 @@ for k = 1:n
     t = t + Tst;
     if k < n
         I.phases(end+1) = struct('name', 'beeps', 'k', k, 't0', t, 't1', t + Tbp, ...
-            'text', sprintf('BEEPS %d - SWITCH NOW to [%s]: %s', k, st(k+1).id, st(k+1).setup));
+            'text', strtrim(sprintf('BEEPS %d - SWITCH NOW to [%s]: %s.  %s', k, st(k+1).id, act{k+1}, st(k+1).setup)));
         tl{end+1} = sprintf('%s BEEPS: switch to %s', mmss(t), st(k+1).id); %#ok<AGROW>
         t = t + Tbp;
     end
@@ -61,6 +70,10 @@ end
 I.secs = t + 3;                      % + start-up of the routine
 tl{end+1} = sprintf('%s done', mmss(I.secs));
 I.timeline = strjoin(tl, '  |  ');
+end
+
+function s = upper1(s)
+if ~isempty(s), s(1) = upper(s(1)); end
 end
 
 function s = mmss(t)

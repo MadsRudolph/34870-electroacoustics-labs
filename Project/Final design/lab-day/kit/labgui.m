@@ -58,6 +58,8 @@ classdef labgui < handle
         BadLogged = {}
         StatusKind = 'ready'
         NothingText = 'Nothing measured yet. Pick a step on the left and press Measure.'
+        SelInst = []                          % lab_instructions of the selection
+        SwState = struct('big', 1, 'beeps', 0) % what the switchboard indicators show
     end
     properties (Constant, Access = private)
         FIELDS = {'UmikSN', 'UMIK serial', 'text'; 'amp_volume', 'Amplifier volume', 'text'; ...
@@ -116,6 +118,9 @@ classdef labgui < handle
             if ~isempty(app.Runs), app.showRun(app.Runs{end}.file); end
             app.applyTheme();
             if o.visible, app.Fig.Visible = 'on'; end
+            if isempty(o.position)                % a lab station: use the whole screen
+                try, app.Fig.WindowState = 'maximized'; catch, end
+            end
             drawnow;
         end
 
@@ -141,6 +146,8 @@ classdef labgui < handle
                 txt{end+1} = 'The beeps (~30 s) come from the speakers: switch only then.';
             end
             app.UI.Instr.Value = txt;
+            app.SelInst = I;
+            app.showSwitches(struct('big', 1, 'beeps', 0));
             app.UI.Instr.Parent.Parent.Title = sprintf('What to do: %s  (%s)', label, strjoin(ids, ' + '));
             app.UI.Measure.Text = sprintf('Measure %s', label);
             app.status(sprintf('Ready: set up as above, then press "Measure %s" (about %s).', label, dur(I.secs)), 'ready');
@@ -323,6 +330,13 @@ classdef labgui < handle
             app.UI.Count.Text = sprintf('%d runs saved', numel(app.Runs));
         end
 
+        function s = switchboard(app)
+            % SWITCHBOARD  What the big indicators show now, e.g. 'WOOFER ON, MID OFF, TWEETER OFF'
+            %   ('' at the Zi station).
+            if strcmp(app.UI.SwBig(1).Visible, 'off'), s = ''; return; end
+            s = strjoin(arrayfun(@(h) strjoin(cellstr(h.Text), ' '), app.UI.SwBig, 'UniformOutput', false), ', ');
+        end
+
         function v = verdict(app, key)
             % VERDICT  The lamp of a step or check: 'OK', 'CHECK', 'BAD' or '' (not measured).
             %   Checks: 'S:bal', 'S:sum', 'A:bal', 'A:sum', 'F:F1n', 'F:F2n'.
@@ -487,9 +501,15 @@ classdef labgui < handle
             if app.Demo, ttl = [ttl '  [DEMO]']; end
             app.Fig = uifigure('Name', ttl, 'Position', pos, 'Visible', 'off', ...
                 'CloseRequestFcn', @(~, ~) app.onClose());
+            try                                   % narrower side panels when the window is small
+                app.Fig.AutoResizeChildren = 'off';
+                app.Fig.SizeChangedFcn = @(~, ~) app.fitColumns(app.Fig.Position(3));
+            catch
+            end
             g = uigridlayout(app.Fig, [2 3]); g.Tag = 'top';
-            g.RowHeight = {38, '1x'}; g.ColumnWidth = {345, '1x', 330};
-            if w < 1350, g.ColumnWidth = {300, '1x', 270}; end      % small screens: more room for the graphs
+            g.RowHeight = {38, '1x'};
+            app.UI.Top = g; app.UI.InstrGrid = [];
+            app.fitColumns(w);
             g.Padding = [8 8 8 8]; g.RowSpacing = 6; g.ColumnSpacing = 8;
 
             % ---- banner
@@ -531,12 +551,36 @@ classdef labgui < handle
 
             % ---- centre: instructions, graphs, verdict
             cg = uigridlayout(g, [3 1]); cg.Layout.Row = 2; cg.Layout.Column = 2;
-            cg.RowHeight = {255, '1x', 165}; cg.Padding = [0 0 0 0]; cg.RowSpacing = 6;
+            cg.RowHeight = {335, '1x', 165}; cg.Padding = [0 0 0 0]; cg.RowSpacing = 6;
             ip = uipanel(cg, 'Title', 'What to do', 'FontWeight', 'bold', 'FontSize', 14);
-            ig = uigridlayout(ip, [3 2]); ig.ColumnWidth = {'1x', 215}; ig.RowHeight = {'1x', 46, 26};
-            ig.Padding = [6 6 6 6]; ig.RowSpacing = 5;
+            ig = uigridlayout(ip, [4 2]); ig.ColumnWidth = {'1x', 215}; ig.RowHeight = {'1x', 74, 46, 26};
+            ig.Padding = [6 6 6 6]; ig.RowSpacing = 5; app.UI.InstrGrid = ig;
+            app.fitColumns(w);
             app.UI.Instr = uitextarea(ig, 'Editable', 'off', 'FontSize', 15);
             app.UI.Instr.Layout.Row = 1; app.UI.Instr.Layout.Column = 1;
+            % ---- the switchboard, drawn: the state to set NOW (big) and after beeps 1 / 2 (small)
+            sb = uigridlayout(ig, [1 7]); sb.Layout.Row = 2; sb.Layout.Column = [1 2];
+            sb.ColumnWidth = {'1.1x', '1x', '1x', '1x', 4, '1.25x', '1.25x'}; sb.Padding = [0 0 0 0]; sb.ColumnSpacing = 6;
+            app.UI.SwHead = uilabel(sb, 'Text', {'Switchboard', 'NOW:'}, 'FontSize', 15, 'FontWeight', 'bold', 'Tag', 'sw');
+            nm = {'WOOFER', 'MID', 'TWEETER'};
+            for i = 1:3
+                app.UI.SwBig(i) = uilabel(sb, 'Text', {nm{i}, 'OFF'}, 'FontSize', 16, 'FontWeight', 'bold', ...
+                    'HorizontalAlignment', 'center', 'Tag', 'sw');
+            end
+            uilabel(sb, 'Text', '', 'Tag', 'sw');
+            for j = 1:2
+                g2 = uigridlayout(sb, [2 3]); g2.RowHeight = {'1x', '1x'}; g2.Padding = [0 4 0 4];
+                g2.RowSpacing = 3; g2.ColumnSpacing = 3;
+                app.UI.SwSmallHead(j) = uilabel(g2, 'Text', sprintf('after beeps %d:', j), 'FontSize', 12, 'Tag', 'sw');
+                app.UI.SwSmallHead(j).Layout.Column = [1 3];
+                for i = 1:3
+                    app.UI.SwSmall(j, i) = uilabel(g2, 'Text', nm{i}(1), 'FontSize', 12, 'FontWeight', 'bold', ...
+                        'HorizontalAlignment', 'center', 'Tag', 'sw');
+                end
+                app.UI.SwSmallGrid(j) = g2;
+            end
+            app.UI.SwGrid = sb;
+            app.fitColumns(w);
             mg = uigridlayout(ig, [3 1]); mg.Layout.Row = 1; mg.Layout.Column = 2;
             mg.RowHeight = {'1x', 32, 32}; mg.Padding = [0 0 0 0]; mg.RowSpacing = 5;
             app.UI.Measure = uibutton(mg, 'Text', 'Measure', 'FontSize', 22, 'FontWeight', 'bold', ...
@@ -549,8 +593,8 @@ classdef labgui < handle
             app.UI.Next = uibutton(mg, 'Text', 'Go to the next step >', 'ButtonPushedFcn', @(~, ~) app.nextStep());
             app.UI.Status = uilabel(ig, 'Text', '', 'FontSize', 15, 'FontWeight', 'bold', 'Tag', 'status');
             try, app.UI.Status.WordWrap = 'on'; catch, end
-            app.UI.Status.Layout.Row = 2; app.UI.Status.Layout.Column = [1 2];
-            ng = uigridlayout(ig, [1 2]); ng.Layout.Row = 3; ng.Layout.Column = [1 2];
+            app.UI.Status.Layout.Row = 3; app.UI.Status.Layout.Column = [1 2];
+            ng = uigridlayout(ig, [1 2]); ng.Layout.Row = 4; ng.Layout.Column = [1 2];
             ng.ColumnWidth = {250, '1x'}; ng.Padding = [0 0 0 0];
             uilabel(ng, 'Text', 'Note for this measurement (saved with it):');
             app.UI.Note = uieditfield(ng, 'text');
@@ -603,7 +647,7 @@ classdef labgui < handle
                     'ValueChangedFcn', @(src, ~) app.onSetting(key, type, src));
             end
             app.UI.Fields.R_series.Tooltip = 'Zi station: the MULTIMETER value of the series resistor (about 32.9), not R_E.';
-            app.UI.Fields.out1_gain.Tooltip = 'Type the value set in the MiniDSP app. -10.3 dB balanced the channels on 10-Nov.';
+            app.UI.Fields.out1_gain.Tooltip = 'Type the value set in the MiniDSP app. Design -4.5 dB; -5.8 dB balanced the lab amplifier on 10-Nov.';
             if app.Demo
                 uilabel(sg, 'Text', 'Demo fault', 'FontWeight', 'bold', 'Tag', 'accent');
                 app.UI.Fault = uidropdown(sg, 'Items', {'none', 'placement off', 'state not switched in time', ...
@@ -748,6 +792,7 @@ classdef labgui < handle
                 app.T0 = [];
                 if ~isempty(app.Sel)
                     [~, ~, label] = lab_steps(app.Sel); app.UI.Measure.Text = sprintf('Measure %s', label);
+                    app.showSwitches(struct('big', 1, 'beeps', 0));
                 end
             end
             drawnow;
@@ -762,8 +807,10 @@ classdef labgui < handle
                 app.status(sprintf('Finishing and saving ... %s', clock), 'busy');
             elseif strcmp(I.phases(k).name, 'beeps')
                 app.status(sprintf('%s   %s', I.phases(k).text, clock), 'beeps');
+                app.showSwitches(struct('big', I.phases(k).k + 1, 'beeps', I.phases(k).k));
             else
                 app.status(sprintf('%s   %s', I.phases(k).text, clock), 'busy');
+                app.showSwitches(struct('big', I.phases(k).k, 'beeps', 0));
             end
         end
 
@@ -795,6 +842,65 @@ classdef labgui < handle
                 app.log(['Could not save the graph: ' err.message]);
             end
             if ~isempty(f) && isvalid(f), close(f); end
+        end
+
+        function fitColumns(app, w)
+            % side columns and the Measure column shrink on small windows (lab PCs, tiling WMs)
+            if ~isfield(app.UI, 'Top') || isempty(app.UI.Top) || ~isvalid(app.UI.Top), return; end
+            if w >= 1450, app.UI.Top.ColumnWidth = {345, '1x', 330}; mw = 215;
+            elseif w >= 1200, app.UI.Top.ColumnWidth = {300, '1x', 280}; mw = 190;
+            else, app.UI.Top.ColumnWidth = {265, '1x', 245}; mw = 160;
+            end
+            if ~isempty(app.UI.InstrGrid) && isvalid(app.UI.InstrGrid), app.UI.InstrGrid.ColumnWidth = {'1x', mw}; end
+            if isfield(app.UI, 'SwBig')
+                fs = 16; if w < 1200, fs = 12; elseif w < 1450, fs = 14; end
+                set(app.UI.SwBig, 'FontSize', fs); app.UI.SwHead.FontSize = min(fs, 15);
+            end
+        end
+
+        function showSwitches(app, w)
+            % the switchboard indicators: w.big = which state is drawn big (1 = the one to set
+            % NOW); w.beeps = k while beeps k are playing (then big = the state to switch TO)
+            app.SwState = w;
+            P = app.Pal; I = app.SelInst; nm = {'WOOFER', 'MID', 'TWEETER'};
+            if app.Busy && ~isempty(app.Inst), I = app.Inst; end
+            chamber = ~isempty(I) && ~isempty(I.sw);
+            set([app.UI.SwBig, app.UI.SwHead], 'Visible', 'on');
+            if ~chamber
+                app.UI.SwHead.Text = {'Zi / near field:', 'see the text'};
+                app.UI.SwHead.FontColor = P.muted;
+                set(app.UI.SwBig, 'Visible', 'off'); set(app.UI.SwSmallGrid, 'Visible', 'off');
+                return
+            end
+            b = min(max(w.big, 1), size(I.sw, 1));
+            if w.beeps > 0
+                app.UI.SwHead.Text = {sprintf('BEEPS %d:', w.beeps), 'SWITCH TO'}; app.UI.SwHead.FontColor = P.accent;
+            elseif app.Busy
+                app.UI.SwHead.Text = {'Switchboard', sprintf('state %d:', b)}; app.UI.SwHead.FontColor = P.fg;
+            else
+                app.UI.SwHead.Text = {'Switchboard', 'NOW:'}; app.UI.SwHead.FontColor = P.fg;
+            end
+            for i = 1:3
+                on = I.sw(b, i) > 0;
+                if on
+                    set(app.UI.SwBig(i), 'Text', {nm{i}, 'ON'}, 'BackgroundColor', P.swon, 'FontColor', P.swonfg);
+                else
+                    set(app.UI.SwBig(i), 'Text', {nm{i}, 'OFF'}, 'BackgroundColor', P.swoff, 'FontColor', P.swofffg);
+                end
+            end
+            for j = 1:2
+                has = size(I.sw, 1) >= j + 1;
+                if has, app.UI.SwSmallGrid(j).Visible = 'on'; else, app.UI.SwSmallGrid(j).Visible = 'off'; end
+                app.UI.SwSmallHead(j).FontColor = P.muted;
+                if ~has, continue; end
+                for i = 1:3
+                    if I.sw(j + 1, i) > 0
+                        set(app.UI.SwSmall(j, i), 'BackgroundColor', P.swon, 'FontColor', P.swonfg);
+                    else
+                        set(app.UI.SwSmall(j, i), 'BackgroundColor', P.swoff, 'FontColor', P.swofffg);
+                    end
+                end
+            end
         end
 
         function colourButtons(app)
@@ -834,7 +940,7 @@ classdef labgui < handle
                         case 'banner'
                             h.FontColor = [1 1 1];
                             if app.Demo, h.BackgroundColor = P.banner.demo; else, h.BackgroundColor = P.banner.live; end
-                        case {'verdict', 'status'}            % set by setVerdict / status
+                        case {'verdict', 'status', 'sw'}      % set by setVerdict / status / showSwitches
                         case 'muted',  h.FontColor = P.muted;
                         case 'accent', h.FontColor = P.accent;
                         otherwise,     h.FontColor = P.fg;
@@ -850,6 +956,7 @@ classdef labgui < handle
                 end
             end
             app.colourButtons();
+            app.showSwitches(app.SwState);
             app.status(app.StatusText, app.StatusKind);
             app.refresh();
             v = app.LastVerdict; a = app.LastAdvice;

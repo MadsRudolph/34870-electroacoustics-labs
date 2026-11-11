@@ -6,7 +6,7 @@ function varargout = lab_demo(station, st, S, opt, varargin)
 %
 %   They return what the real routines return, "measured" from the expected curves:
 %   level -6 dB, a random latency per run, a little noise. The MiniDSP gains in S act like
-%   the real knobs: Out 1 = -10.3 dB balances the woofer (as on 10-Nov), anything else
+%   the real knobs: Out 1 = -5.8 dB balances the woofer (as on 10-Nov), anything else
 %   unbalances it by the difference. Board impedance from the model, woofer and near
 %   field from the Lab D data at S.vent_mm (160 mm if Lab D has no data at that length).
 %
@@ -37,7 +37,7 @@ case 'chamber'
     [T, hdr] = readcsv(fullfile(L.model, ifelse(st(1).angle == 30, 'expected_off30.csv', 'expected_on.csv')));
     fn = T(:,1); col = @(s) T(:, strcmp(hdr, [s '_re'])) + 1j*T(:, strcmp(hdr, [s '_im']));
     W = col('woofer');                           % all = W + midtw, flipW = -W + midtw, flipT = W + mid - tw
-    gw = 10^((S.out1_gain - (-10.3))/20);        % -10.3 dB = what balanced the lab's amplifier
+    gw = 10^((S.out1_gain - (-5.8))/20);         % -5.8 dB = what balanced the lab's amplifier on 10-Nov
     g2 = 10^(S.out2_gain/20);
     H = zeros(numel(fn), Nmeas);
     for k = 1:Nmeas

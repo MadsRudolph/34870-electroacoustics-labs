@@ -12,34 +12,34 @@
 
 %% 0. Before the first measurement (no hardware needed)
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end
-edit lab_setup          % Out 1 gain (-10.3), amplifier, vent 160 mm, UMIK serial
+edit lab_setup          % Out 1 gain (-5.8), amplifier, vent 160 mm, UMIK serial
 addpath tests; test_lab % must print PASS (stand-in routines, no hardware)
 lab list                % the step list
 return
 
 %% P. Placement check, MiniDSP BYPASSED: woofer / mid / tweeter in one run (~4 min)
-% Start: amp ch. 2 cable pulled. Beeps 1: ch. 1 pulled, tweeter lead off. Beeps 2: mid lead off, tweeter on.
+% Switchboard: start woofer ON only. Beeps 1: woofer OFF, mid ON. Beeps 2: mid OFF, tweeter ON.
 % All three should be OK before going on (else: box/mic position differs from Lab E).
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end
 lab P
 
 %% S. The system, MiniDSP ON: woofer / mid+tw / all in one run (~4 min)
-% Start: amp ch. 2 cable pulled. Beeps 1: ch. 2 back, ch. 1 pulled. Beeps 2: ch. 1 back.
+% Switchboard: start woofer ON only. Beeps 1: woofer OFF, mid ON, tweeter ON. Beeps 2: woofer ON (all ON).
 % Checks: balance woofer vs mid+tw (+-1 dB; it says how to change Out 1) and the sum check.
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end
 lab S
 
-%% S4. Midrange only (MiniDSP on, amp ch. 1 pulled, TWEETER lead off) (~1 min)
+%% S4. Midrange only (MiniDSP on; switchboard: mid ON, woofer and tweeter OFF) (~1 min)
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end
 lab S4
 
-%% S5. Tweeter only (MiniDSP on, amp ch. 1 pulled, MIDRANGE lead off) (~1 min)
+%% S5. Tweeter only (MiniDSP on; switchboard: tweeter ON, woofer and mid OFF) (~1 min)
 % After S4 + S5 the verdict also prints the tweeter level against the midrange.
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end
 lab S5
 
 %% F. Polarity flips: all / woofer inverted / tweeter swapped (~4 min)
-% Beeps 1: tick Out 1 INVERT. Beeps 2: untick it, swap the tweeter + and - at the board.
+% Switchboard: all three ON. Beeps 1: tick Out 1 INVERT. Beeps 2: untick it, swap the tweeter + and - at the board.
 % AFTERWARDS: swap the tweeter back!
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end
 lab F
@@ -54,11 +54,11 @@ lab A
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end
 lab Z1
 
-%% Z2. Board, midrange branch (TWEETER lead off at the board)
+%% Z2. Board, midrange branch (TWEETER OFF on the switchboard, or lift its lead if the board is wired straight)
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end
 lab Z2
 
-%% Z3. Board, tweeter branch (MIDRANGE lead off, tweeter lead back on)
+%% Z3. Board, tweeter branch (tweeter back ON, MIDRANGE OFF; or lift its lead if the board is wired straight)
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end
 lab Z3
 

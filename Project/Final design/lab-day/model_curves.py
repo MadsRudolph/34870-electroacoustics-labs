@@ -23,8 +23,8 @@ import xover as X  # noqa: E402
 OUT = HERE / "model"
 STATES = ["woofer", "midtw", "mid", "tw", "all", "flipW", "flipT",
           "byp_woofer", "byp_mid", "byp_tw", "byp_midtw", "dir_woofer", "dir_mid", "dir_tw"]
-LABEL = {"woofer": "woofer only (Out 2 muted)", "midtw": "mid + tweeter (Out 1 muted)",
-         "mid": "midrange only (tweeter lead off)", "tw": "tweeter only (mid lead off)",
+LABEL = {"woofer": "woofer only (switchboard W)", "midtw": "mid + tweeter (switchboard M+T)",
+         "mid": "midrange only (switchboard M)", "tw": "tweeter only (switchboard T)",
          "all": "all three", "flipW": "all, woofer inverted (Out 1 invert)",
          "flipT": "all, tweeter leads swapped",
          # placement check (MiniDSP bypassed): byp_* = through the board as built, dir_* = unit

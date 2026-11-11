@@ -10,7 +10,7 @@ if strcmp(m.station, 'chamber')
     end
     if size(m.peak, 1) >= 2 && any(m.peak(2,:) < 0.01)
         k = find(m.peak(2,:) < 0.01);
-        warn{end+1} = sprintf(['Very small UMIK signal in state %s: a cable still pulled, the mic not ' ...
+        warn{end+1} = sprintf(['Very small UMIK signal in state %s: a unit still OFF on the switchboard, the mic not ' ...
             'plugged in, or the amplifier off?'], strjoin(m.ids(k(k <= numel(m.ids))), ', '));
         level = worst(level, 'CHECK');
     end

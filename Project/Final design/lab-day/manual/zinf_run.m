@@ -27,14 +27,14 @@ return
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end, addpath('core', fullfile('..', 'kit', 'core'))   % finds the helpers
 m = measure_zinf('board', 'board', 'R', R, 'note', 'mid + tweeter on the board');
 
-%% Z2. Board, midrange branch only (tweeter lead off at the board)
+%% Z2. Board, midrange branch only (TWEETER OFF on the switchboard, or lift its lead if the board is wired straight)
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end, addpath('core', fullfile('..', 'kit', 'core'))   % finds the helpers
-m = measure_zinf('board_mid', 'board', 'R', R, 'note', 'tweeter lead off');
+m = measure_zinf('board_mid', 'board', 'R', R, 'note', 'tweeter off');
 
-%% Z3. Board, tweeter branch only (midrange lead off at the board)
+%% Z3. Board, tweeter branch only (MIDRANGE OFF on the switchboard, or lift its lead if the board is wired straight)
 % Above ~20 kHz the 4.7 / 3.3 ohm pad dominates; below 1 kHz it is C_tw + L_tw.
 try, cd(fileparts(matlab.desktop.editor.getActiveFilename)); end, addpath('core', fullfile('..', 'kit', 'core'))   % finds the helpers
-m = measure_zinf('board_tw', 'board', 'R', R, 'note', 'midrange lead off');
+m = measure_zinf('board_tw', 'board', 'R', R, 'note', 'midrange off');
 
 %% Z4. Woofer in the box, final tuning: ONE vent open at 160 mm, other plugged, filling in
 % Checks the box is as designed (Lab D: fb 23.4 Hz; model 24.6 Hz).

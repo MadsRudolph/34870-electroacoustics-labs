@@ -21,8 +21,10 @@ Three ways to measure, all saving data the GUI and the dashboard show: (a) `kit/
 (b) `kit/lab_run.m` or the `lab` commands, (c) Tuesday's `manual/project_run.m` and `manual/zinf_run.m`
 (the GUI's *Load manual runs...* shows those runs too).
 
-> The printed guide (`guide/LabDay_Guide.pdf`) and the plan below were written for 10-Nov: where they
-> say `matlab/`, read `manual/` (the scripts were moved on 11-Nov; nothing else changed in them).
+> The printed guide (`guide/LabDay_Guide.pdf`) and the plan below were written for 10-Nov and are kept as
+> history: where they say `matlab/`, read `manual/`; where they mute a channel in the MiniDSP or pull a
+> cable or lift a lead, the chamber's **switchboard** (woofer / mid / tweeter ON/OFF) is what is used;
+> and Out 1 is **-5.8 dB**, not -4.5 (10-Nov: 0 dB in tries 1-2, then -5.8 dB balanced the channels).
 
 
 **Printable guide:** `guide/LabDay_Guide.pdf` walks through the whole day step by step (timeline,
@@ -88,7 +90,7 @@ Step by step in `report/Project_report.tex`, section "Setting up the MiniDSP". I
 | PEQ, Comp, FIR | bypassed on both outputs, only **Xover** active |
 | Output 1 Xover, Advanced | paste `../data/dsp/MiniDSP_woofer_out1.txt` (LR4 low-pass 325 Hz = two identical BW2 biquads), Process |
 | Output 2 Xover, Advanced | paste `../data/dsp/MiniDSP_midtw_out2.txt` (LR4 high-pass 325 Hz), Process |
-| Gain | Output 1 **-4.5 dB**, Output 2 0 dB |
+| Gain | Output 1 **-4.5 dB** by design; in the chamber **-5.8 dB** balanced the lab amplifier (10-Nov; tries 1-2 ran at 0 dB by mistake). Output 2 0 dB |
 | Invert / polarity | off on both |
 | Delay | **0 on both.** The "d = -1.15 m" in the report is only the distance correction used to draw the phase plots, not a delay to type in. |
 | Sample rate | the coefficients only hold at **96 kHz**; check the plugin says 96 kHz |
@@ -141,12 +143,13 @@ is not valid below 125 Hz; the low end is Task 1's job (near field, already done
 
 One run = up to three states with ~30 s of beeps in between (the course routine's `Nmeas <= 3`).
 States inside one run are phase-coherent; separate runs are not (the UMIK has its own USB clock).
-Muting is done in the MiniDSP app, unplugging at the board (it sits outside the chamber).
+The states are selected on the chamber's **switchboard** (woofer, midrange, tweeter each ON/OFF, as in Lab E),
+not with the MiniDSP mute, not by pulling amplifier cables and not by lifting leads at the board.
 
 | Run | Angle | States (switch during the beeps) | What it proves |
 |---|---|---|---|
-| R1 | 0 | woofer (Out 2 muted) -> mid+tw (Out 1 muted) -> all | each channel against the model; channel balance; woofer + mid/tw = all |
-| R2 | 0 | mid (tweeter lead off) -> tw (mid lead off) -> all | the passive board, driver by driver |
+| R1 | 0 | woofer (switchboard W) -> mid+tw (M+T) -> all (W+M+T) | each channel against the model; channel balance; woofer + mid/tw = all |
+| R2 | 0 | mid (switchboard M) -> tw (T) -> all (W+M+T) | the passive board, driver by driver |
 | R3 | 0 | all -> woofer inverted (Out 1 invert) -> tweeter swapped (at the board) | phase alignment: model says notch at **329 Hz, -21 dB** and **3.9 kHz, -14 dB** |
 | R4 | 30 | woofer -> mid+tw -> all | off-axis, against the Lab E 30 deg model |
 | R5 | 0 | repeat of R1 | drift/placement: 'all' must land on R1's within a few tenths of a dB |

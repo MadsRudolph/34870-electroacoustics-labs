@@ -41,7 +41,7 @@ for i = 1:numel(R)
         do{end+1} = sprintf('%s: the unit itself differs from Lab E (or the placement). Compare with P1: if P1 is OK, the unit changed.', r.id); %#ok<AGROW>
     case {'S1', 'S2', 'S3', 'S4', 'S5', 'A1', 'A2', 'A3', 'F0'}
         do{end+1} = sprintf(['%s: the shape differs from the expectation. Check the MiniDSP (filters pasted, PEQ/Comp/FIR ' ...
-            'bypassed, 96 kHz, invert off), the cables, the board wiring; then compare with the placement run P.'], r.id); %#ok<AGROW>
+            'bypassed, 96 kHz, invert off), the switchboard, the cables, the board wiring; then compare with the placement run P.'], r.id); %#ok<AGROW>
     case {'F1', 'F2'}
         do{end+1} = sprintf('%s: looks different from the model: was the switch made during the beeps?', r.id); %#ok<AGROW>
     case 'bal'
