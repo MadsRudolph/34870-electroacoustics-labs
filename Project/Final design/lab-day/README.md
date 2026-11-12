@@ -1,5 +1,7 @@
 # Lab day: build the crossover and measure System D (Task 3)
 
+> **What to change and what we aim for:** `TUNING.md` (Out 1 -5.8 dB, Rp 3.3 -> 8.2 ohm, the flat target, then tuning by ear).
+
 > **After 10-Nov:** results in `results_2026-11-10/LabDay_Results.pdf`, log in `LOG_2026-11-10.md`.
 > **For the next session (Thu 12-Nov) use the kit:** in MATLAB `cd lab-day/kit`, then **`labgui`** (buttons, a graph
 > and a verdict after every measurement; `labgui('demo')` to rehearse without hardware). Details: `kit/README.md`.
