@@ -1,0 +1,88 @@
+% The passive board as physically wired (top view sketch). Terminal names are ours.
+\begin{tikzpicture}[x=0.94cm,y=0.94cm,
+  lbl/.style={font=\scriptsize, inner sep=1pt},
+  val/.style={font=\scriptsize\bfseries, inner sep=1pt},
+  note/.style={draw, rounded corners=2pt, fill=yellow!12, font=\scriptsize, align=left, inner sep=3pt},
+  wp/.style={line width=1.4pt, red!75!black},
+  wn/.style={line width=1.4pt, black},
+  wi/.style={line width=1.2pt, black!65},
+  every node/.style={font=\footnotesize}]
+  \newcommand{\screw}[2]{\draw[fill=#2, thick] (#1) circle (0.2);
+     \draw[thick] ($(#1)+(-0.13,-0.13)$) -- ($(#1)+(0.13,0.13)$);}
+  % board
+  \draw[rounded corners=6pt, thick, fill=brown!7] (0,0) rectangle (11,6.6);
+  \node[font=\footnotesize\bfseries, anchor=south] at (5.5,6.65) {Passive filter panel, top view (our board)};
+  % ground bus
+  \draw[wn, line width=2.4pt] (0.7,0.9) -- (10.3,0.9);
+  \node[lbl] at (5.9,0.45) {common return ($-$): AMP$-$, MID$-$, TW$-$ and every shunt part};
+  % ---------- wires
+  \draw[wp] (0.7,5.6) -- (2.0,5.6) -- (2.7,5.6);          % AMP+ -> A -> C_tw
+  \draw[wi] (4.5,5.6) -- (5.2,5.6) -- (5.9,5.6);          % C_tw -> J -> Rs
+  \draw[wp] (7.9,5.6) -- (8.6,5.6) -- (10.3,5.6);         % Rs -> T -> TW+
+  \draw[wp] (2.0,5.6) -- (2.0,5.0);                       % A -> L_mid
+  \draw[wp] (2.0,3.6) -- (2.0,2.9) -- (0.7,2.9);          % L_mid -> M -> MID+
+  \draw[wi] (2.0,2.9) -- (2.0,2.5);                       % M -> C_mid
+  \draw[wn] (2.0,1.4) -- (2.0,0.9);                       % C_mid -> bus
+  \draw[wn] (0.7,1.8) -- (1.3,1.8) -- (1.3,0.9);          % MID- -> bus
+  \draw[wi] (5.2,5.6) -- (5.2,3.9) -- (5.5,3.9);          % J -> L_tw
+  \draw[wn] (7.3,3.9) -- (7.5,3.9) -- (7.5,0.9);          % L_tw -> bus
+  \draw[wi] (8.6,5.6) -- (8.6,4.4);                       % T -> Rp
+  \draw[wn] (8.6,2.4) -- (8.6,0.9);                       % Rp -> bus
+  % ---------- parts
+  % C_tw
+  \draw[thick, fill=blue!15, rounded corners=3pt] (2.7,5.33) rectangle (4.5,5.87);
+  \node[val] at (3.6,5.6) {5.6\,\textmu F};
+  \node[lbl, anchor=south] at (3.6,5.92) {$C_\mathrm{tw}$, non-polarised};
+  % Rs
+  \draw[thick, fill=gray!25] (5.9,5.38) rectangle (7.9,5.82);
+  \node[val] at (6.9,5.6) {4.7\,$\Omega$};
+  \node[lbl, anchor=south] at (6.9,5.92) {$R_s$, $\geq$5 W};
+  % L_tw: horizontal axis
+  \draw[thick, fill=orange!30, rounded corners=2pt] (5.5,3.55) rectangle (7.3,4.25);
+  \foreach \x in {5.7,5.9,...,7.15} \draw[orange!60!black] (\x,3.55) -- (\x,4.25);
+  \draw[dashed, -{Latex[length=1.6mm]}] (5.3,4.55) -- (7.5,4.55) node[lbl, right] {axis};
+  \node[lbl, anchor=north] at (6.4,3.5) {$L_\mathrm{tw}$ \textbf{0.22\,mH}};
+  % Rp: vertical
+  \draw[thick, fill=gray!25] (8.38,2.4) rectangle (8.82,4.4);
+  \node[val, rotate=90] at (8.6,3.4) {3.3\,$\Omega$};
+  \node[lbl, anchor=west, align=left] at (8.9,3.4) {$R_p$\\$\geq$5 W};
+  % L_mid: vertical axis
+  \draw[thick, fill=orange!30, rounded corners=2pt] (1.65,3.6) rectangle (2.35,5.0);
+  \foreach \y in {3.8,4.0,...,4.85} \draw[orange!60!black] (1.65,\y) -- (2.35,\y);
+  \draw[dashed, -{Latex[length=1.6mm]}] (2.6,3.45) -- (2.6,5.15) node[lbl, above right] {axis};
+  \node[lbl, anchor=west, align=left] at (2.75,4.3) {$L_\mathrm{mid}$\\\textbf{0.82\,mH}};
+  % C_mid: vertical
+  \draw[thick, fill=blue!15, rounded corners=3pt] (1.73,1.4) rectangle (2.27,2.5);
+  \node[val, rotate=90] at (2.0,1.95) {6.8\,\textmu F};
+  \node[lbl, anchor=west, align=left] at (2.35,1.95) {$C_\mathrm{mid}$, non-\\polarised};
+  % ---------- screws (internal junctions) and terminals
+  \screw{2.0,5.6}{gray!20} \screw{5.2,5.6}{gray!20} \screw{8.6,5.6}{gray!20} \screw{2.0,2.9}{gray!20}
+  \screw{0.7,5.6}{red!60} \screw{0.7,2.9}{red!60} \screw{0.7,1.8}{gray!60} \screw{0.7,0.9}{gray!60}
+  \screw{10.3,5.6}{red!60} \screw{10.3,0.9}{gray!60}
+  \node[lbl, anchor=north] at (0.7,5.35) {AMP+};
+  \node[lbl, anchor=south] at (0.7,3.15) {MID+};
+  \node[lbl, anchor=west] at (0.95,1.95) {MID$-$};
+  \node[lbl, anchor=north] at (0.7,0.65) {AMP$-$};
+  \node[lbl, anchor=north] at (10.3,5.35) {TW+};
+  \node[lbl, anchor=south] at (10.3,1.15) {TW$-$};
+  % ---------- leads leaving the board
+  \draw[wp, {Latex[length=2mm]}-] (0.5,5.6) -- (-1.0,5.6);
+  \draw[wn, {Latex[length=2mm]}-] (0.5,0.9) -- (-1.0,0.9);
+  \node[lbl, align=right, anchor=east] at (-1.05,3.25) {from amplifier\\channel 2\\(red +, black $-$)};
+  \draw[wp, -{Latex[length=2mm]}] (0.5,2.9) -- (-0.6,2.9);
+  \draw[wn, -{Latex[length=2mm]}] (0.5,1.8) -- (-0.6,1.8);
+  \node[lbl, align=center, fill=white, anchor=north] at (-0.4,2.75) {to\\mid};
+  \draw[wp, -{Latex[length=2mm]}] (10.5,5.6) -- (11.6,5.6);
+  \draw[wn, -{Latex[length=2mm]}] (10.5,0.9) -- (11.6,0.9);
+  \node[lbl, align=left, anchor=west] at (11.7,5.6) {to tweeter +\\(red)};
+  \node[lbl, align=left, anchor=west] at (11.7,0.9) {to tweeter $-$\\(black)};
+  % ---------- what to lift / swap
+  \node[note, anchor=west, text width=2.45cm] at (11.6,3.9)
+    {\textbf{TW+ lead}: lift for R2 state 1 and for Z2.\\
+     \textbf{R3 state 3}: swap TW+ and TW$-$ (swap back after R3).};
+  \node[note, anchor=west, text width=2.45cm] at (11.6,2.05)
+    {\textbf{MID+ lead}: lift for R2 state 2 and for Z3.};
+  \node[note, anchor=north, text width=14.6cm] at (5.4,-0.25)
+    {Terminal names and positions are \textbf{ours}: match them to the panel's own markings \textbf{on the day}.
+     Parts from the course baskets only. Coils apart and with their axes at \ang{90}. Wire both drivers red to +.};
+\end{tikzpicture}

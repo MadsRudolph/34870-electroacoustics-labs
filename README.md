@@ -1,5 +1,10 @@
 # 34870 Electroacoustics — labs
 
+## Going to the lab? Copy `LabPC/`
+
+`LabPC/` holds both lab GUIs ready to copy to the lab PC (MATLAB R2019b). Start with
+[`LabPC/README.md`](LabPC/README.md).
+
 Shared lab repo for the group (DTU 34870, autumn 2026). One folder per lab; every lab has
 `report/` (LaTeX), `figures/` and its working files. The repo is linked to an Overleaf
 project through Overleaf's GitHub synchronisation, so the reports can be edited either in
