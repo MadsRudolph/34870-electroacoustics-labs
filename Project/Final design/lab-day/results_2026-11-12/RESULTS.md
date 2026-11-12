@@ -34,6 +34,9 @@ The group's notes describe S/S_2 as "S1/S2 columns swapped"; it is the amplifier
 directly. Below about 120 Hz S_3 sits above 10-Nov because the vent was open from S_2 on. The
 chamber is not valid there anyway.
 
+## Photos
+`../data/2026-11-12/photos/`: the board as built, the amplifier (Dynavox CS-PA1 MKII, volume about 11 o'clock, tone controls flat, input 2) and the switchboard.
+
 ## Figures
 - `fig_system.png`: 10-Nov, S_3 as measured, and S_3 with the extra high-pass removed.
 - `fig_double_filter.png`: today's mid/tw divided by 10-Nov's, against 1, 2 and 3 extra MiniDSP
