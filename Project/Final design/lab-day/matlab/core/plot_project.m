@@ -136,7 +136,7 @@ xlabel(ax2, 'frequency (Hz)');
 xline(ax2, 325, ':k', 'HandleVisibility', 'off');
 linkaxes([ax1 ax2], 'x');
 if o.save
-    exportgraphics(fig, fullfile(figdir, [m.tag '.png']), 'Resolution', 150);
+    try, exportgraphics(fig, fullfile(figdir, [m.tag '.png']), 'Resolution', 150); catch, print(fig, fullfile(figdir, [m.tag '.png']), '-dpng', '-r150'); end
     savefig(fig, fullfile(figdir, [m.tag '.fig']));
     fprintf('figure -> figures/%s.png\n', m.tag);
 end
@@ -162,7 +162,7 @@ xlabel('frequency (Hz)'); ylabel('|p/V|  (dB re 1 Pa/V), 1/6 oct');
 title('''all'' state of every 0 deg run (should overlap once the setup is final)');
 legend('Location', 'southwest', 'Interpreter', 'none');
 if o.save
-    exportgraphics(fig, fullfile(figdir, 'overview_all.png'), 'Resolution', 150);
+    try, exportgraphics(fig, fullfile(figdir, 'overview_all.png'), 'Resolution', 150); catch, print(fig, fullfile(figdir, 'overview_all.png'), '-dpng', '-r150'); end
     savefig(fig, fullfile(figdir, 'overview_all.fig'));
 end
 end

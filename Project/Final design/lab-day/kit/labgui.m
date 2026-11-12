@@ -61,6 +61,9 @@ old = findall(groot, 'Type', 'figure', 'Tag', 'labgui');
 if ~isempty(old), try, delete(old); catch, end, end
 
 build();
+for l = [h.legend, h.when(:)', h.what(:)', h.prog, h.verdict]   % WordWrap needs R2020b
+    try, l.WordWrap = 'on'; catch, end
+end
 applyTheme();
 reload(0);
 refreshInstr();
@@ -99,7 +102,8 @@ if nargout == 0, clear app; end
         end
 
         % ---- header
-        g = uigridlayout(h.main, [1 5], 'ColumnWidth', {'1x', 'fit', 'fit', 50, 110}, 'Padding', [4 2 4 2], 'Tag', 'bg');
+        g = uigridlayout(h.main, [1 5], 'ColumnWidth', {'1x', 420, 300, 50, 110}, 'Padding', [4 2 4 2], 'Tag', 'bg');
+        try, g.ColumnWidth = {'1x', 'fit', 'fit', 50, 110}; catch, end   % 'fit' needs a newer MATLAB
         g.Layout.Row = 1; g.Layout.Column = [1 3];
         h.title = uilabel(g, 'Text', sprintf('Lab day %s    Group %g, System D', day, S.group), ...
             'FontSize', 20, 'FontWeight', 'bold');
@@ -128,7 +132,7 @@ if nargout == 0, clear app; end
         end
         expand(h.tree, 'all');
         h.legend = uilabel(g, 'Text', ['Lamp: grey = not done, green = OK, orange = CHECK, red = BAD.' newline ...
-            'Ctrl+click = your own run of up to 3 chamber steps.'], 'FontSize', 11, 'Tag', 'muted', 'WordWrap', 'on');
+            'Ctrl+click = your own run of up to 3 chamber steps.'], 'FontSize', 11, 'Tag', 'muted');
 
         % ---- middle
         mid = uigridlayout(h.main, [4 1], 'RowHeight', {236, 58, 104, '1x'}, 'Padding', [0 0 0 0], 'RowSpacing', 8, 'Tag', 'bg');
@@ -142,7 +146,7 @@ if nargout == 0, clear app; end
         unit = {'WOOFER', 'MID', 'TWEETER'};
         for k = 1:3
             h.when(k) = uilabel(g, 'Text', '', 'FontSize', 15, 'FontWeight', 'bold', 'Tag', 'instr', ...
-                'HorizontalAlignment', 'center', 'WordWrap', 'on');
+                'HorizontalAlignment', 'center');
             h.when(k).Layout.Row = k + 1; h.when(k).Layout.Column = 1;
             % the switchboard for this step: three ON/OFF indicators
             h.swgrid(k) = uigridlayout(g, [1 3], 'Padding', [2 8 2 8], 'ColumnSpacing', 5, 'Tag', 'sw');
@@ -152,7 +156,7 @@ if nargout == 0, clear app; end
                     'HorizontalAlignment', 'center', 'Tag', 'swlamp', 'UserData', unit{u}, ...
                     'Tooltip', 'The switchboard in the chamber: set this unit ON or OFF');
             end
-            h.what(k) = uilabel(g, 'Text', '', 'FontSize', 14, 'WordWrap', 'on', 'Tag', 'instr');
+            h.what(k) = uilabel(g, 'Text', '', 'FontSize', 14, 'Tag', 'instr');
             h.what(k).Layout.Row = k + 1; h.what(k).Layout.Column = 3;
         end
         h.facts = uilabel(g, 'Text', '', 'FontSize', 14, 'FontWeight', 'bold', 'Tag', 'facts');
@@ -164,12 +168,12 @@ if nargout == 0, clear app; end
         h.bar = uigridlayout(g, [1 2], 'ColumnWidth', {'0x', '1x'}, 'Padding', [0 14 0 14], 'ColumnSpacing', 0, 'Tag', 'bg');
         h.barDone = uilabel(h.bar, 'Text', '', 'Tag', 'bardone');
         h.barLeft = uilabel(h.bar, 'Text', '', 'Tag', 'barleft');
-        h.prog = uilabel(g, 'Text', '', 'FontSize', 14, 'WordWrap', 'on');
+        h.prog = uilabel(g, 'Text', '', 'FontSize', 14);
 
         p = uipanel(mid, 'Title', 'Verdict and what to do next', 'FontSize', 14, 'FontWeight', 'bold');
         g = uigridlayout(p, [1 2], 'ColumnWidth', {170, '1x'}, 'Padding', [6 4 6 6], 'ColumnSpacing', 8);
         h.verdict = uilabel(g, 'Text', '', 'FontSize', 26, 'FontWeight', 'bold', 'HorizontalAlignment', 'center', ...
-            'Tag', 'verdict', 'WordWrap', 'on');
+            'Tag', 'verdict');
         h.advice = uitextarea(g, 'Editable', 'off', 'FontSize', 14, 'Value', {''});
 
         h.tabs = uitabgroup(mid);
@@ -444,7 +448,7 @@ if nargout == 0, clear app; end
             on = i == k;
             h.when(i).BackgroundColor = tern(on, C.now, C.panel);
             h.what(i).BackgroundColor = tern(on, C.now, C.panel);
-            h.swgrid(i).BackgroundColor = tern(on, C.now, C.panel);
+            try, h.swgrid(i).BackgroundColor = tern(on, C.now, C.panel); catch, end   % GridLayout colour: newer MATLAB only
             h.what(i).FontWeight = tern(on, 'bold', 'normal');
         end
     end
@@ -779,7 +783,7 @@ if nargout == 0, clear app; end
 
     function file = screenshot(file)
         drawnow; pause(0.5); drawnow;
-        exportapp(h.fig, file);
+        try, exportapp(h.fig, file); catch, end   % R2020b+
     end
 
     function onClose(varargin)

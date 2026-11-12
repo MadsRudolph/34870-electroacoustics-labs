@@ -75,7 +75,8 @@ if o.save && ~isempty(runs)
         if isempty(tabs.(t{1}).Children), continue; end
         try
             tg.SelectedTab = tabs.(t{1}); drawnow;
-            exportgraphics(tabs.(t{1}), fullfile(fd, [t{1} '.png']), 'Resolution', 110);
+            try, exportgraphics(tabs.(t{1}), fullfile(fd, [t{1} '.png']), 'Resolution', 110);
+            catch, print(fig, fullfile(fd, [t{1} '.png']), '-dpng', '-r110'); end
         catch
         end
     end
@@ -136,7 +137,7 @@ style(a1, [50 20000]); ylabel(a1, '|p/V| (dB re 1 Pa/V)');
 legend(a1, 'Location', 'southwest', 'Interpreter', 'none');
 ylim(a1, [ytop - 40, ytop + 5]);
 title(a1, {ttl, strjoin(vt, '   ')}, 'Interpreter', 'tex');
-style(a2, [50 20000]); ylim(a2, [-6 6]); yline(a2, [-1.5 1.5], ':k', 'HandleVisibility', 'off');
+style(a2, [50 20000]); ylim(a2, [-6 6]); yline(a2, -1.5, ':k', 'HandleVisibility', 'off'); yline(a2, 1.5, ':k', 'HandleVisibility', 'off');
 ylabel(a2, {'meas - expected', '(dB, 1/6 oct, in band)'}); xlabel(a2, 'frequency (Hz)');
 txt = strjoin(arrayfun(@(e) sprintf('%s: %s', e.id, e.msg), m.R, 'UniformOutput', false), newline);
 annotation(tab, 'textbox', [0.13 0.005 0.8 0.04], 'String', txt, 'EdgeColor', 'none', ...
@@ -168,7 +169,7 @@ end
 style(a1, [50 20000]); ylabel(a1, '|p/V| (dB re 1 Pa/V)'); legend(a1, 'Location', 'southwest', 'Interpreter', 'none');
 ylim(a1, [ytop - 40, ytop + 5]);
 title(a1, {ttl, strjoin(vt, '   ')}, 'Interpreter', 'tex');
-style(a2, [50 20000]); ylim(a2, [-6 6]); yline(a2, [-1.5 1.5], ':k');
+style(a2, [50 20000]); ylim(a2, [-6 6]); yline(a2, -1.5, ':k'); yline(a2, 1.5, ':k');
 ylabel(a2, {'meas - expected', '(dB, 1/6 oct, in band)'}); xlabel(a2, 'frequency (Hz)');
 end
 
