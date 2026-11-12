@@ -100,8 +100,9 @@ Step by step in `report/Project_report.tex`, section "Setting up the MiniDSP". I
 Copy the text from the `.txt` file, not from the PDF (hidden characters). The a1/a2 signs are
 the MiniDSP's own convention (a1 = +1.9699), as `DigitalCrossover.m` prints them.
 
-Electrical check with a 325 Hz sine and the scope: Output 1 = input -10.5 dB (-6 dB filter,
--4.5 dB gain), Output 2 = input -6.0 dB, the two in phase (LR4). Save the configuration (slot and
+Electrical check with a 325 Hz sine and the scope: Output 1 = input -11.8 dB (-6 dB filter,
+-5.8 dB gain), Output 2 = input -6.0 dB, the two in phase (LR4). **Output 2 at -12 dB means the
+high-pass is applied twice** (what happened on 12-Nov: see `results_2026-11-12/RESULTS.md`). Save the configuration (slot and
 file) so the listening test and the demo on 3 Dec start from the same settings.
 
 ## 3. Passive board (amplifier channel 2)

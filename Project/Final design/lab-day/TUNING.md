@@ -61,4 +61,4 @@ Procedure:
 | Date | Change | Result |
 |---|---|---|
 | 10-Nov | Out 1 0 -> -5.8 dB | balance -0.1 dB; spread 7.1 dB (tweeter 2.7 dB low) |
-| 12-Nov | Rp 3.3 -> 8.2 ohm (planned) | |
+| 12-Nov | Rp 3.3 -> 8.2 ohm | tweeter +2.9 dB as predicted; with the MiniDSP Out 2 high-pass applied twice by mistake the system dipped -11 dB at 400 Hz. With that removed (computed): spread 5.5 dB, rms 1.23 dB. Confirm with one S run. See `results_2026-11-12/RESULTS.md` |

@@ -1,0 +1,6 @@
+spread 150-15k / rms: 10-Nov 7.1 / 1.60 dB; S_3 measured 15.1 / 3.39; S_3 corrected 5.5 / 1.23
+S_4 (Rp 3.3) corrected: 7.4 / 1.72 dB
+Rp 8.2 - 3.3: 5-15 kHz +2.9 dB, 1-3 kHz +0.3 dB
+P1 vs Lab E woofer: level +2.2 dB, shape 0.6 dB rms
+P2 vs Lab E midrange: level +2.2 dB, shape 0.2 dB rms
+P3 vs Lab E tweeter: level +2.2 dB, shape 0.7 dB rms
