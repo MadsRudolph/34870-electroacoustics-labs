@@ -924,6 +924,7 @@ classdef labgui < handle
             for h = findall(app.Fig)'
                 if h == app.Fig, continue; end
                 tag = ''; try, tag = h.Tag; catch, end
+                try   % older MATLAB lacks some colour properties (e.g. GridLayout.BackgroundColor): skip them
                 switch h.Type
                 case 'uigridlayout'
                     if strcmp(tag, 'top'), h.BackgroundColor = P.bg;
@@ -953,6 +954,8 @@ classdef labgui < handle
                     end
                 case 'axes'
                     set(h, 'Color', P.axbg, 'XColor', P.axfg, 'YColor', P.axfg);
+                end
+                catch
                 end
             end
             app.colourButtons();
