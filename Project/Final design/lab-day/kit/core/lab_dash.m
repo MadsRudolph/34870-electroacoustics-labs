@@ -65,7 +65,7 @@ if o.save && ~isempty(runs)
         if isempty(tabs.(t{1}).Children), continue; end
         try
             tg.SelectedTab = tabs.(t{1}); drawnow;
-            exportgraphics(tabs.(t{1}), fullfile(fd, [t{1} '.png']), 'Resolution', 110);
+            save_png(tabs.(t{1}), fullfile(fd, [t{1} '.png']), 110);
         catch
         end
     end
@@ -140,7 +140,7 @@ end
 style(a1, [50 20000]); ylabel(a1, '|p/V| (dB re 1 Pa/V)'); legend(a1, 'Location', 'southwest', 'Interpreter', 'none');
 ylim(a1, [ytop - 40, ytop + 5]);
 title(a1, {ttl, strjoin(vt, '   ')}, 'Interpreter', 'tex');
-style(a2, [50 20000]); ylim(a2, [-6 6]); yline(a2, [-1.5 1.5], ':k');
+style(a2, [50 20000]); ylim(a2, [-6 6]); yline(a2, -1.5, ':k'); yline(a2, 1.5, ':k');
 ylabel(a2, {'meas - expected', '(dB, 1/6 oct, in band)'}); xlabel(a2, 'frequency (Hz)');
 end
 

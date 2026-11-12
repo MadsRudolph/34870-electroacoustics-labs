@@ -59,7 +59,7 @@ if isfinite(ytop), ylim(a1, [ytop - 40, ytop + 5]); end
 title(a1, {sprintf('%s   %s   (solid = measured, dashed = expected)', esc(m.file), hhmm(m.time)), strjoin(vt, '   ')}, ...
     'Interpreter', 'tex');
 style(a2, [50 20000]); ylim(a2, [-6 6]);
-yline(a2, [-1.5 1.5], ':', 'Color', pal.axfg, 'HandleVisibility', 'off'); yline(a2, 0, '-', 'Color', pal.grid*0.6 + pal.axbg*0.4, 'HandleVisibility', 'off');
+yline(a2, -1.5, ':', 'Color', pal.axfg, 'HandleVisibility', 'off'); yline(a2, 1.5, ':', 'Color', pal.axfg, 'HandleVisibility', 'off'); yline(a2, 0, '-', 'Color', pal.grid*0.6 + pal.axbg*0.4, 'HandleVisibility', 'off');
 ylabel(a2, {'measured - expected', '(dB, 1/6 oct, in band)'}); xlabel(a2, 'frequency (Hz)');
 end
 

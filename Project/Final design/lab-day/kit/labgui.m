@@ -454,7 +454,11 @@ classdef labgui < handle
         function screenshot(app, file)
             % SCREENSHOT  Save this window as a PNG.
             drawnow;
-            exportapp(app.Fig, file);
+            try
+                exportapp(app.Fig, file);              % R2020b+
+            catch
+                app.log('Screenshot skipped: needs MATLAB R2020b or newer.');
+            end
         end
     end
 
@@ -837,7 +841,7 @@ classdef labgui < handle
                 try, f.Theme = 'light'; catch, end
                 a1 = subplot(3, 1, [1 2], 'Parent', f); a2 = subplot(3, 1, 3, 'Parent', f);
                 if ~lab_plot('run', a1, a2, app.Runs{i}), delete(a2); a1.Position = [0.09 0.1 0.87 0.8]; end
-                exportgraphics(f, fullfile(fd, [file '.png']), 'Resolution', 110);
+                save_png(f, fullfile(fd, [file '.png']), 110);
             catch err
                 app.log(['Could not save the graph: ' err.message]);
             end
