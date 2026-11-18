@@ -127,7 +127,7 @@
     'A sound that seemed wrong, too loud or missing. Optional.', 'A_note'), check: () => true });
   steps.push({ id: 'B-intro', where: 'Part B', render: renderBIntro, check: () => true });
   [1, 2, 3, 4].forEach(k => steps.push({ id: 'B-' + k, where: `Part B · ${k}/4`,
-    render: () => renderScales(`Part B · Sample ${k}`, 'Track 1, then track 3. Judge this sample on its own.', 'B', 'sample' + k, PART_B_ITEMS, 'B_comment_sample' + k),
+    render: () => renderScales(`Part B · Sample ${k}`, 'Track 2, then track 3. Judge this sample on its own.', 'B', 'sample' + k, PART_B_ITEMS, 'B_comment_sample' + k),
     check: () => checkScales('B', 'sample' + k, PART_B_ITEMS) }));
   steps.push({ id: 'B-best', where: 'Part B', render: () => renderChoice('Part B', 'Which sample did you like best?',
     'B_best', ['1', '2', '3', '4', 'no difference'], ['Sample 1', 'Sample 2', 'Sample 3', 'Sample 4', 'No difference']),
@@ -225,7 +225,7 @@
 
   function renderBIntro() {
     return `<h2>Part B · compare four samples</h2>
-      <div class="card"><p>You will hear four samples. Each one is <b>track 1, then track 3</b>.</p>
+      <div class="card"><p>You will hear four samples. Each one is <b>track 2, then track 3</b>.</p>
       <p>The samples may sound different or the same. Judge each one on its own, then pick your favourite at the end.</p></div>`;
   }
 

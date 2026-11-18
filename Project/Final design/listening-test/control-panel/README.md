@@ -35,7 +35,7 @@ Needs only what is already installed: Python 3, `mpv`, `ffmpeg`/`ffprobe`, `busc
   vs both plugged, track 3) is a switch, off by default; it is not on the questionnaire yet.
 - **Tracks:** the four test tracks. Per track: **Local** (a file from the vinyl library) or
   **Stream** (Spotify or another player), start and length (type `1:30` or `90`), and Part B /
-  Part C sample buttons that play track 1 → 3 and 4 → 2 with a gap between them.
+  Part C sample buttons that play track 2 → 3 and 4 → 2 with a gap between them.
 - **Library:** the vinyl albums: play an album or a track, seek by clicking the progress bar,
   previous and next in the bottom bar.
 - **Players:** Spotify, Tidal or Qobuz in a browser, tidal-hifi … (anything that shows media
@@ -51,7 +51,7 @@ excerpt that plays now longer, this time only) and **Stop**. The sidebar shows t
 | Key | Action |
 |---|---|
 | `1` `2` `3` `4` | play test track 1–4 (stops whatever plays) |
-| `B` | Part B sample: track 1, then track 3 |
+| `B` | Part B sample: track 2, then track 3 |
 | `C` | Part C sample: track 4, then track 2 |
 | `Space` or `Esc` | stop |
 | `P` | (Steps view) play the current step |
