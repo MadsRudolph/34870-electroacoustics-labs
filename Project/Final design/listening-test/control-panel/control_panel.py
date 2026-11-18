@@ -683,6 +683,7 @@ class Panel:
             self.mpris.pause_all_playing()
             self.mpv.set('volume', 100)
             self.mpv.set('volume-gain', 0)
+            self.mpv.set('pause', False)          # a Pause pressed earlier must not carry over
             r = self.mpv.cmd({'name': 'loadfile', 'url': str(path), 'flags': 'replace', 'options': {'af': ''}})
             eid = (r.get('data') or {}).get('playlist_entry_id')
             if r.get('error') != 'success' or eid is None:
@@ -720,6 +721,7 @@ class Panel:
             self.mpris.pause_all_playing()
             self.mpv.set('volume', 100)
             self.mpv.set('volume-gain', 0)
+            self.mpv.set('pause', False)          # a Pause pressed earlier must not carry over
             r = self.mpv.cmd({'name': 'loadfile', 'url': p, 'flags': 'replace',
                               'options': {'start': f'{start}', 'end': f'{start + length}',
                                           'af': self._test_af(start, start + length, fade, gain)}})
@@ -855,7 +857,7 @@ class Panel:
                 self.mpris.call(name, 'SetPosition', 'ox', info['trackid'], int(x * 1e6))
             return True
 
-        t0, seeks, ok_since, final = time.monotonic(), 0, None, False
+        t0, seeks, ok_since, final, replayed = time.monotonic(), 0, None, False, False
         while True:
             if cancel.wait(0.05):
                 return False
@@ -880,12 +882,19 @@ class Panel:
                     if not seek_to(start):
                         return False
                     seeks, final, t0 = seeks + 1, False, now
-            if now - t0 > 6:
+            if st != 'Playing' and not replayed and now - t0 > 3:
+                log(f'Track {i + 1}: {info["identity"]} is {st}, sending Play again')
+                with self.lock:
+                    if cancel.is_set():
+                        return False
+                    self.mpris.call(name, 'Play')
+                replayed = True
+            if now - t0 > (6 if st == 'Playing' else 10):
                 if st == 'Playing':
                     warn.append(f'{info["identity"]} did not seek: starts at {fmt_time(pos)}')
                     break
                 sv.restore()
-                self._fail(cancel, f'Track {i + 1}: {info["identity"]} did not start playing within 6 s.')
+                self._fail(cancel, f'Track {i + 1}: {info["identity"]} did not start playing within 10 s.')
                 return False
         with self.lock:
             if cancel.is_set():
@@ -1010,6 +1019,7 @@ class Panel:
             self.mpv.cmd(['playlist-clear'])
             for p in paths:                    # queue the album, then start at the chosen track
                 self.mpv.cmd({'name': 'loadfile', 'url': p, 'flags': 'append', 'options': opts})
+            self.mpv.set('pause', False)
             self.mpv.set('playlist-pos', index)
         pairs = list(zip(paths, rels))
         todo = pairs[index + 1:] + pairs[:index]          # measure the next tracks first
@@ -1069,6 +1079,7 @@ class Panel:
             self.mpris.pause_all_playing()
             self.mpv.set('volume', 100)
             self.mpv.set('volume-gain', 0)
+            self.mpv.set('pause', False)          # a Pause pressed earlier must not carry over
             self.mpv.cmd({'name': 'loadfile', 'url': path, 'flags': 'replace', 'options': {'loop-file': 'inf'}})
             self.mode = 'tone'
             self.cur = {'kind': 'tone', 'title': f'Check tone {which} Hz, −12 dBFS (loops until Stop)'}
