@@ -63,7 +63,7 @@ pc = ph(w3, t3 ./ BQ2); pc(~near(w3, t3 ./ BQ2)) = NaN;
 semilogx(fn, p10, 'Color', [0.55 0.55 0.55], 'LineWidth', 1.3, 'DisplayName', '10 Nov');
 semilogx(fn, p3, 'r', 'LineWidth', 1.3, 'DisplayName', '12 Nov S\_3 as measured');
 semilogx(fn, pc, 'k', 'LineWidth', 1.6, 'DisplayName', '12 Nov S\_3, extra high-pass removed');
-yline(0, ':'); set(gca, 'XScale', 'log'); grid on; xlim([150 800]); ylim([-180 180]);
+yline(0, ':', 'HandleVisibility', 'off'); set(gca, 'XScale', 'log'); grid on; xlim([150 800]); ylim([-180 180]);
 xlabel('frequency (Hz)'); ylabel('woofer - mid/tw (deg)'); legend('Location', 'southwest');
 title('Phase between woofer and mid/tweeter where their levels are within 10 dB (one run each)');
 save_png(f, fullfile(out, 'fig_phase.png'), 150);
