@@ -1,0 +1,6 @@
+slprj/
+*.slxc
+*.slx.autosave
+*.log
+system_data.json
+*_validation.mat

@@ -1,0 +1,12 @@
+{
+  "devDependencies": {
+    "wrangler": "4.136.1"
+  },
+  "name": "electroacoustics-guide",
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "npm run build && wrangler deploy --dry-run",
+    "deploy": "npm run build && wrangler deploy"
+  }
+}

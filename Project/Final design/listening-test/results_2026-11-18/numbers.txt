@@ -1,0 +1,47 @@
+Listening test 18 Nov 2026, IEC listening room, System D
+source: listening_results_2026-11-18.csv, 144 rows
+
+Listeners
+  1L: session 1, seat left, group member no, experience none, hearing issue no
+  1M: session 1, seat middle, group member no, experience none, hearing issue no
+  1R: session 1, seat right, group member no, experience none, hearing issue no
+
+Part A, the loudspeaker as designed (Out 1 -5.8 dB, Rp 8.2 ohm); mean per track, then all tracks
+  bass_amount    -0.67   0.33   0.00   0.33   all  0.00 (sd 0.60, n=12)
+  bass_quality    3.67   3.00   4.00   4.00   all  3.67 (sd 0.89, n=12)
+  natural         4.33   3.33   3.67   4.00   all  3.83 (sd 0.72, n=12)
+  treble_amount   0.67   0.33   0.00   0.33   all  0.33 (sd 0.65, n=12)
+  treble_smooth   2.33   2.67   4.33   3.67   all  3.25 (sd 1.22, n=12)
+  clarity         4.00   3.67   3.67   3.67   all  3.75 (sd 0.87, n=12)
+  overall         8.00   6.67   7.67   8.67   all  7.75 (sd 1.71, n=12)
+  by seat, overall:        left 6.25  middle 8.25  right 8.75
+  by seat, treble amount:  left +0.75  middle +0.25  right +0.00
+
+Part B, woofer level (Out 1: L -7.8, D -5.8, H -3.8 dB); D was played twice
+  L (-7.8 dB): overall  8.67 (sd 0.58, n=3), bass amount -0.33 (sd 0.58, n=3), chosen best 1
+  D (-5.8 dB): overall  7.67 (sd 1.51, n=6), bass amount  0.17 (sd 0.75, n=6), chosen best 2
+  H (-3.8 dB): overall  7.67 (sd 1.53, n=3), bass amount  1.33 (sd 0.58, n=3), chosen best 0
+  repeat of D, overall (first, second):
+    1L: 5, 7  (difference 2)
+    1M: 8, 9  (difference 1)
+    1R: 8, 9  (difference 1)
+
+Part C, tweeter L-pad (R8 = Rp 8.2 ohm, R3 = Rp 3.3 ohm, i.e. tweeter 2.9 dB lower)
+  NOTE: the woofer was left at -3.8 dB (H) from Part B for both samples, not the design -5.8 dB
+  R8: overall  7.33 (sd 2.08, n=3), treble amount  0.33 (sd 0.58, n=3), smoothness  2.67 (sd 1.15, n=3), preferred 0
+  R3: overall  8.67 (sd 0.58, n=3), treble amount  0.00 (sd 0.00, n=3), smoothness  3.33 (sd 0.58, n=3), preferred 2
+  no difference: 1
+
+Comments (verbatim)
+  1L B sample1 D: For me the tremble is too much, that it can be king of annoying in track 3
+  1L B sample2 L: More smooth (I guess) both of them
+  1L B sample4 H: Probably it is far too much bass, but i don’t find it bad
+  1L end last : Clarity probably is the weakest point for me. And when tremble is high it is so annoying for me
+  1M A note D_R8: Not that I can tell
+  1M B sample4 H: I usually listen to music thru a bad laptop speaker or headphones so idk if my benchmark for bass is nicely tuned
+  1M end last : Louder music can make the sounds more distinct?
+  1R A note D_R8: Some guitar sounds were louder than others
+  1R B sample1 D: I think the first song had more treble. The second was balanced
+  1R B sample2 L: The guitar was slightly louder than the rest sounds in the first song. In the second song the bass was very obvious but it was nice since that’s the vibe of that specific song.
+  1R B sample3 D: I think that was more balanced.
+  1R end last : I think the fact that the song had an intense guitar sound made me focus in that sound and I couldn’t differentiate the others that much. But maybe it was the song

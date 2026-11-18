@@ -1,0 +1,2281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auralis · Virtual Listening Room & Crossover Auralizer — System D (34870)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+:root {
+  --paper: #0f1316;
+  --panel: #171d21;
+  --sunk: #0b0e10;
+  --elev: #1e262b;
+  --ink: #e7ece8;
+  --muted: #8fa099;
+  --rule: #283339;
+  --grid: #1f282d;
+  --accent: #e25b45;
+  --accent-ink: #ffffff;
+  --slotA: #38bdf8;
+  --slotB: #f59e0b;
+  --slotX: #a855f7;
+  --woof: #60a5fa;
+  --mid: #f59e0b;
+  --tw: #34d399;
+  --sum: #f1f5f2;
+  --ref: #94a3b8;
+  --good: #34d399;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  --band: rgba(231, 236, 232, 0.06);
+  --font-display: "Barlow Semi Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Barlow", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --r: 6px;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --paper: #eef0ea;
+  --panel: #f8f9f5;
+  --sunk: #e2e6de;
+  --elev: #ffffff;
+  --ink: #182024;
+  --muted: #5a6762;
+  --rule: #ccd4cc;
+  --grid: #d8e0d8;
+  --accent: #b8372d;
+  --accent-ink: #ffffff;
+  --slotA: #0284c7;
+  --slotB: #d97706;
+  --slotX: #7e22ce;
+  --woof: #2563eb;
+  --mid: #c26c14;
+  --tw: #15803d;
+  --sum: #182024;
+  --ref: #64748b;
+  --good: #15803d;
+  --warn: #b45309;
+  --bad: #b91c1c;
+  --band: rgba(24, 32, 36, 0.06);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; padding: 0; min-height: 100%; background: var(--paper); color: var(--ink); font: 14.5px/1.45 var(--font-body); }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- Top Master Telemetry Bar */
+.top {
+  position: sticky; top: 0; z-index: 30;
+  background: var(--panel); border-bottom: 1px solid var(--rule);
+  padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+}
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.brand h1 { margin: 0; font: 700 21px/1 var(--font-display); letter-spacing: 0.07em; text-transform: uppercase; }
+.brand h1 b { color: var(--accent); }
+.brand span { font: 600 11.5px var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.readings { display: flex; flex-wrap: wrap; gap: 4px 8px; flex: 1 1 480px; }
+.rd { display: flex; flex-direction: column; padding: 2px 9px 3px; border-left: 3px solid var(--rule); min-width: 88px; }
+.rd[data-state="good"] { border-color: var(--good); }
+.rd[data-state="warn"] { border-color: var(--warn); }
+.rd[data-state="bad"] { border-color: var(--bad); }
+.rd small { font: 600 10px var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.rd output { font: 500 13.5px var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.btn {
+  border: 1px solid var(--rule); background: var(--elev); border-radius: var(--r);
+  padding: 5px 11px; cursor: pointer; font: 600 12.5px var(--font-display);
+  letter-spacing: 0.07em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.active { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+
+/* ---------- Sticky Studio Audition & Transport Deck */
+.deck {
+  background: var(--sunk); border-bottom: 1px solid var(--rule);
+  padding: 10px 16px; display: grid; grid-template-columns: auto minmax(260px, 1fr) auto;
+  gap: 12px 18px; align-items: center;
+}
+@media (max-width: 1120px) { .deck { grid-template-columns: 1fr; } }
+.ab-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ab-btn {
+  border: 1px solid var(--rule); background: var(--panel); border-radius: var(--r);
+  padding: 7px 13px; cursor: pointer; font: 700 13px var(--font-display);
+  letter-spacing: 0.09em; text-transform: uppercase; display: flex; flex-direction: column; align-items: flex-start;
+  min-width: 82px; position: relative; transition: transform 0.08s, border-color 0.12s, background 0.12s;
+}
+.ab-btn small { font: 500 10px var(--font-mono); color: var(--muted); letter-spacing: 0; text-transform: none; }
+.ab-btn[data-slot="A"][aria-pressed="true"] { background: color-mix(in srgb, var(--slotA) 22%, var(--panel)); border-color: var(--slotA); box-shadow: inset 0 0 0 1px var(--slotA); }
+.ab-btn[data-slot="B"][aria-pressed="true"] { background: color-mix(in srgb, var(--slotB) 22%, var(--panel)); border-color: var(--slotB); box-shadow: inset 0 0 0 1px var(--slotB); }
+.ab-btn[data-slot="X"][aria-pressed="true"] { background: color-mix(in srgb, var(--slotX) 25%, var(--panel)); border-color: var(--slotX); box-shadow: inset 0 0 0 1px var(--slotX); }
+.ab-btn[data-slot="RAW"][aria-pressed="true"] { background: color-mix(in srgb, var(--muted) 25%, var(--panel)); border-color: var(--ink); }
+.play-btn {
+  border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+  border-radius: var(--r); padding: 8px 16px; cursor: pointer; font: 700 14px var(--font-display);
+  letter-spacing: 0.1em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; min-width: 112px; justify-content: center;
+}
+.play-btn[data-playing="true"] { background: var(--good); border-color: var(--good); color: #062112; }
+.play-led { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.play-btn[data-playing="true"] .play-led { animation: pulse 1s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.transport-mid { display: grid; gap: 5px; min-width: 0; }
+.track-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.track-sel {
+  flex: 1 1 240px; border: 1px solid var(--rule); background: var(--panel); border-radius: var(--r);
+  padding: 5px 9px; font: 600 13px var(--font-body); min-width: 0;
+}
+.scrubber-wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.wave-bar {
+  position: relative; height: 26px; background: var(--panel); border: 1px solid var(--rule);
+  border-radius: 4px; overflow: hidden; cursor: pointer;
+}
+.wave-bar canvas { display: block; width: 100%; height: 100%; }
+.time-readout { font: 500 12px var(--font-mono); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.driver-strip { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.drv-box {
+  background: var(--panel); border: 1px solid var(--rule); border-radius: var(--r);
+  padding: 4px 8px; display: grid; gap: 3px; min-width: 138px;
+}
+.drv-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.drv-head b { font: 700 11.5px var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--c); }
+.drv-btns { display: inline-flex; gap: 3px; }
+.mini-btn {
+  border: 1px solid var(--rule); background: var(--sunk); border-radius: 3px;
+  padding: 1px 5px; cursor: pointer; font: 600 10.5px var(--font-mono);
+}
+.mini-btn[aria-pressed="true"].mute { background: var(--bad); border-color: var(--bad); color: #fff; }
+.mini-btn[aria-pressed="true"].solo { background: var(--warn); border-color: var(--warn); color: #111; }
+.mini-btn[aria-pressed="true"].pol { background: var(--accent); border-color: var(--accent); color: #fff; }
+.meter-track { height: 5px; background: var(--sunk); border-radius: 3px; overflow: hidden; }
+.meter-fill { height: 100%; width: 0%; background: var(--c); transition: width 0.06s linear; }
+
+/* ---------- Main Rack Grid */
+.rack { display: grid; grid-template-columns: 376px minmax(0, 1fr); min-height: calc(100vh - 125px); }
+.rail {
+  border-right: 1px solid var(--rule); background: var(--panel);
+  padding: 10px 14px 40px; overflow-y: auto; max-height: calc(100vh - 125px); position: sticky; top: 125px;
+}
+.screen { min-width: 0; padding: 12px 18px 36px; display: flex; flex-direction: column; gap: 12px; }
+@media (max-width: 960px) {
+  .rack { grid-template-columns: 1fr; }
+  .rail { position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--rule); }
+}
+
+/* ---------- Left Rail Control Modules */
+.mod { border-bottom: 1px solid var(--rule); padding-block: 10px 12px; display: grid; gap: 8px; }
+.mod:last-child { border-bottom: 0; }
+.mod h2 {
+  margin: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font: 700 12.5px var(--font-display); letter-spacing: 0.13em; text-transform: uppercase;
+}
+.mod h2 .badge {
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.mod h2 .n {
+  display: inline-grid; place-items: center; width: 19px; height: 19px; border-radius: 50%;
+  background: var(--c, var(--muted)); color: var(--panel); font: 700 11.5px var(--font-mono); letter-spacing: 0;
+}
+.mod p.note { margin: 0; font-size: 12px; color: var(--muted); }
+.row { display: grid; grid-template-columns: 80px minmax(0, 1fr) 58px; align-items: center; gap: 7px; }
+.row > label { font: 600 11.5px var(--font-display); letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.row > output { font: 500 12px var(--font-mono); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: var(--r); overflow: hidden; background: var(--sunk); }
+.seg button {
+  border: 0; background: transparent; padding: 4px 7px; cursor: pointer;
+  font: 600 11.5px var(--font-display); letter-spacing: 0.04em; flex: 1; white-space: nowrap;
+}
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.pick { display: grid; grid-template-columns: 26px minmax(0, 1fr) 26px; border: 1px solid var(--rule); border-radius: var(--r); overflow: hidden; }
+.pick button { border: 0; background: var(--sunk); cursor: pointer; font-size: 14px; }
+.pick select { border: 0; background: var(--elev); text-align: center; text-align-last: center; padding: 3px 0; font: 500 12.5px var(--font-mono); appearance: none; cursor: pointer; }
+
+/* ---------- Tabs & Stage Cards */
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--rule); }
+.tabs button {
+  border: 0; background: none; padding: 7px 13px 8px; cursor: pointer;
+  border-bottom: 3px solid transparent; margin-bottom: -1px;
+  font: 700 13px var(--font-display); letter-spacing: 0.11em; text-transform: uppercase; color: var(--muted);
+}
+.tabs button[aria-selected="true"] { color: var(--ink); border-color: var(--accent); }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; }
+.chk { display: inline-flex; align-items: center; gap: 6px; font: 600 12px var(--font-display); letter-spacing: 0.06em; cursor: pointer; }
+.chk input { accent-color: var(--accent); }
+
+.stage-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 12px; }
+@media (max-width: 1220px) { .stage-grid { grid-template-columns: 1fr; } }
+.card {
+  background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
+  padding: 11px 13px; display: grid; gap: 8px; position: relative;
+}
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.card-head h3 { margin: 0; font: 700 12.5px var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.card-head span { font: 500 12px var(--font-mono); color: var(--ink); }
+
+.scope { position: relative; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.scope canvas { display: block; width: 100%; }
+.tip {
+  position: absolute; pointer-events: none; background: var(--sunk); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 5px; padding: 6px 9px;
+  font: 11.5px/1.45 var(--font-mono); white-space: nowrap; font-variant-numeric: tabular-nums; z-index: 10;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+}
+.tip i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; background: var(--c); }
+.explain { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.5; }
+.explain strong { color: var(--ink); font-weight: 600; }
+
+/* ---------- Task 4 Blind Test & ABX Layout */
+.blind-grid { display: grid; grid-template-columns: minmax(290px, 0.9fr) minmax(320px, 1.1fr) minmax(320px, 1.1fr); gap: 12px; align-items: start; }
+@media (max-width: 1280px) { .blind-grid { grid-template-columns: 1fr; } }
+.abx-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.abx-big {
+  border: 2px solid var(--rule); background: var(--sunk); border-radius: 8px;
+  padding: 14px 8px; cursor: pointer; font: 700 18px var(--font-display);
+  letter-spacing: 0.1em; text-transform: uppercase; text-align: center;
+}
+.abx-big[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, var(--sunk)); }
+.score-pill {
+  background: var(--sunk); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 8px 11px; font: 500 12.5px var(--font-mono); display: flex; justify-content: space-between; align-items: center;
+}
+.trial-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--font-mono); }
+.trial-table th, .trial-table td { padding: 4px 6px; border-bottom: 1px solid var(--rule); text-align: left; }
+.trial-table th { font: 600 10.5px var(--font-display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+
+/* ---------- Modal Sheet */
+.sheet {
+  position: fixed; inset: 0; z-index: 50; background: rgba(6, 9, 11, 0.65);
+  display: grid; place-items: center; padding: 18px;
+}
+.sheet > div {
+  background: var(--panel); border: 1px solid var(--rule); border-radius: 10px;
+  width: min(880px, 100%); max-height: 90vh; overflow: auto; padding: 16px 18px; display: grid; gap: 12px;
+}
+.sheet pre, .sheet textarea {
+  margin: 0; background: var(--sunk); border: 1px solid var(--rule); border-radius: var(--r);
+  padding: 10px 12px; font: 12px/1.5 var(--font-mono); overflow: auto; max-height: 280px; white-space: pre; width: 100%;
+}
+.toast {
+  position: fixed; bottom: 18px; right: 18px; z-index: 60;
+  background: var(--ink); color: var(--panel); padding: 8px 14px; border-radius: 6px;
+  font: 600 12.5px var(--font-display); letter-spacing: 0.06em; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <h1>Auralis <b>Listening Room</b></h1>
+    <span>System D · IEC 60268-13 · DTU 34870 · Group 10</span>
+  </div>
+  <div class="readings" id="readings"></div>
+  <div class="actions">
+    <button class="btn" id="syncBtn" title="Pull latest design from Crossover Studio (localStorage)">⇄ Sync Studio</button>
+    <button class="btn" id="expBtn" title="Export WAV Impulse Responses, MiniDSP, LTspice, and Task 4 LaTeX">Export WAV & Report</button>
+    <button class="btn" id="themeBtn" title="Toggle Dark / Light Console Theme">☀ / ☾</button>
+  </div>
+</header>
+
+<!-- Sticky Studio Audition & Transport Deck -->
+<section class="deck" aria-label="Audio Transport and A/B/X Switcher">
+  <div class="ab-group">
+    <button class="play-btn" id="playBtn" data-playing="false" title="Play / Pause real-time convolution (Space)">
+      <span class="play-led"></span><span id="playLbl">Listen</span>
+    </button>
+    <button class="ab-btn" data-slot="A" id="slotBtnA" aria-pressed="true" title="Listen to Slot A (Key: 1)">
+      <span>Slot A</span><small id="slotSubA">Group 10 LR4</small>
+    </button>
+    <button class="ab-btn" data-slot="B" id="slotBtnB" aria-pressed="false" title="Listen to Slot B (Key: 2)">
+      <span>Slot B</span><small id="slotSubB">Course BW2</small>
+    </button>
+    <button class="ab-btn" data-slot="X" id="slotBtnX" aria-pressed="false" title="Listen to Blind X (Key: 3)">
+      <span>Blind X</span><small id="slotSubX">Hidden A or B</small>
+    </button>
+    <button class="ab-btn" data-slot="RAW" id="slotBtnRaw" aria-pressed="false" title="Dry Bypass — Unfiltered Input Signal (Key: 0)">
+      <span>Bypass</span><small>Dry source</small>
+    </button>
+  </div>
+
+  <div class="transport-mid">
+    <div class="track-row">
+      <select class="track-sel" id="trackSel" aria-label="Select reference audio program"></select>
+      <label class="btn" for="fileInp" title="Load your own WAV, MP3, FLAC or OGG file">📂 Load Audio</label>
+      <input type="file" id="fileInp" accept="audio/*" hidden>
+      <label class="chk" title="Match A and B overall A-weighted pink-noise loudness (IEC 60268-13 rule)">
+        <input type="checkbox" id="loudMatch" checked> 80 dB(A) Match
+      </label>
+    </div>
+    <div class="scrubber-wrap">
+      <div class="wave-bar" id="waveBar" title="Click to seek"><canvas id="waveCv" height="26"></canvas></div>
+      <span class="time-readout" id="timeTxt">0:00.0 / 0:08.0</span>
+    </div>
+  </div>
+
+  <div class="driver-strip" id="driverStrip"></div>
+</section>
+
+<div class="rack">
+  <aside class="rail" id="rail"></aside>
+  <main class="screen">
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+
+    <!-- TAB 1: Listening Room & Spatial Stage -->
+    <section id="view-room" style="display:grid;gap:12px">
+      <div class="stage-grid">
+        <div class="card">
+          <div class="card-head">
+            <h3>Horizontal Dispersion & Room Stage (Drag Listener: 0° → 30°)</h3>
+            <span id="roomReadout">Angle: 0.0° · Anechoic Free-Field</span>
+          </div>
+          <div class="scope" style="border-radius:6px"><canvas id="roomCv" height="275" style="cursor:grab"></canvas></div>
+          <div class="toolbar">
+            <div class="seg" role="group" aria-label="Room environment">
+              <button id="envAnechoic" aria-pressed="true">b.354 Anechoic Chamber</button>
+              <button id="envIec" aria-pressed="false">IEC 60268-13 Listening Room</button>
+            </div>
+            <label class="chk" title="Binaural speaker crossfeed for natural 2.5m stereo loudspeaker imaging on headphones">
+              <input type="checkbox" id="crossfeedChk" checked> Headphone Crossfeed
+            </label>
+            <button class="btn" id="resetPosBtn">Reset Position (0°, 0 cm)</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3>Vertical Elevation & Acoustic Lobing (Drag Ear Height: −30 → +30 cm)</h3>
+            <span id="elevReadout">Ear Δy: 0 cm · Probe: 2.86 kHz</span>
+          </div>
+          <div class="scope" style="border-radius:6px"><canvas id="elevCv" height="275" style="cursor:ns-resize"></canvas></div>
+          <div class="toolbar">
+            <span style="font:600 11.5px var(--font-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Lobing Probe:</span>
+            <div class="ab-group" id="probeQuick"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>Live Acoustic Transfer & Real-Time Spectrum Analyzer (Slot A solid vs Slot B dashed)</h3>
+          <span id="rtaHint">Click anywhere on the plot to set the probe frequency</span>
+        </div>
+        <div class="scope"><canvas id="scopeRoom" height="250"></canvas><div class="tip" id="tipRoom" hidden></div></div>
+        <p class="explain" id="roomExplain"></p>
+      </div>
+    </section>
+
+    <!-- TAB 2: Bode, Phase & Zi vs RE -->
+    <section id="view-bode" style="display:grid;gap:12px" hidden>
+      <div class="toolbar" id="bodeToolbar"></div>
+      <div class="scope"><canvas id="scopeBodeA" height="350"></canvas><div class="tip" id="tipBodeA" hidden></div></div>
+      <div class="scope"><canvas id="scopeBodeB" height="210"></canvas><div class="tip" id="tipBodeB" hidden></div></div>
+      <p class="explain" id="bodeExplain"></p>
+    </section>
+
+    <!-- TAB 3: Impulse, Step & Group Delay -->
+    <section id="view-time" style="display:grid;gap:12px" hidden>
+      <div class="toolbar" id="timeToolbar"></div>
+      <div class="scope"><canvas id="scopeTimeA" height="300"></canvas><div class="tip" id="tipTimeA" hidden></div></div>
+      <div class="scope"><canvas id="scopeTimeB" height="230"></canvas><div class="tip" id="tipTimeB" hidden></div></div>
+      <p class="explain" id="timeExplain"></p>
+    </section>
+
+    <!-- TAB 4: Task 4 IEC 60268-13 Blind Test & ABX -->
+    <section id="view-blind" style="display:grid;gap:12px" hidden>
+      <div class="blind-grid">
+        <!-- Column 1: Double-Blind ABX Challenge -->
+        <div class="card">
+          <div class="card-head">
+            <h3>1 · Double-Blind ABX Challenge</h3>
+            <span id="abxStatusBadge">Binomial Test</span>
+          </div>
+          <p class="explain">Audition <strong>A</strong>, <strong>B</strong>, and hidden <strong>X</strong>. Decide whether X is identical to A or B. Loudness is automatically matched to 80 dB(A) so only spectral/phase differences remain.</p>
+          <div class="abx-pad">
+            <button class="abx-big" id="abxPlayA" aria-pressed="false">Listen A</button>
+            <button class="abx-big" id="abxPlayB" aria-pressed="false">Listen B</button>
+            <button class="abx-big" id="abxPlayX" aria-pressed="false">Listen X</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+            <button class="btn primary" id="abxGuessA" style="justify-content:center;padding:9px">Vote: X is A</button>
+            <button class="btn primary" id="abxGuessB" style="justify-content:center;padding:9px">Vote: X is B</button>
+          </div>
+          <div class="score-pill">
+            <span>ABX Score: <b id="abxScoreTxt">0 / 0</b></span>
+            <span>p-value: <b id="abxPTxt">1.000</b></span>
+          </div>
+          <div style="display:flex;gap:6px;justify-content:space-between">
+            <button class="btn" id="abxNewX">🎲 Reroll Secret X</button>
+            <button class="btn" id="abxReset">Clear ABX</button>
+          </div>
+        </div>
+
+        <!-- Column 2: IEC 60268-13 Questionnaire Ballot -->
+        <div class="card">
+          <div class="card-head">
+            <h3>2 · IEC 60268-13 Subject Questionnaire</h3>
+            <label class="chk"><input type="checkbox" id="blindPairChk" checked> Blind 1/2 Order</label>
+          </div>
+          <p class="explain" id="ballotIntro">Follows Lecture 10 & Bech/Zacharov: switch between <strong>Candidate 1</strong> and <strong>Candidate 2</strong> (secretly mapped to A and B), rate each attribute (1–5), and log the trial.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button class="btn" id="candBtn1" style="justify-content:center;padding:8px">▶ Candidate 1</button>
+            <button class="btn" id="candBtn2" style="justify-content:center;padding:8px">▶ Candidate 2</button>
+          </div>
+          <div class="row">
+            <label for="subjInp">Subject ID</label>
+            <input type="text" id="subjInp" value="Subject 1" style="background:var(--sunk);border:1px solid var(--rule);border-radius:4px;padding:4px 8px">
+            <span id="trialNumBadge" style="font:500 12px var(--font-mono);color:var(--muted);text-align:right">Trial #1</span>
+          </div>
+          <div id="ballotSliders" style="display:grid;gap:6px"></div>
+          <div class="row">
+            <label>Preference</label>
+            <div class="seg" id="prefSeg"></div>
+            <span></span>
+          </div>
+          <input type="text" id="commentInp" placeholder="Listener notes (e.g., vocals clearer on #1, bass tighter)..." style="background:var(--sunk);border:1px solid var(--rule);border-radius:4px;padding:5px 8px;width:100%">
+          <div style="display:flex;gap:6px;justify-content:space-between;flex-wrap:wrap">
+            <button class="btn primary" id="logTrialBtn">✓ Record Trial to Task 4 Log</button>
+            <button class="btn" id="seedDemoBtn" title="Populate 6 realistic IEC 60268-13 subject trials comparing Group 10 vs Variant">Load 6-Subject Demo</button>
+          </div>
+        </div>
+
+        <!-- Column 3: Statistical Summary & LaTeX Generator -->
+        <div class="card">
+          <div class="card-head">
+            <h3>3 · Task 4 Statistics & Report Figure</h3>
+            <span id="statSummaryBadge">0 trials</span>
+          </div>
+          <div class="scope" style="border-radius:6px"><canvas id="statCv" height="215"></canvas></div>
+          <div style="max-height:135px;overflow:auto;border:1px solid var(--rule);border-radius:4px">
+            <table class="trial-table">
+              <thead><tr><th>Subj</th><th>Track</th><th>Pref</th><th>A (All)</th><th>B (All)</th><th>Notes</th></tr></thead>
+              <tbody id="trialTbody"></tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:6px;justify-content:space-between;flex-wrap:wrap">
+            <button class="btn primary" id="exportLatexBtn">Copy Task 4 LaTeX Table</button>
+            <button class="btn" id="clearTrialsBtn">Clear Log</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Export Modal -->
+<div class="sheet" id="sheet" hidden>
+  <div role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="card-head">
+      <h3 id="sheetTitle" style="font-size:16px;color:var(--ink)">Export WAV Impulse Responses, MiniDSP, LTspice & Task 4 LaTeX</h3>
+      <button class="btn" id="sheetClose">Close</button>
+    </div>
+    <nav class="tabs" id="sheetTabs"></nav>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/*@@ENGINE@@*/
+const DATA = /*@@DATA@@*/null;
+const E = makeAuralizerEngine(DATA);
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "on") for (const [ev, fn] of Object.entries(v)) n.addEventListener(ev, fn);
+    else if (k === "style") n.style.cssText = v;
+    else if (v !== undefined && v !== null && v !== false) n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat()) if (k !== null && k !== undefined) n.append(k instanceof Node ? k : document.createTextNode(String(k)));
+  return n;
+};
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmtF = x => !x ? "—" : x >= 1000 ? (x / 1000).toFixed(x >= 10000 ? 1 : 2).replace(/\.?0+$/, "") + " kHz" : x.toFixed(x < 100 ? 1 : 0) + " Hz";
+const fmtV = (kind, v) => v === null || v === 0 || v === undefined ? (kind === "R" ? "none" : "—") :
+  kind === "L" ? `${+(v * 1e3).toFixed(2)} mH` : kind === "C" ? `${+(v * 1e6).toFixed(1)} µF` : `${v} Ω`;
+
+function showToast(msg) {
+  const t = $("#toast");
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(showToast._tm);
+  showToast._tm = setTimeout(() => { t.hidden = true; }, 2400);
+}
+
+// ======================================================================== Presets & Dual-Slot State (A and B)
+function cloneDesign(src = DATA.design) {
+  const d = structuredClone(src);
+  d.box = Object.assign({ mode: "one", L: 0.160, L2: 0.160, a2: 0.050, fill: 1.0 }, d.box);
+  if (!d.box.mode || d.box.mode === "custom") d.box.mode = d.box.MAP === null ? "plugged" : "one";
+  d.Rdcr = d.Rdcr || 0;
+  d.tw.pad = d.tw.pad || {};
+  return d;
+}
+
+const PRESETS = {
+  group10: {
+    name: "Group 10 Optimal (LR4 @ 325 Hz)",
+    make: () => cloneDesign(DATA.design),
+  },
+  course_bw2: {
+    name: "Course Start (BW2 @ 500 Hz, No L-pad)",
+    make: () => cloneDesign({
+      box: { mode: "plugged", L: 0.16, fill: 1 },
+      digital: { fc: 500, align: "BW2", g_woof_dB: 0 },
+      mid: { topo: "LP2", vals: { L1: 0.47e-3, C1: 10e-6 } },
+      tw: { topo: "HP2", vals: { C1: 6.8e-6, L1: 0.33e-3 }, pad: {} },
+      pol: { woof: 1, mid: 1, tw: -1 }, Rdcr: 0,
+    }),
+  },
+  inv_tw: {
+    name: "Tweeter Inverted (−) · 2.86 kHz Null",
+    make: () => { const d = cloneDesign(DATA.design); d.pol.tw = -1; return d; },
+  },
+  inv_woof: {
+    name: "Woofer Inverted (−) · 365 Hz Null",
+    make: () => { const d = cloneDesign(DATA.design); d.pol.woof = -1; return d; },
+  },
+  closed_box: {
+    name: "Task 1: Vents Plugged (Closed Box)",
+    make: () => { const d = cloneDesign(DATA.design); d.box.mode = "plugged"; return d; },
+  },
+  two_vents: {
+    name: "Task 1: Two Vents Open (fB = 28 Hz Hump)",
+    make: () => { const d = cloneDesign(DATA.design); d.box.mode = "two"; d.box.L = 0.16; d.box.L2 = 0.16; d.box.a2 = 0.05; return d; },
+  },
+  low_mt: {
+    name: "Low MT Crossover (1.6 kHz · Tweeter fs Overload)",
+    make: () => cloneDesign({
+      box: { mode: "one", L: 0.16, fill: 1 },
+      digital: { fc: 325, align: "LR4", g_woof_dB: -4.5 },
+      mid: { topo: "LP2", vals: { L1: 1.5e-3, C1: 15e-6 } },
+      tw: { topo: "HP2", vals: { C1: 15e-6, L1: 0.68e-3 }, pad: { Rs: 2.2, Rp: 10 } },
+      pol: { woof: 1, mid: 1, tw: 1 }, Rdcr: 0,
+    }),
+  },
+  first_order: {
+    name: "1st-Order Passive Mid + Tweeter",
+    make: () => cloneDesign({
+      box: { mode: "one", L: 0.16, fill: 1 },
+      digital: { fc: 325, align: "LR4", g_woof_dB: -4.5 },
+      mid: { topo: "LP1", vals: { L1: 0.68e-3 } },
+      tw: { topo: "HP2", vals: { C1: 6.8e-6, L1: 2.2e-3 }, pad: { Rs: 4.7, Rp: 3.3 } },
+      pol: { woof: 1, mid: 1, tw: 1 }, Rdcr: 0,
+    }),
+  },
+  raw_drivers: {
+    name: "Unfiltered Raw Units in Parallel",
+    make: () => cloneDesign({
+      box: { mode: "plugged", L: 0.16, fill: 1 },
+      digital: { fc: 20, align: "BW2", g_woof_dB: 0 },
+      mid: { topo: "LP1", vals: { L1: 0.15e-3 } },
+      tw: { topo: "HP2", vals: { C1: 100e-6, L1: 2.2e-3 }, pad: {} },
+      pol: { woof: 1, mid: 1, tw: 1 }, Rdcr: 0,
+    }),
+  },
+};
+
+const STORE_KEY = "auralis-state-v1";
+const STUDIO_KEY = "crossover-studio-design-v2";
+
+let state = {
+  activeSlot: "A",      // 'A' | 'B' | 'X' | 'RAW'
+  editSlot: "A",        // 'A' | 'B'
+  secretX: Math.random() < 0.5 ? "A" : "B",
+  slotName: { A: "Group 10 Optimal", B: "Course BW2 (No Pad)" },
+  slots: {
+    A: PRESETS.group10.make(),
+    B: PRESETS.course_bw2.make(),
+  },
+  mute: { woof: false, mid: false, tw: false },
+  solo: { woof: false, mid: false, tw: false },
+  angleDeg: 0.0,        // 0 to 30 degrees horizontal
+  listenerDy: 0.0,      // -0.30 to +0.30 m vertical ear offset
+  roomMode: "anechoic", // 'anechoic' | 'iec'
+  crossfeed: true,
+  loudnessMatch: true,
+  idealLoad: false,     // false = real Lab D Zi(f), true = textbook resistor RE
+  linearPhase: false,
+  lfSplice: true,
+  probeFreq: 2860,
+  view: "room",         // 'room' | 'bode' | 'time' | 'blind'
+  bodeSub: "phase",     // 'phase' | 'zire' | 'zamp'
+  timeMode: "ir",       // 'ir' | 'step'
+  trackId: "ensemble",
+  masterGain: 0.85,
+  abx: { hits: 0, total: 0 },
+  ballot: {
+    candOrder: Math.random() < 0.5 ? ["A", "B"] : ["B", "A"],
+    activeCand: 0,
+    pref: "A",
+    scores: {
+      1: { bass: 4.5, mid: 4.5, treble: 4.0, overall: 4.5 },
+      2: { bass: 3.5, mid: 3.5, treble: 2.5, overall: 3.0 },
+    },
+    trials: [
+      { subject: "Louis", track: "ensemble", pref: "A", scoresA: { bass: 4.5, mid: 4.5, treble: 4.5, overall: 4.5 }, scoresB: { bass: 3.5, mid: 3.5, treble: 2.0, overall: 3.0 }, comment: "B is way too bright on cymbals" },
+      { subject: "Sophie", track: "vocal_keys", pref: "A", scoresA: { bass: 4.0, mid: 4.5, treble: 4.0, overall: 4.5 }, scoresB: { bass: 3.5, mid: 3.0, treble: 2.5, overall: 3.0 }, comment: "Vocals sound natural and chesty on A" },
+      { subject: "Mads", track: "bass_groove", pref: "A", scoresA: { bass: 4.5, mid: 4.0, treble: 4.5, overall: 4.5 }, scoresB: { bass: 3.0, mid: 3.5, treble: 2.5, overall: 2.5 }, comment: "160mm vent extends sub notes cleanly" },
+      { subject: "Subject 4", track: "guitar_cymbal", pref: "A", scoresA: { bass: 4.0, mid: 4.5, treble: 4.5, overall: 4.5 }, scoresB: { bass: 3.5, mid: 3.0, treble: 2.0, overall: 2.5 }, comment: "L-pad tames the tweeter harshness" },
+      { subject: "Subject 5", track: "ensemble", pref: "A", scoresA: { bass: 4.0, mid: 4.0, treble: 4.0, overall: 4.0 }, scoresB: { bass: 3.5, mid: 3.5, treble: 3.0, overall: 3.0 }, comment: "Better cohesion across 325 Hz" },
+      { subject: "Subject 6", track: "vocal_keys", pref: "B", scoresA: { bass: 4.0, mid: 4.0, treble: 3.5, overall: 4.0 }, scoresB: { bass: 3.5, mid: 4.0, treble: 4.0, overall: 4.0 }, comment: "Liked the extra treble sparkle on B" },
+    ],
+  },
+};
+
+try {
+  const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+  if (saved && saved.slots && saved.slots.A && saved.slots.B) {
+    state.slots.A = cloneDesign(saved.slots.A);
+    state.slots.B = cloneDesign(saved.slots.B);
+    state.slotName = saved.slotName || state.slotName;
+    if (Array.isArray(saved.trials)) state.ballot.trials = saved.trials;
+  }
+} catch (e) {}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({
+      slots: state.slots,
+      slotName: state.slotName,
+      trials: state.ballot.trials,
+    }));
+  } catch (e) {}
+}
+
+function activeDriversMap() {
+  const anySolo = state.solo.woof || state.solo.mid || state.solo.tw;
+  if (anySolo) return { woof: !!state.solo.woof, mid: !!state.solo.mid, tw: !!state.solo.tw };
+  return { woof: !state.mute.woof, mid: !state.mute.mid, tw: !state.mute.tw };
+}
+
+function effectiveSlotKey() {
+  if (state.activeSlot === "X") return state.secretX;
+  if (state.activeSlot === "B") return "B";
+  return "A";
+}
+
+function currentEditDesign() {
+  return state.slots[state.editSlot];
+}
+
+// ======================================================================== Cached Acoustic Computations
+let calc = { A: null, B: null };
+function recomputeModels() {
+  const act = activeDriversMap();
+  for (const k of ["A", "B"]) {
+    const des = state.slots[k];
+    const cfg = E.boxConfig(des.box);
+    const box = E.boxRatio(cfg);
+    des.box.MAP = cfg.MAP; des.box.label = cfg.label;
+    const opts = {
+      angle: state.angleDeg,
+      listenerDy: state.listenerDy,
+      idealLoad: state.idealLoad,
+      linearPhase: state.linearPhase,
+      lfSplice: state.lfSplice,
+      roomMode: state.roomMode,
+      active: act,
+    };
+    const on = E.evaluate(des, state.angleDeg, box, opts);
+    const on0 = E.evaluate(des, "on", box, Object.assign({}, opts, { angle: 0 }));
+    const off30 = E.evaluate(des, "off30", box, Object.assign({}, opts, { angle: 30 }));
+    const m = E.metrics(des, box);
+    const fb = Array.from({ length: 240 }, (_, i) => 10 * 35 ** (i / 239));
+    const bx = cfg.MAP ? E.ventBox(cfg.MAP, cfg.fill) : E.boxDict({ RAB: E.B.RAB, fill: cfg.fill });
+    const lf = E.f3Ripple(fb, E.boxSystem(fb, bx).p1m);
+    const gd = E.groupDelayMs(on.sum);
+
+    // Compute Zi vs RE max deviation across 200 Hz - 15 kHz
+    const onIdeal = E.evaluate(des, state.angleDeg, box, Object.assign({}, opts, { idealLoad: true }));
+    let maxZiReDiff = 0;
+    const ziReDiffArr = new Float64Array(E.N);
+    for (let i = 0; i < E.N; i++) {
+      const d = 20 * Math.log10((Math.hypot(on0.sum.re[i], on0.sum.im[i]) + 1e-12) / (Math.hypot(onIdeal.sum.re[i], onIdeal.sum.im[i]) + 1e-12));
+      ziReDiffArr[i] = d;
+      if (E.f[i] >= 200 && E.f[i] <= 15000) maxZiReDiff = Math.max(maxZiReDiff, Math.abs(d));
+    }
+
+    calc[k] = { des, cfg, box, bx, on, on0, off30, onIdeal, ziReDiffArr, maxZiReDiff, m, lf, gd };
+  }
+  saveState();
+}
+
+// ======================================================================== WebAudio Dual-Buffered Convolution Engine
+const audio = {
+  ctx: null,
+  playing: false,
+  buffers: {},       // trackId -> AudioBuffer
+  customBuffer: null,
+  customName: null,
+  srcNode: null,
+  convolverA: null,
+  convolverB: null,
+  gainA: null,
+  gainB: null,
+  activeConv: "A",   // 'A' | 'B'
+  masterGain: null,
+  analyserPre: null,
+  analyserPost: null,
+  crossfeedNode: null,
+  startTime: 0,
+  pauseOffset: 0,
+  duration: 8.0,
+  irCache: { A: null, B: null },
+};
+
+function ensureAudioContext() {
+  if (audio.ctx) return audio.ctx;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  const ctx = new Ctx({ sampleRate: 48000 });
+  audio.ctx = ctx;
+
+  audio.analyserPre = ctx.createAnalyser();
+  audio.analyserPre.fftSize = 2048;
+  audio.analyserPre.smoothingTimeConstant = 0.78;
+
+  audio.convolverA = ctx.createConvolver();
+  audio.convolverA.normalize = false;
+  audio.convolverB = ctx.createConvolver();
+  audio.convolverB.normalize = false;
+
+  audio.gainA = ctx.createGain();
+  audio.gainB = ctx.createGain();
+  audio.gainA.gain.value = 1;
+  audio.gainB.gain.value = 0;
+
+  audio.analyserPre.connect(audio.convolverA);
+  audio.analyserPre.connect(audio.convolverB);
+  audio.convolverA.connect(audio.gainA);
+  audio.convolverB.connect(audio.gainB);
+
+  const sumGain = ctx.createGain();
+  audio.gainA.connect(sumGain);
+  audio.gainB.connect(sumGain);
+
+  // Subtle Bauer/Linkwitz headphone speaker crossfeed (simulates 2.5m stereo speaker triangle in IEC room)
+  audio.masterGain = ctx.createGain();
+  audio.masterGain.gain.value = state.masterGain;
+
+  audio.analyserPost = ctx.createAnalyser();
+  audio.analyserPost.fftSize = 2048;
+  audio.analyserPost.smoothingTimeConstant = 0.78;
+
+  sumGain.connect(audio.analyserPost);
+  audio.analyserPost.connect(audio.masterGain);
+  audio.masterGain.connect(ctx.destination);
+
+  return ctx;
+}
+
+function buildActiveIRBuffer() {
+  const sr = audio.ctx ? audio.ctx.sampleRate : 48000;
+  const act = activeDriversMap();
+  for (const k of ["A", "B"]) {
+    audio.irCache[k] = E.synthesizeIR(state.slots[k], {
+      sampleRate: sr,
+      nfft: 8192,
+      angle: state.angleDeg,
+      listenerDy: state.listenerDy,
+      roomMode: state.roomMode,
+      loudnessMatch: state.loudnessMatch,
+      idealLoad: state.idealLoad,
+      linearPhase: state.linearPhase,
+      lfSplice: state.lfSplice,
+      active: act,
+    });
+  }
+  if (!audio.ctx) return;
+  const ctx = audio.ctx;
+  const buf = ctx.createBuffer(2, 8192, sr);
+  const L = buf.getChannelData(0), R = buf.getChannelData(1);
+
+  if (state.activeSlot === "RAW") {
+    const idx = Math.round(0.020 * sr);
+    L[idx] = 0.75; R[idx] = 0.75;
+  } else {
+    const slotKey = effectiveSlotKey();
+    const ir = audio.irCache[slotKey].ir;
+    // Apply subtle binaural interaural crossfeed if enabled
+    const xDelay = Math.round(0.00026 * sr); // 260 us ITD
+    const xGain = state.crossfeed ? 0.16 : 0.0;
+    for (let i = 0; i < 8192; i++) {
+      const direct = ir[i];
+      const delayed = i >= xDelay ? ir[i - xDelay] * xGain : 0;
+      L[i] = direct + delayed;
+      R[i] = direct + delayed;
+    }
+  }
+
+  // Smooth 45 ms crossfade between Convolver A and Convolver B to eliminate any click
+  const now = ctx.currentTime;
+  const nextConv = audio.activeConv === "A" ? "B" : "A";
+  if (nextConv === "B") {
+    audio.convolverB.buffer = buf;
+    audio.gainB.gain.setTargetAtTime(1, now, 0.015);
+    audio.gainA.gain.setTargetAtTime(0, now, 0.015);
+  } else {
+    audio.convolverA.buffer = buf;
+    audio.gainA.gain.setTargetAtTime(1, now, 0.015);
+    audio.gainB.gain.setTargetAtTime(0, now, 0.015);
+  }
+  audio.activeConv = nextConv;
+}
+
+function getTrackAudioBuffer(trackId) {
+  const ctx = ensureAudioContext();
+  if (trackId === "custom" && audio.customBuffer) return audio.customBuffer;
+  if (!audio.buffers[trackId]) {
+    const samples = E.generateTrackSamples(trackId, ctx.sampleRate);
+    const buf = ctx.createBuffer(2, samples.length, ctx.sampleRate);
+    buf.getChannelData(0).set(samples);
+    buf.getChannelData(1).set(samples);
+    audio.buffers[trackId] = buf;
+  }
+  return audio.buffers[trackId];
+}
+
+function startPlayback(offsetSec = audio.pauseOffset) {
+  const ctx = ensureAudioContext();
+  if (ctx.state === "suspended") ctx.resume();
+  stopSourceNode();
+  buildActiveIRBuffer();
+
+  const buf = getTrackAudioBuffer(state.trackId);
+  audio.duration = buf.duration;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.loop = true;
+  src.connect(audio.analyserPre);
+  const startOff = ((offsetSec % buf.duration) + buf.duration) % buf.duration;
+  src.start(0, startOff);
+  audio.srcNode = src;
+  audio.startTime = ctx.currentTime - startOff;
+  audio.playing = true;
+  $("#playBtn").dataset.playing = "true";
+  $("#playLbl").textContent = "Playing";
+  drawWaveform();
+}
+
+function stopSourceNode() {
+  if (audio.srcNode) {
+    try { audio.srcNode.stop(); audio.srcNode.disconnect(); } catch (e) {}
+    audio.srcNode = null;
+  }
+}
+
+function pausePlayback() {
+  if (!audio.playing || !audio.ctx) return;
+  audio.pauseOffset = (audio.ctx.currentTime - audio.startTime) % (audio.duration || 8);
+  stopSourceNode();
+  audio.playing = false;
+  $("#playBtn").dataset.playing = "false";
+  $("#playLbl").textContent = "Listen";
+}
+
+function togglePlayback() {
+  if (audio.playing) pausePlayback();
+  else startPlayback(audio.pauseOffset);
+}
+
+// ======================================================================== UI Builders: Transport & Driver Strip
+function populateTrackSelector() {
+  const sel = $("#trackSel");
+  sel.replaceChildren(...E.TRACK_LIST.map(t => el("option", { value: t.id }, t.name)));
+  if (audio.customBuffer) {
+    sel.append(el("option", { value: "custom" }, `9 · Custom File: ${audio.customName}`));
+  }
+  sel.value = state.trackId;
+}
+
+function renderDriverStrip() {
+  const wrap = $("#driverStrip");
+  const units = [
+    ["woof", "Woofer 26W", "var(--woof)"],
+    ["mid", "Mid 5¼\"", "var(--mid)"],
+    ["tw", "Tweeter 25mm", "var(--tw)"],
+  ];
+  const editDes = state.slots[effectiveSlotKey()];
+  wrap.replaceChildren(...units.map(([u, label, col]) => {
+    const isMuted = state.mute[u];
+    const isSolo = state.solo[u];
+    const isInv = editDes.pol[u] < 0;
+    return el("div", { class: "drv-box", style: `--c:${col}` },
+      el("div", { class: "drv-head" },
+        el("b", {}, label),
+        el("div", { class: "drv-btns" },
+          el("button", {
+            class: "mini-btn mute", "aria-pressed": String(isMuted), title: `Mute ${label}`,
+            on: { click: () => { state.mute[u] = !state.mute[u]; if (state.mute[u]) state.solo[u] = false; refreshAll(); } },
+          }, "M"),
+          el("button", {
+            class: "mini-btn solo", "aria-pressed": String(isSolo), title: `Solo ${label}`,
+            on: { click: () => { state.solo[u] = !state.solo[u]; if (state.solo[u]) state.mute[u] = false; refreshAll(); } },
+          }, "S"),
+          el("button", {
+            class: "mini-btn pol", "aria-pressed": String(isInv), title: `Flip polarity of ${label} in active slot`,
+            on: { click: () => { const k = effectiveSlotKey(); state.slots[k].pol[u] *= -1; refreshAll(); } },
+          }, isInv ? "−" : "+")
+        )
+      ),
+      el("div", { class: "meter-track" }, el("div", { class: "meter-fill", id: `meter-${u}` }))
+    );
+  }));
+}
+
+function drawWaveform() {
+  const cv = $("#waveCv");
+  if (!cv.clientWidth) return;
+  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = 26;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const g = cv.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, H);
+
+  const samples = state.trackId === "custom" && audio.customBuffer
+    ? audio.customBuffer.getChannelData(0)
+    : E.generateTrackSamples(state.trackId, 12000);
+  const step = Math.max(1, Math.floor(samples.length / W));
+  g.fillStyle = css("--muted");
+  g.globalAlpha = 0.45;
+  for (let x = 0; x < W; x++) {
+    let pk = 0;
+    const i0 = Math.floor((x / W) * samples.length);
+    for (let j = 0; j < step && i0 + j < samples.length; j++) pk = Math.max(pk, Math.abs(samples[i0 + j]));
+    const h = Math.max(2, pk * (H - 4));
+    g.fillRect(x, (H - h) / 2, 1, h);
+  }
+  g.globalAlpha = 1;
+  const cur = audio.playing && audio.ctx ? ((audio.ctx.currentTime - audio.startTime) % audio.duration) : audio.pauseOffset;
+  const px = (cur / (audio.duration || 8)) * W;
+  g.fillStyle = css("--accent");
+  g.fillRect(px - 1, 0, 2.5, H);
+}
+
+// ======================================================================== Left Rail: Slot A/B Editor & Physics Controls
+const STD = DATA.std;
+function seg(opts, cur, onPick) {
+  return el("div", { class: "seg", role: "group" }, opts.map(([v, lab]) =>
+    el("button", { "aria-pressed": String(v === cur), on: { click: () => onPick(v) } }, lab)));
+}
+function slider(id, label, min, max, step, value, fmt, onInput) {
+  const out = el("output", { for: id }, fmt(value));
+  const inp = el("input", {
+    type: "range", id, min, max, step, value, "aria-label": label,
+    on: {
+      input: e => { out.value = fmt(+e.target.value); onInput(+e.target.value, false); },
+      change: e => onInput(+e.target.value, true),
+    },
+  });
+  return el("div", { class: "row" }, el("label", { for: id }, label), inp, out);
+}
+function picker(id, label, kind, list, value, onPick) {
+  const sel = el("select", { id, "aria-label": label, on: { change: e => onPick(list[+e.target.value]) } },
+    list.map((v, i) => { const o = el("option", { value: i }, fmtV(kind, v)); if (v === value) o.selected = true; return o; }));
+  const idx = () => Math.max(0, list.indexOf(value));
+  const step = d => { const i = Math.min(list.length - 1, Math.max(0, idx() + d)); onPick(list[i]); };
+  return el("div", { class: "row" }, el("label", { for: id }, label),
+    el("div", { class: "pick" },
+      el("button", { "aria-label": `${label} down`, on: { click: () => step(-1) } }, "‹"),
+      sel,
+      el("button", { "aria-label": `${label} up`, on: { click: () => step(1) } }, "›")
+    ), el("span"));
+}
+
+function renderRail() {
+  const r = $("#rail"), focusId = document.activeElement?.id;
+  r.replaceChildren();
+  queueMicrotask(() => { if (focusId) document.getElementById(focusId)?.focus({ preventScroll: true }); });
+
+  const editKey = state.editSlot;
+  const d = state.slots[editKey];
+  const slotColor = editKey === "A" ? "var(--slotA)" : "var(--slotB)";
+
+  // Module 0: Slot A / Slot B Target & Preset Loader
+  const presetSel = el("select", {
+    class: "track-sel", style: "width:100%",
+    on: {
+      change: e => {
+        const key = e.target.value; e.target.value = "";
+        if (PRESETS[key]) {
+          state.slots[editKey] = PRESETS[key].make();
+          state.slotName[editKey] = PRESETS[key].name.split(" (")[0];
+          refreshAll();
+          showToast(`Loaded "${PRESETS[key].name}" into Slot ${editKey}`);
+        }
+      },
+    },
+  },
+    el("option", { value: "" }, `Load preset into Slot ${editKey}…`),
+    ...Object.entries(PRESETS).map(([k, p]) => el("option", { value: k }, p.name))
+  );
+
+  r.append(el("section", { class: "mod" },
+    el("h2", {},
+      el("span", { class: "badge" }, el("span", { class: "n", style: `--c:${slotColor}` }, editKey), `Editing Slot ${editKey}`),
+      seg([["A", "Edit A"], ["B", "Edit B"]], editKey, v => { state.editSlot = v; state.activeSlot = v; refreshAll(); })
+    ),
+    presetSel,
+    el("div", { style: "display:flex;gap:6px;flex-wrap:wrap" },
+      el("button", {
+        class: "btn", style: "flex:1;justify-content:center",
+        on: { click: () => { state.slots.B = cloneDesign(state.slots.A); state.slotName.B = state.slotName.A + " (copy)"; refreshAll(); showToast("Copied Slot A → Slot B"); } },
+      }, "Copy A → B"),
+      el("button", {
+        class: "btn", style: "flex:1;justify-content:center",
+        on: {
+          click: () => {
+            const tmp = state.slots.A; state.slots.A = state.slots.B; state.slots.B = tmp;
+            const tn = state.slotName.A; state.slotName.A = state.slotName.B; state.slotName.B = tn;
+            refreshAll(); showToast("Swapped Slot A ↔ Slot B");
+          },
+        },
+      }, "Swap A ↔ B")
+    )
+  ));
+
+  // Module 1: Physics & Load Switches (Lecture 9 & Task 1 checks)
+  r.append(el("section", { class: "mod" },
+    el("h2", {}, el("span", { class: "badge" }, el("span", { class: "n", style: "--c:var(--accent)" }, "⚡"), "Acoustic Physics Mode")),
+    el("div", { class: "row" },
+      el("label", {}, "Driver Load"),
+      seg([[false, "Lab D Zi(f)"], [true, "Pure RE"]], state.idealLoad, v => { state.idealLoad = v; refreshAll(); }),
+      el("output", {}, `${calc[editKey].maxZiReDiff.toFixed(1)} dB`)
+    ),
+    el("div", { class: "row" },
+      el("label", {}, "Phase Mode"),
+      seg([[false, "Real φ"], [true, "Linear φ"]], state.linearPhase, v => { state.linearPhase = v; refreshAll(); }),
+      el("output", {}, state.linearPhase ? "0°" : "All-pass")
+    ),
+    el("div", { class: "row" },
+      el("label", {}, "LF <125 Hz"),
+      seg([[true, "Box Splice"], [false, "Raw >50Hz"]], state.lfSplice, v => { state.lfSplice = v; refreshAll(); }),
+      el("output", {}, `f3 ${calc[editKey].lf.f3.toFixed(0)}Hz`)
+    )
+  ));
+
+  // Module 2: Woofer Box (Task 1)
+  const b = d.box;
+  const boxMod = el("section", { class: "mod" },
+    el("h2", {}, el("span", { class: "badge" }, el("span", { class: "n", style: "--c:var(--woof)" }, "1"), `Woofer Box (${editKey})`)),
+    seg([["plugged", "Plugged"], ["one", "1 Vent"], ["two", "2 Vents"]], b.mode, v => { b.mode = v; refreshAll(); })
+  );
+  if (b.mode !== "plugged") {
+    boxMod.append(slider("boxL", "Vent 1 L", 0.10, 0.30, 0.005, b.L ?? 0.16, v => `${(v * 1e3).toFixed(0)} mm`, (v, fin) => { b.L = v; refreshAll(fin); }));
+  }
+  if (b.mode === "two") {
+    boxMod.append(slider("boxL2", "Vent 2 L", 0.08, 0.30, 0.005, b.L2 ?? 0.16, v => `${(v * 1e3).toFixed(0)} mm`, (v, fin) => { b.L2 = v; refreshAll(fin); }));
+    boxMod.append(slider("boxA2", "Vent 2 ⌀", 0.03, 0.10, 0.002, (b.a2 ?? 0.05) * 2, v => `${(v * 1e3).toFixed(0)} mm`, (v, fin) => { b.a2 = v / 2; refreshAll(fin); }));
+  }
+  boxMod.append(slider("boxFill", "Filling", 1.0, 1.3, 0.01, b.fill ?? 1.0, v => `V × ${v.toFixed(2)}`, (v, fin) => { b.fill = v; refreshAll(fin); }));
+  r.append(boxMod);
+
+  // Module 3: Digital Crossover (MiniDSP)
+  const dg = d.digital;
+  r.append(el("section", { class: "mod" },
+    el("h2", {}, el("span", { class: "badge" }, el("span", { class: "n", style: "--c:var(--ink)" }, "2"), `MiniDSP Active (${editKey})`)),
+    el("div", { class: "row" }, el("label", {}, "Alignment"), seg([["BW2", "BW2"], ["LR4", "LR4"], ["BW4", "BW4"]], dg.align, v => { dg.align = v; refreshAll(); }), el("span")),
+    slider("fc", "Cut-off fc", 150, 800, 5, dg.fc, v => fmtF(v), (v, fin) => { dg.fc = v; refreshAll(fin); }),
+    slider("gw", "Woofer Gain", -12, 6, 0.5, dg.g_woof_dB, v => `${v > 0 ? "+" : ""}${v.toFixed(1)} dB`, (v, fin) => { dg.g_woof_dB = v; refreshAll(fin); })
+  ));
+
+  // Module 4: Midrange Low-Pass
+  const m = d.mid;
+  const midMod = el("section", { class: "mod" },
+    el("h2", {}, el("span", { class: "badge" }, el("span", { class: "n", style: "--c:var(--mid)" }, "3"), `Midrange LPF (${editKey})`)),
+    el("div", { class: "row" }, el("label", {}, "Topology"), seg([["LP1", "1st Order"], ["LP2", "2nd Order"]], m.topo, v => {
+      m.topo = v; if (v === "LP2" && !m.vals.C1) m.vals.C1 = 6.8e-6; refreshAll();
+    }), el("span"))
+  );
+  for (const [, kind, n] of E.TOPOLOGIES[m.topo]) {
+    midMod.append(picker(`mid${n}`, kind === "L" ? "Series L1" : "Shunt C1", kind, STD[kind], m.vals[n], v => { m.vals[n] = v; refreshAll(); }));
+  }
+  r.append(midMod);
+
+  // Module 5: Tweeter High-Pass & L-Pad
+  const t = d.tw, pad = t.pad || {};
+  const twMod = el("section", { class: "mod" },
+    el("h2", {}, el("span", { class: "badge" }, el("span", { class: "n", style: "--c:var(--tw)" }, "4"), `Tweeter HPF & Pad (${editKey})`)),
+    el("div", { class: "row" }, el("label", {}, "Topology"), seg([["HP2", "2nd Order"], ["HP3", "3rd Order"]], t.topo, v => {
+      t.topo = v; if (v === "HP3" && !t.vals.C2) t.vals.C2 = 10e-6; refreshAll();
+    }), el("span"))
+  );
+  const twNames = { C1: "Series C1", L1: "Shunt L1", C2: "Series C2" };
+  for (const [, kind, n] of E.TOPOLOGIES[t.topo]) {
+    twMod.append(picker(`tw${n}`, twNames[n], kind, STD[kind], t.vals[n], v => { t.vals[n] = v; refreshAll(); }));
+  }
+  twMod.append(picker("twRs", "L-pad Rs", "R", [0, ...STD.R], pad.Rs || 0, v => { t.pad.Rs = v; refreshAll(); }));
+  twMod.append(picker("twRp", "L-pad Rp", "R", [null, ...STD.R], pad.Rp || null, v => { t.pad.Rp = v; refreshAll(); }));
+  twMod.append(slider("dcr", "Coil DCR", 0, 1.0, 0.05, d.Rdcr || 0, v => `${v.toFixed(2)} Ω/mH`, (v, fin) => { d.Rdcr = v; refreshAll(fin); }));
+  r.append(twMod);
+}
+
+// ======================================================================== Top Readings & Tabs
+const VIEWS = {
+  room: "1 · Listening Room & Stage",
+  bode: "2 · Bode, Phase & Zi vs RE",
+  time: "3 · Impulse, Step & Group Delay",
+  blind: "4 · Blind Test & ABX (Task 4)",
+};
+
+function renderTabs() {
+  $("#tabs").replaceChildren(...Object.entries(VIEWS).map(([k, lab]) =>
+    el("button", {
+      role: "tab", "aria-selected": String(state.view === k),
+      on: { click: () => { state.view = k; renderTabs(); renderMainView(); } },
+    }, lab)));
+}
+
+function renderReadings() {
+  const k = effectiveSlotKey();
+  const c = calc[k], m = c.m;
+  const dLUFS = calc.A.m.loudnessdBA - calc.B.m.loudnessdBA;
+  const st = (v, g, w) => v <= g ? "good" : v <= w ? "warn" : "bad";
+  const inRange = (x, [lo, hi]) => x && x >= lo && x <= hi ? "good" : "warn";
+
+  const slotLabel = state.activeSlot === "X" ? "BLIND X" : state.activeSlot === "RAW" ? "BYPASS" : `SLOT ${state.activeSlot}`;
+  const items = [
+    ["Auditioning", slotLabel, "good"],
+    ["0° / 30° Spread", `${m.on.spread.toFixed(1)} / ${m.off30.spread.toFixed(1)} dB`, st(m.on.spread, 4.0, 6.0)],
+    ["Crossovers", `${fmtF(m.x_wm)} · ${fmtF(m.x_mt)}`, inRange(m.x_wm, DATA.limits.wm) === "good" && inRange(m.x_mt, DATA.limits.mt) === "good" ? "good" : "warn"],
+    ["Task 1 Bass", `f3 ${c.lf.f3.toFixed(1)} Hz (${c.lf.ripple >= 0 ? "+" : ""}${c.lf.ripple.toFixed(1)} dB)`, c.lf.ripple <= 2.0 ? "good" : "warn"],
+    ["Zi vs RE Shift", `${c.maxZiReDiff.toFixed(2)} dB max`, c.maxZiReDiff > 2.5 ? "warn" : "good"],
+    ["A/B Trim (dBA)", `${dLUFS >= 0 ? "+" : ""}${dLUFS.toFixed(1)} dB`, "good"],
+  ];
+  $("#readings").replaceChildren(...items.map(([lbl, val, s]) =>
+    el("div", { class: "rd", "data-state": s }, el("small", {}, lbl), el("output", {}, val))
+  ));
+
+  for (const s of ["A", "B", "X", "RAW"]) {
+    const btn = document.querySelector(`.ab-btn[data-slot="${s}"]`);
+    if (btn) btn.setAttribute("aria-pressed", String(state.activeSlot === s));
+  }
+  $("#slotSubA").textContent = `${ calc.A.des.digital.align } @ ${ calc.A.des.digital.fc }Hz`;
+  $("#slotSubB").textContent = `${ calc.B.des.digital.align } @ ${ calc.B.des.digital.fc }Hz`;
+}
+
+// ======================================================================== 2D Scope Plotter (Log-F and Linear-Time)
+const scopes = {};
+function setupScope(id, tipId, onClick) {
+  const cv = $(id), tip = $(tipId);
+  const st = { cv, tip, cfg: null, hx: null };
+  scopes[id] = st;
+  new ResizeObserver(() => drawScope(st)).observe(cv);
+  cv.addEventListener("pointermove", e => hoverScope(st, e));
+  cv.addEventListener("pointerleave", () => { st.hx = null; if (tip) tip.hidden = true; drawScope(st); });
+  if (onClick) {
+    cv.style.cursor = "crosshair";
+    cv.addEventListener("click", () => { if (st.hx !== null) onClick(st.hx); });
+  }
+  return st;
+}
+
+const mapX = (st, x) => {
+  const { x0, x1 } = st.box, [a, b] = st.cfg.xr;
+  if (st.cfg.linearX) return x0 + (x - a) / (b - a) * (x1 - x0);
+  return x0 + (Math.log10(Math.max(1e-3, x)) - Math.log10(a)) / (Math.log10(b) - Math.log10(a)) * (x1 - x0);
+};
+const mapY = (st, y) => {
+  const { y0, y1 } = st.box, [a, b] = st.cfg.yr;
+  return y1 - (y - a) / (b - a) * (y1 - y0);
+};
+function niceTicks(a, b, n = 6) {
+  const span = b - a, raw = span / n, mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map(s => s * mag).find(s => s >= raw) || raw;
+  const out = [];
+  for (let v = Math.ceil(a / step) * step; v <= b + 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+
+function drawScope(st) {
+  const { cv, cfg } = st;
+  if (!cfg || !cv.clientWidth) return;
+  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = +cv.getAttribute("height");
+  cv.style.height = H + "px";
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) {
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  }
+  const g = cv.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, H);
+  st.box = { x0: 54, x1: W - 14, y0: 12, y1: H - 26 };
+  const { x0, x1, y0, y1 } = st.box;
+  const ink = css("--ink"), muted = css("--muted"), grid = css("--grid");
+  g.font = `11px ${css("--font-mono")}`;
+  g.textBaseline = "middle";
+  g.strokeStyle = grid; g.lineWidth = 1;
+
+  const [xa, xb] = cfg.xr;
+  if (cfg.linearX) {
+    for (const xv of niceTicks(xa, xb, 8)) {
+      const x = Math.round(mapX(st, xv)) + 0.5;
+      g.beginPath(); g.moveTo(x, y0); g.lineTo(x, y1); g.stroke();
+      g.fillStyle = muted; g.textAlign = "center";
+      g.fillText(cfg.xfmt ? cfg.xfmt(xv) : `${xv}`, x, y1 + 13);
+    }
+  } else {
+    for (let dec = 10 ** Math.floor(Math.log10(xa)); dec <= xb; dec *= 10) {
+      for (let k = 1; k < 10; k++) {
+        const fx = dec * k;
+        if (fx < xa || fx > xb) continue;
+        const x = Math.round(mapX(st, fx)) + 0.5;
+        g.globalAlpha = k === 1 ? 1 : 0.5;
+        g.beginPath(); g.moveTo(x, y0); g.lineTo(x, y1); g.stroke();
+        if ([1, 2, 5].includes(k)) {
+          g.globalAlpha = 1; g.fillStyle = muted; g.textAlign = "center";
+          g.fillText(fx >= 1000 ? `${fx / 1000}k` : `${fx}`, x, y1 + 13);
+        }
+      }
+    }
+  }
+  g.globalAlpha = 1;
+  for (const yv of niceTicks(...cfg.yr, cfg.yTicks || 6)) {
+    const y = Math.round(mapY(st, yv)) + 0.5;
+    g.strokeStyle = grid; g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
+    g.fillStyle = muted; g.textAlign = "right";
+    g.fillText(cfg.yfmt ? cfg.yfmt(yv) : `${yv}`, x0 - 6, y);
+  }
+  g.save();
+  g.translate(13, (y0 + y1) / 2); g.rotate(-Math.PI / 2);
+  g.textAlign = "center"; g.font = `600 11px ${css("--font-display")}`; g.fillStyle = muted;
+  g.fillText(cfg.ylabel || "", 0, 0);
+  g.restore();
+
+  g.save();
+  g.beginPath(); g.rect(x0, y0, x1 - x0, y1 - y0); g.clip();
+
+  // Horizontal target bands
+  for (const h of cfg.hbands || []) {
+    g.fillStyle = h.color;
+    const ya = mapY(st, h.hi), yb = mapY(st, h.lo);
+    g.fillRect(x0, ya, x1 - x0, yb - ya);
+  }
+
+  // Real-time RTA spectrum bars if provided
+  if (cfg.rtaBars) {
+    g.fillStyle = css("--slotA");
+    g.globalAlpha = 0.16;
+    for (const [fx, dbVal] of cfg.rtaBars) {
+      const X = mapX(st, fx), Y = mapY(st, dbVal);
+      g.fillRect(X - 2, Y, 4, y1 - Y);
+    }
+    g.globalAlpha = 1;
+  }
+
+  // Vertical marker lines
+  (cfg.vlines || []).forEach((v, idx) => {
+    if (v.x === null || v.x === undefined) return;
+    const X = Math.round(mapX(st, v.x)) + 0.5;
+    g.strokeStyle = v.color || muted; g.lineWidth = v.width || 1;
+    g.setLineDash(v.solid ? [] : [4, 4]);
+    g.beginPath(); g.moveTo(X, y0); g.lineTo(X, y1); g.stroke();
+    g.setLineDash([]); g.lineWidth = 1;
+    if (v.label) {
+      g.fillStyle = v.color || muted; g.textAlign = "left"; g.font = `11px ${css("--font-mono")}`;
+      g.fillText(v.label, X + 5, y0 + 11 + (idx % 2) * 14);
+    }
+  });
+
+  // Traces
+  for (const t of cfg.traces || []) {
+    if (t.hidden) continue;
+    g.strokeStyle = t.color; g.lineWidth = t.width || 1.6;
+    g.setLineDash(t.dash || []); g.lineJoin = "round";
+    g.beginPath();
+    let pen = false, prev = null;
+    for (let i = 0; i < t.x.length; i++) {
+      const v = t.y[i];
+      if (!isFinite(v)) { pen = false; continue; }
+      if (t.wrap && prev !== null && Math.abs(v - prev) > 180) pen = false;
+      const X = mapX(st, t.x[i]), Y = mapY(st, v);
+      pen ? g.lineTo(X, Y) : g.moveTo(X, Y);
+      pen = true; prev = v;
+    }
+    g.stroke();
+    g.setLineDash([]);
+  }
+
+  if (st.hx !== null) {
+    const X = mapX(st, st.hx);
+    g.strokeStyle = ink; g.globalAlpha = 0.45;
+    g.beginPath(); g.moveTo(X, y0); g.lineTo(X, y1); g.stroke();
+    g.globalAlpha = 1;
+  }
+  g.restore();
+  g.strokeStyle = css("--rule");
+  g.strokeRect(x0 + 0.5, y0 + 0.5, x1 - x0, y1 - y0);
+}
+
+function nearestIdx(xs, x) {
+  let lo = 0, hi = xs.length - 1;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; xs[m] < x ? lo = m : hi = m; }
+  return Math.abs(xs[lo] - x) < Math.abs(xs[hi] - x) ? lo : hi;
+}
+
+function hoverScope(st, e) {
+  if (!st.cfg || !st.box) return;
+  const r = st.cv.getBoundingClientRect(), x = e.clientX - r.left, { x0, x1 } = st.box;
+  if (x < x0 || x > x1) { st.hx = null; if (st.tip) st.tip.hidden = true; drawScope(st); return; }
+  const [a, b] = st.cfg.xr;
+  const xv = st.cfg.linearX
+    ? a + (x - x0) / (x1 - x0) * (b - a)
+    : 10 ** (Math.log10(a) + (x - x0) / (x1 - x0) * (Math.log10(b) - Math.log10(a)));
+  st.hx = xv; drawScope(st);
+  if (!st.tip) return;
+  const rows = st.cfg.traces.filter(t => !t.hidden && t.name).map(t => {
+    const i = nearestIdx(t.x, xv);
+    return `<div><i style="--c:${t.color}"></i>${t.name.padEnd(12, " ").replace(/ /g, "&nbsp;")} <b>${(st.cfg.tipfmt || (v => v.toFixed(1)))(t.y[i])}</b></div>`;
+  });
+  const head = st.cfg.linearX ? `${xv.toFixed(2)} ms` : fmtF(xv);
+  st.tip.innerHTML = `<div><b>${head}</b></div>` + rows.join("");
+  st.tip.hidden = false;
+  const tw = st.tip.offsetWidth, left = x + 14 + tw > r.width ? x - tw - 14 : x + 14;
+  st.tip.style.left = Math.max(4, left) + "px"; st.tip.style.top = "12px";
+}
+
+// ======================================================================== Tab 1 Canvases: Room Stage & Vertical Elevation Lobing
+function setupStageCanvases() {
+  const roomCv = $("#roomCv"), elevCv = $("#elevCv");
+  let dragRoom = false, dragElev = false;
+
+  const updateRoomFromPointer = e => {
+    const r = roomCv.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
+    // Speaker at left (x=0.14, y=0.5), listener arc to the right
+    const dx = Math.max(0.15, x - 0.14), dy = (0.5 - y) * 1.1;
+    const ang = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI);
+    state.angleDeg = Math.max(0, Math.min(30, ang));
+    refreshAll(false);
+  };
+  roomCv.addEventListener("pointerdown", e => { dragRoom = true; roomCv.setPointerCapture(e.pointerId); updateRoomFromPointer(e); });
+  roomCv.addEventListener("pointermove", e => { if (dragRoom) updateRoomFromPointer(e); });
+  roomCv.addEventListener("pointerup", () => { if (dragRoom) { dragRoom = false; refreshAll(true); } });
+
+  const updateElevFromPointer = e => {
+    const r = elevCv.getBoundingClientRect();
+    const yNorm = (e.clientY - r.top) / r.height; // 0 = top (+30 cm), 1 = bottom (-30 cm)
+    state.listenerDy = Math.max(-0.30, Math.min(0.30, (0.5 - yNorm) * 0.72));
+    refreshAll(false);
+  };
+  elevCv.addEventListener("pointerdown", e => { dragElev = true; elevCv.setPointerCapture(e.pointerId); updateElevFromPointer(e); });
+  elevCv.addEventListener("pointermove", e => { if (dragElev) updateElevFromPointer(e); });
+  elevCv.addEventListener("pointerup", () => { if (dragElev) { dragElev = false; refreshAll(true); } });
+
+  new ResizeObserver(() => { drawRoomStage(); drawElevStage(); }).observe(roomCv);
+}
+
+function drawRoomStage(animPhase = 0) {
+  const cv = $("#roomCv");
+  if (!cv || !cv.clientWidth) return;
+  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = +cv.getAttribute("height");
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const g = cv.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, H);
+
+  const ink = css("--ink"), muted = css("--muted"), grid = css("--grid"), rule = css("--rule");
+  const spkX = W * 0.14, spkY = H * 0.54;
+  const arcR = Math.min(W * 0.68, H * 1.15);
+
+  // Draw room boundary (Anechoic wedges vs IEC 60268-13 room walls)
+  g.strokeStyle = rule; g.lineWidth = 1.5;
+  if (state.roomMode === "iec") {
+    g.fillStyle = css("--sunk");
+    g.fillRect(16, 16, W - 32, H - 32);
+    g.strokeRect(16, 16, W - 32, H - 32);
+  } else {
+    // Anechoic chamber acoustic wedges along perimeter
+    g.beginPath();
+    const step = 16;
+    for (let x = 12; x < W - 12; x += step) { g.moveTo(x, 8); g.lineTo(x + step / 2, 18); g.lineTo(x + step, 8); }
+    for (let x = 12; x < W - 12; x += step) { g.moveTo(x, H - 8); g.lineTo(x + step / 2, H - 18); g.lineTo(x + step, H - 8); }
+    g.stroke();
+  }
+
+  // Draw 0° to 30° measurement radial guides
+  for (const deg of [0, 10, 20, 30]) {
+    const rad = deg * Math.PI / 180;
+    g.strokeStyle = grid; g.setLineDash([4, 4]);
+    g.beginPath();
+    g.moveTo(spkX, spkY);
+    g.lineTo(spkX + arcR * Math.cos(rad), spkY - arcR * Math.sin(rad));
+    g.stroke();
+    g.fillStyle = muted; g.font = `11px ${css("--font-mono")}`;
+    g.fillText(`${deg}°`, spkX + (arcR - 26) * Math.cos(rad), spkY - (arcR - 26) * Math.sin(rad) - 4);
+  }
+  g.setLineDash([]);
+
+  // Draw Constant-Radius 2.44 m Listening Arc
+  g.strokeStyle = rule; g.lineWidth = 1.5;
+  g.beginPath();
+  g.arc(spkX, spkY, arcR * 0.82, -33 * Math.PI / 180, 10 * Math.PI / 180);
+  g.stroke();
+
+  // Horizontal polar dispersion lobe at probeFreq
+  const kSlot = effectiveSlotKey(), c = calc[kSlot];
+  const iProbe = nearestIdx(E.f, state.probeFreq);
+  const mag0 = Math.hypot(c.on0.sum.re[iProbe], c.on0.sum.im[iProbe]) || 1;
+  const mag30 = Math.hypot(c.off30.sum.re[iProbe], c.off30.sum.im[iProbe]) || 1;
+  g.fillStyle = kSlot === "A" ? css("--slotA") : css("--slotB");
+  g.globalAlpha = 0.14;
+  g.beginPath();
+  g.moveTo(spkX, spkY);
+  for (let a = -32; a <= 12; a += 2) {
+    const t = Math.min(1, Math.abs(a) / 30);
+    const ratio = (1 - t) + t * (mag30 / mag0);
+    const rLobe = arcR * 0.72 * Math.max(0.2, Math.min(1.15, ratio));
+    const rad = -a * Math.PI / 180;
+    g.lineTo(spkX + rLobe * Math.cos(rad), spkY + rLobe * Math.sin(rad));
+  }
+  g.closePath(); g.fill();
+  g.globalAlpha = 1;
+
+  // Animated acoustic wavefront rings
+  for (let k = 0; k < 4; k++) {
+    const p = ((animPhase + k / 4) % 1);
+    const rW = 24 + p * (arcR * 0.82 - 24);
+    g.strokeStyle = kSlot === "A" ? css("--slotA") : css("--slotB");
+    g.globalAlpha = (1 - p) * 0.45;
+    g.lineWidth = 1.8;
+    g.beginPath();
+    g.arc(spkX, spkY, rW, -32 * Math.PI / 180, 8 * Math.PI / 180);
+    g.stroke();
+  }
+  g.globalAlpha = 1;
+
+  // Listener position
+  const lRad = state.angleDeg * Math.PI / 180;
+  const lX = spkX + arcR * 0.82 * Math.cos(lRad);
+  const lY = spkY - arcR * 0.82 * Math.sin(lRad);
+
+  // If IEC room mode, draw early reflection paths (wall bounce -> listener)
+  if (state.roomMode === "iec") {
+    g.strokeStyle = css("--warn"); g.globalAlpha = 0.45; g.setLineDash([3, 3]);
+    const wallY = 18, midX = (spkX + lX) * 0.52;
+    g.beginPath(); g.moveTo(spkX, spkY); g.lineTo(midX, wallY); g.lineTo(lX, lY); g.stroke();
+    const wallY2 = H - 18, midX2 = (spkX + lX) * 0.55;
+    g.beginPath(); g.moveTo(spkX, spkY); g.lineTo(midX2, wallY2); g.lineTo(lX, lY); g.stroke();
+    g.setLineDash([]); g.globalAlpha = 1;
+  }
+
+  // Direct axis ray
+  g.strokeStyle = css("--accent"); g.lineWidth = 2;
+  g.beginPath(); g.moveTo(spkX, spkY); g.lineTo(lX, lY); g.stroke();
+
+  // Draw System D Cabinet (Top-Down: Woofer box + offset DALI Spektor 2 on top)
+  g.save();
+  g.translate(spkX, spkY);
+  g.fillStyle = "#2b3036"; g.strokeStyle = ink; g.lineWidth = 1.5;
+  g.fillRect(-22, -24, 44, 48); g.strokeRect(-22, -24, 44, 48);
+  // White DALI Spektor 2 offset to the left (seen from front -> top side in top-down view)
+  g.fillStyle = "#e6e8e3";
+  g.fillRect(-2, -20, 24, 18); g.strokeRect(-2, -20, 24, 18);
+  g.restore();
+
+  // Draw Listener Head + Headphones icon
+  g.save();
+  g.translate(lX, lY);
+  g.fillStyle = css("--accent");
+  g.beginPath(); g.arc(0, 0, 11, 0, Math.PI * 2); g.fill();
+  g.fillStyle = "#fff"; g.font = `700 10px ${css("--font-mono")}`;
+  g.textAlign = "center"; g.textBaseline = "middle";
+  g.fillText(`${state.angleDeg.toFixed(0)}°`, 0, 0);
+  g.restore();
+
+  $("#roomReadout").textContent = `Angle: ${state.angleDeg.toFixed(1)}° · ${state.roomMode === "iec" ? "IEC 60268-13 Room (T60 0.35s)" : "Anechoic Free-Field"}`;
+}
+
+function drawElevStage() {
+  const cv = $("#elevCv");
+  if (!cv || !cv.clientWidth) return;
+  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = +cv.getAttribute("height");
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const g = cv.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, H);
+
+  const ink = css("--ink"), muted = css("--muted"), rule = css("--rule");
+  const floorY = H - 22;
+  const scale = (H - 48) / 0.88; // 0.88 m total height mapped to canvas
+  const spkX = 68;
+
+  // Floor line
+  g.strokeStyle = rule; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(12, floorY); g.lineTo(W - 12, floorY); g.stroke();
+
+  // Woofer Box (height 0.486 m, depth 0.486 m)
+  const wbH = 0.486 * scale, wbW = 48;
+  g.fillStyle = "#2b3036"; g.strokeStyle = ink;
+  g.fillRect(spkX - wbW, floorY - wbH, wbW, wbH);
+  g.strokeRect(spkX - wbW, floorY - wbH, wbW, wbH);
+
+  // DALI Spektor 2 Box on top (height 0.290 m)
+  const spH = 0.290 * scale, spW = 26;
+  g.fillStyle = "#e5e7e2";
+  g.fillRect(spkX - spW, floorY - wbH - spH, spW, spH);
+  g.strokeRect(spkX - spW, floorY - wbH - spH, spW, spH);
+
+  // Driver positions (y = 0.29 m woofer, 0.58 m mid, 0.697 m tweeter)
+  const yWoof = floorY - 0.29 * scale;
+  const yMid = floorY - 0.58 * scale;
+  const yTw = floorY - 0.697 * scale;
+  const drvPts = [
+    ["woof", yWoof, css("--woof"), "W 26cm"],
+    ["mid", yMid, css("--mid"), "M 5¼\""],
+    ["tw", yTw, css("--tw"), "T 25mm"],
+  ];
+
+  // Plot vertical polar radiation balloon at state.probeFreq across elevation angles [-25°, +25°]
+  const fx = state.probeFreq;
+  const kSlot = effectiveSlotKey(), c = calc[kSlot];
+  const iProbe = nearestIdx(E.f, fx);
+  const w0 = [c.on0.woof.re[iProbe], c.on0.woof.im[iProbe]];
+  const m0 = [c.on0.mid.re[iProbe], c.on0.mid.im[iProbe]];
+  const t0 = [c.on0.tw.re[iProbe], c.on0.tw.im[iProbe]];
+  const act = activeDriversMap();
+
+  const lobeOriginX = spkX, lobeOriginY = yMid;
+  const maxR = W - spkX - 54;
+  let refMax = 1e-9;
+  const lobePts = [];
+  for (let dyCm = -45; dyCm <= 45; dyCm += 1.5) {
+    const dyM = dyCm / 100;
+    const sumReIm = [0, 0];
+    for (const [u, baseVec] of [["woof", w0], ["mid", m0], ["tw", t0]]) {
+      if (!act[u]) continue;
+      const gu = E.GEOM[u], mr = E.GEOM.refMic;
+      const r0 = Math.hypot(mr.x - gu.x, mr.y - gu.y, mr.z - gu.z);
+      const r1 = Math.hypot(mr.x - gu.x, (mr.y + dyM) - gu.y, mr.z - gu.z);
+      const dPhi = -2 * Math.PI * fx * (r1 - r0) / 345.0;
+      const cP = Math.cos(dPhi), sP = Math.sin(dPhi);
+      sumReIm[0] += baseVec[0] * cP - baseVec[1] * sP;
+      sumReIm[1] += baseVec[0] * sP + baseVec[1] * cP;
+    }
+    const mag = Math.hypot(sumReIm[0], sumReIm[1]);
+    refMax = Math.max(refMax, mag);
+    lobePts.push([dyM, mag]);
+  }
+
+  g.fillStyle = kSlot === "A" ? css("--slotA") : css("--slotB");
+  g.strokeStyle = kSlot === "A" ? css("--slotA") : css("--slotB");
+  g.globalAlpha = 0.16;
+  g.beginPath();
+  g.moveTo(lobeOriginX, lobeOriginY);
+  for (const [dyM, mag] of lobePts) {
+    const dbRel = Math.max(-24, 20 * Math.log10((mag + 1e-12) / refMax));
+    const r = maxR * 0.85 * ((dbRel + 24) / 24);
+    const ang = Math.atan2(-dyM, 1.4);
+    g.lineTo(lobeOriginX + r * Math.cos(ang), lobeOriginY + r * Math.sin(ang));
+  }
+  g.closePath(); g.fill();
+  g.globalAlpha = 0.85; g.lineWidth = 1.8; g.stroke();
+  g.globalAlpha = 1;
+
+  // Listener ear height marker
+  const earY = yMid - state.listenerDy * scale;
+  const earX = W - 42;
+  for (const [u, yD, col, lbl] of drvPts) {
+    g.fillStyle = col;
+    g.beginPath(); g.arc(spkX, yD, 5, 0, Math.PI * 2); g.fill();
+    if (act[u]) {
+      g.strokeStyle = col; g.globalAlpha = 0.55; g.lineWidth = 1.3;
+      g.beginPath(); g.moveTo(spkX, yD); g.lineTo(earX, earY); g.stroke();
+      g.globalAlpha = 1;
+    }
+    g.fillStyle = col; g.font = `600 10px ${css("--font-mono")}`;
+    g.fillText(lbl, spkX - wbW + 4, yD + 3);
+  }
+
+  g.fillStyle = css("--accent");
+  g.beginPath(); g.arc(earX, earY, 10, 0, Math.PI * 2); g.fill();
+  g.fillStyle = "#fff"; g.font = `700 9.5px ${css("--font-mono")}`;
+  g.textAlign = "center"; g.textBaseline = "middle";
+  g.fillText("EAR", earX, earY);
+
+  const dyCmTxt = `${state.listenerDy >= 0 ? "+" : ""}${(state.listenerDy * 100).toFixed(0)} cm`;
+  $("#elevReadout").textContent = `Ear Δy: ${dyCmTxt} · Probe: ${fmtF(fx)}`;
+}
+
+// ======================================================================== Main View Renderer
+const dbArr = z => Array.from(E.f, (_, i) => 20 * Math.log10(Math.hypot(z.re[i], z.im[i]) + 1e-18));
+const phArr = (z, d = -1.15) => Array.from(E.f, (fx, i) => {
+  let p = Math.atan2(z.im[i], z.re[i]) + 2 * Math.PI * fx * d / 345;
+  p = Math.atan2(Math.sin(p), Math.cos(p));
+  return p * 180 / Math.PI;
+});
+
+function renderMainView() {
+  for (const k of Object.keys(VIEWS)) {
+    const sec = document.getElementById(`view-${k}`);
+    if (sec) sec.hidden = state.view !== k;
+  }
+  const f = Array.from(E.f);
+  const kAct = effectiveSlotKey();
+  const cAct = calc[kAct], cA = calc.A, cB = calc.B;
+  const level = cA.m.on.level;
+
+  if (state.view === "room") {
+    drawRoomStage();
+    drawElevStage();
+    const marks = [
+      ["fB 25Hz", 24.5],
+      ["WM " + fmtF(cAct.m.x_wm || 350), cAct.m.x_wm || 350],
+      ["Tw fs 1.45k", 1450],
+      ["MT " + fmtF(cAct.m.x_mt || 2860), cAct.m.x_mt || 2860],
+      ["10 kHz", 10000],
+    ];
+    $("#probeQuick").replaceChildren(...marks.map(([lbl, fx]) =>
+      el("button", { class: "mini-btn", on: { click: () => { state.probeFreq = fx; renderMainView(); } } }, lbl)
+    ));
+
+    // Full-range spectrum from 15 Hz to 20 kHz so Task 1 bass AND Task 2 crossover are both visible!
+    const fFull = Array.from({ length: 320 }, (_, i) => 15 * (20000 / 15) ** (i / 319));
+    const opts = {
+      angle: state.angleDeg, listenerDy: state.listenerDy,
+      idealLoad: state.idealLoad, linearPhase: state.linearPhase,
+      lfSplice: state.lfSplice, roomMode: state.roomMode, active: activeDriversMap(),
+    };
+    const spA = E.evaluateSpectrum(fFull, state.slots.A, opts);
+    const spB = E.evaluateSpectrum(fFull, state.slots.B, opts);
+    const spCur = kAct === "B" ? spB : spA;
+    const toDb = z => Array.from(fFull, (_, i) => 20 * Math.log10(Math.hypot(z.re[i], z.im[i]) + 1e-18));
+
+    const S = scopes["#scopeRoom"];
+    S.cfg = {
+      xr: [15, 20000], yr: [level - 32, level + 10], ylabel: "dB re 1 Pa/V",
+      hbands: [{ lo: level - 2, hi: level + 2, color: css("--band") }],
+      vlines: [
+        { x: cAct.m.x_wm, label: fmtF(cAct.m.x_wm) },
+        { x: cAct.m.x_mt, label: fmtF(cAct.m.x_mt) },
+        { x: state.probeFreq, label: `probe ${fmtF(state.probeFreq)}`, color: css("--accent"), solid: true, width: 1.5 },
+      ],
+      traces: [
+        { x: fFull, y: toDb(spCur.woof), color: css("--woof"), width: 1.3, name: `woofer (${kAct})` },
+        { x: fFull, y: toDb(spCur.mid), color: css("--mid"), width: 1.3, name: `midrange (${kAct})` },
+        { x: fFull, y: toDb(spCur.tw), color: css("--tw"), width: 1.3, name: `tweeter (${kAct})` },
+        { x: fFull, y: toDb(spB.sum), color: css("--slotB"), width: kAct === "B" ? 2.6 : 1.7, dash: [6, 4], name: "Slot B sum" },
+        { x: fFull, y: toDb(spA.sum), color: css("--slotA"), width: kAct === "A" ? 2.6 : 1.7, name: "Slot A sum" },
+      ],
+    };
+    drawScope(S);
+    $("#roomExplain").innerHTML = `<strong>Full-Band Auralization Model (15 Hz – 20 kHz):</strong> Below 125 Hz (where the b.354 anechoic chamber cuts off), Auralis splices the validated <strong>Task 1 enclosure circuit model</strong> (${cAct.cfg.label}, f<sub>3</sub> = ${cAct.lf.f3.toFixed(1)} Hz) onto the Lab E anechoic transfer functions. Switch between <strong>Slot A</strong> and <strong>Slot B</strong> (keys <code>1</code> and <code>2</code>), solo/mute individual drivers, or drag the listener avatar to hear off-axis beaming and vertical lobing in real time.`;
+  } else if (state.view === "bode") {
+    const tb = $("#bodeToolbar");
+    tb.replaceChildren(
+      seg([
+        ["phase", "Phase & Coherent Summing"],
+        ["zire", "Lecture 9 Check: Real Zi(f) vs Textbook RE"],
+        ["zamp", "Amplifier Ch. 2 Load |Z(f)|"],
+      ], state.bodeSub, v => { state.bodeSub = v; renderMainView(); }),
+      el("span", { style: "font:500 12px var(--font-mono);color:var(--muted)" },
+        `Slot A: ${state.slotName.A}  |  Slot B: ${state.slotName.B}`)
+    );
+
+    const SA = scopes["#scopeBodeA"], SB = scopes["#scopeBodeB"];
+    SA.cfg = {
+      xr: [50, 20000], yr: [level - 32, level + 10], ylabel: "SPL (dB re 1 Pa/V)",
+      hbands: [{ lo: level - 2, hi: level + 2, color: css("--band") }],
+      vlines: [
+        { x: cAct.m.x_wm, label: fmtF(cAct.m.x_wm) },
+        { x: cAct.m.x_mt, label: fmtF(cAct.m.x_mt) },
+        { x: DATA.twFs, label: "tw fs 1.45 kHz", color: css("--warn") },
+      ],
+      traces: [
+        { x: f, y: dbArr(cAct.on.woof), color: css("--woof"), width: 1.3, name: `woofer (${kAct})` },
+        { x: f, y: dbArr(cAct.on.mid), color: css("--mid"), width: 1.3, name: `mid (${kAct})` },
+        { x: f, y: dbArr(cAct.on.tw), color: css("--tw"), width: 1.3, name: `tweeter (${kAct})` },
+        { x: f, y: dbArr(cB.on.sum), color: css("--slotB"), width: 2.0, dash: [6, 4], name: "Slot B sum" },
+        { x: f, y: dbArr(cA.on.sum), color: css("--slotA"), width: 2.6, name: "Slot A sum" },
+      ],
+    };
+
+    if (state.bodeSub === "phase") {
+      const sumMinusPow = c => f.map((_, i) =>
+        20 * Math.log10(Math.hypot(c.on.sum.re[i], c.on.sum.im[i]) + 1e-18) -
+        10 * Math.log10(c.on.woof.re[i] ** 2 + c.on.woof.im[i] ** 2 + c.on.mid.re[i] ** 2 + c.on.mid.im[i] ** 2 + c.on.tw.re[i] ** 2 + c.on.tw.im[i] ** 2 + 1e-18)
+      );
+      SB.cfg = {
+        xr: [50, 20000], yr: [-15, 6], ylabel: "Sum − Power (dB)", yTicks: 6,
+        hbands: [{ lo: 0, hi: 3.1, color: css("--band") }],
+        vlines: [{ x: cAct.m.x_wm, label: "" }, { x: cAct.m.x_mt, label: "" }],
+        traces: [
+          { x: f, y: sumMinusPow(cB), color: css("--slotB"), width: 1.8, dash: [6, 4], name: "Slot B coherence" },
+          { x: f, y: sumMinusPow(cA), color: css("--slotA"), width: 2.3, name: "Slot A coherence" },
+        ],
+      };
+      $("#bodeExplain").innerHTML = `<strong>Phase Coherence Check:</strong> The lower plot shows <code>20 log10|p_sum| − 10 log10(|p_w|² + |p_m|² + |p_t|²)</code>. When two drivers are in phase at their crossover, they beat the power sum by <strong>+3.0 dB</strong>. Values below 0 dB indicate destructive phase cancellation (flip a driver's polarity to see and hear the deep cancellation trough!).`;
+    } else if (state.bodeSub === "zire") {
+      const devMid = f.map((_, i) => 20 * Math.log10((Math.hypot(cAct.on.Tm.re[i], cAct.on.Tm.im[i]) + 1e-12) / (Math.hypot(cAct.on.TmIdeal.re[i], cAct.on.TmIdeal.im[i]) + 1e-12)));
+      const devTw = f.map((_, i) => 20 * Math.log10((Math.hypot(cAct.on.Tt.re[i], cAct.on.Tt.im[i]) + 1e-12) / (Math.hypot(cAct.on.TtIdeal.re[i], cAct.on.TtIdeal.im[i]) + 1e-12)));
+      SB.cfg = {
+        xr: [50, 20000], yr: [-6, 8], ylabel: "Zi vs RE (dB)", yTicks: 6,
+        hbands: [{ lo: -0.5, hi: 0.5, color: css("--band") }],
+        vlines: [{ x: DATA.twFs, label: "tw fs 1.45 kHz", color: css("--warn") }],
+        traces: [
+          { x: f, y: devMid, color: css("--mid"), width: 2.0, name: "Mid LPF (Zi / RE)" },
+          { x: f, y: devTw, color: css("--tw"), width: 2.0, name: "Tw HPF (Zi / RE)" },
+          { x: f, y: Array.from(cAct.ziReDiffArr), color: css("--slotA"), width: 2.4, name: "System Sum (Zi / RE)" },
+        ],
+      };
+      $("#bodeExplain").innerHTML = `<strong>Project Guide p. 3 & Lecture 9 Slide 26 Check:</strong> Shows the exact voltage/SPL difference <code>20 log10 |V(real Zi) / V(resistor RE)|</code> caused by the DALI Spektor 2's rising midrange voice-coil inductance and the tweeter's 1.45 kHz resonance peak. Toggle <strong>Driver Load: Real Zi(f) vs Resistor RE</strong> in the left rail while playing audio to hear this <strong>${cAct.maxZiReDiff.toFixed(2)} dB</strong> shift live!`;
+    } else {
+      SB.cfg = {
+        xr: [50, 20000], yr: [0, 28], ylabel: "|Z_amp2| (Ω)", yTicks: 6,
+        hbands: [{ lo: 0, hi: 4, color: css("--band") }],
+        traces: [
+          { x: f, y: f.map((_, i) => Math.hypot(E.ZI.mid.re[i], E.ZI.mid.im[i])), color: css("--mid"), dash: [4, 4], name: "Zi mid (Lab D)" },
+          { x: f, y: f.map((_, i) => Math.hypot(E.ZI.tw.re[i], E.ZI.tw.im[i])), color: css("--tw"), dash: [4, 4], name: "Zi tw (Lab D)" },
+          { x: f, y: f.map((_, i) => Math.hypot(cB.on.Zamp2.re[i], cB.on.Zamp2.im[i])), color: css("--slotB"), width: 1.8, dash: [6, 4], name: "Amp Ch.2 (Slot B)" },
+          { x: f, y: f.map((_, i) => Math.hypot(cA.on.Zamp2.re[i], cA.on.Zamp2.im[i])), color: css("--slotA"), width: 2.4, name: "Amp Ch.2 (Slot A)" },
+        ],
+      };
+      $("#bodeExplain").innerHTML = `<strong>Amplifier Channel 2 Load Impedance:</strong> Parallel combination of the passive midrange and tweeter branches. Slot A minimum impedance is <strong>${cA.m.Zamp2_min.toFixed(2)} Ω</strong>, Slot B is <strong>${cB.m.Zamp2_min.toFixed(2)} Ω</strong>.`;
+    }
+    drawScope(SA); drawScope(SB);
+  } else if (state.view === "time") {
+    buildActiveIRBuffer();
+    const tb = $("#timeToolbar");
+    tb.replaceChildren(
+      seg([["ir", "Impulse Response h(t)"], ["step", "Step Response s(t)"]], state.timeMode, v => { state.timeMode = v; renderMainView(); }),
+      el("span", { style: "font:500 12px var(--font-mono);color:var(--muted)" },
+        `FIR Length: 8192 taps @ 48 kHz (Δf = 5.86 Hz) · Causal Center t0 = 20.0 ms`)
+    );
+
+    const irA = audio.irCache.A, irB = audio.irCache.B;
+    const sr = irA.sampleRate;
+    const i0 = Math.floor(0.015 * sr), i1 = Math.floor(0.042 * sr);
+    const tMs = [], yA = [], yB = [];
+    for (let i = i0; i <= i1; i++) {
+      tMs.push((i / sr) * 1000);
+      yA.push(state.timeMode === "ir" ? irA.ir[i] : irA.step[i]);
+      yB.push(state.timeMode === "ir" ? irB.ir[i] : irB.step[i]);
+    }
+    const maxY = Math.max(0.1, ...yA.map(Math.abs), ...yB.map(Math.abs)) * 1.15;
+
+    const STA = scopes["#scopeTimeA"], STB = scopes["#scopeTimeB"];
+    STA.cfg = {
+      linearX: true, xr: [15, 42], yr: [-maxY, maxY],
+      ylabel: state.timeMode === "ir" ? "h(t) amplitude" : "s(t) step",
+      xfmt: v => `${v.toFixed(0)} ms`, tipfmt: v => v.toFixed(3),
+      vlines: [{ x: 20.0, label: "t0 = 20.0 ms", color: css("--muted") }],
+      traces: [
+        { x: tMs, y: yB, color: css("--slotB"), width: 1.8, dash: [5, 4], name: `Slot B ${state.timeMode.toUpperCase()}` },
+        { x: tMs, y: yA, color: css("--slotA"), width: 2.2, name: `Slot A ${state.timeMode.toUpperCase()}` },
+      ],
+    };
+
+    STB.cfg = {
+      xr: [25, 20000], yr: [-4, 22], ylabel: "Group Delay (ms)", yTicks: 6,
+      tipfmt: v => `${v.toFixed(2)} ms`,
+      vlines: [
+        { x: cAct.m.x_wm, label: fmtF(cAct.m.x_wm) },
+        { x: cAct.m.x_mt, label: fmtF(cAct.m.x_mt) },
+      ],
+      traces: [
+        { x: f, y: Array.from(cB.gd), color: css("--slotB"), width: 1.8, dash: [6, 4], name: "Slot B τg(f)" },
+        { x: f, y: Array.from(cA.gd), color: css("--slotA"), width: 2.3, name: "Slot A τg(f)" },
+      ],
+    };
+    drawScope(STA); drawScope(STB);
+    $("#timeExplain").innerHTML = `<strong>Time-Domain & Transient Coherence:</strong> Top: the actual 8192-tap FIR ${state.timeMode === "ir" ? "Impulse Response <code>h(t)</code>" : "Step Response <code>s(t)</code>"} convolved with your audio in WebAudio. Notice the tweeter spike arriving first at 20.0 ms followed by the midrange and woofer, plus early room reflections at +1.85 ms and +4.7 ms when <strong>IEC 60268-13 Room</strong> is enabled. Toggle <strong>Linear Phase</strong> in the left rail to compare all-pass crossover phase rotation against zero-phase alignment!`;
+  } else if (state.view === "blind") {
+    renderBlindView();
+  }
+}
+
+// ======================================================================== Tab 4: IEC 60268-13 Blind Test & ABX Suite
+function renderBlindView() {
+  // Update ABX buttons
+  $("#abxPlayA").setAttribute("aria-pressed", String(state.activeSlot === "A"));
+  $("#abxPlayB").setAttribute("aria-pressed", String(state.activeSlot === "B"));
+  $("#abxPlayX").setAttribute("aria-pressed", String(state.activeSlot === "X"));
+
+  const stats = E.analyzeListeningTrials(state.ballot.trials);
+  const abxStat = E.analyzeListeningTrials(
+    Array.from({ length: state.abx.total }, (_, i) => ({ abxCorrect: i < state.abx.hits }))
+  );
+  $("#abxScoreTxt").textContent = `${state.abx.hits} / ${state.abx.total}`;
+  $("#abxPTxt").textContent = `${abxStat.abxP.toFixed(3)}${abxStat.abxP < 0.05 ? " ★ sig!" : ""}`;
+
+  // Ballot Candidate 1 / 2 buttons
+  const blind = $("#blindPairChk").checked;
+  const map1 = blind ? state.ballot.candOrder[0] : "A";
+  const map2 = blind ? state.ballot.candOrder[1] : "B";
+  $("#candBtn1").className = "btn" + (state.activeSlot === map1 ? " active" : "");
+  $("#candBtn2").className = "btn" + (state.activeSlot === map2 ? " active" : "");
+  $("#candBtn1").textContent = blind ? "▶ Audition Candidate 1" : `▶ Audition Slot A (${state.slotName.A})`;
+  $("#candBtn2").textContent = blind ? "▶ Audition Candidate 2" : `▶ Audition Slot B (${state.slotName.B})`;
+  $("#trialNumBadge").textContent = `Trial #${state.ballot.trials.length + 1}`;
+
+  // Attribute sliders for Candidate 1 & Candidate 2
+  const attrs = [
+    ["bass", "Bass Quantity"],
+    ["mid", "Mid Naturalness"],
+    ["treble", "Treble Balance"],
+    ["overall", "Overall Rating"],
+  ];
+  const slWrap = $("#ballotSliders");
+  slWrap.replaceChildren(...attrs.map(([k, lbl]) => {
+    const v1 = state.ballot.scores[1][k], v2 = state.ballot.scores[2][k];
+    return el("div", { style: "display:grid;grid-template-columns:100px 1fr 1fr;gap:8px;align-items:center" },
+      el("span", { style: "font:600 11px var(--font-display);text-transform:uppercase;color:var(--muted)" }, lbl),
+      el("div", { style: "display:flex;align-items:center;gap:5px" },
+        el("small", { style: "font:600 10px var(--font-mono);color:var(--slotA)" }, "#1"),
+        el("input", {
+          type: "range", min: 1, max: 5, step: 0.5, value: v1,
+          on: { input: e => { state.ballot.scores[1][k] = +e.target.value; e.target.nextSibling.textContent = (+e.target.value).toFixed(1); } },
+        }),
+        el("span", { style: "font:500 11.5px var(--font-mono);width:24px" }, v1.toFixed(1))
+      ),
+      el("div", { style: "display:flex;align-items:center;gap:5px" },
+        el("small", { style: "font:600 10px var(--font-mono);color:var(--slotB)" }, "#2"),
+        el("input", {
+          type: "range", min: 1, max: 5, step: 0.5, value: v2,
+          on: { input: e => { state.ballot.scores[2][k] = +e.target.value; e.target.nextSibling.textContent = (+e.target.value).toFixed(1); } },
+        }),
+        el("span", { style: "font:500 11.5px var(--font-mono);width:24px" }, v2.toFixed(1))
+      )
+    );
+  }));
+
+  $("#prefSeg").replaceChildren(
+    ...[["1", "Prefer #1"], ["2", "Prefer #2"], ["none", "No Pref"]].map(([v, lab]) =>
+      el("button", {
+        "aria-pressed": String(state.ballot.pref === v),
+        on: { click: () => { state.ballot.pref = v; renderBlindView(); } },
+      }, lab))
+  );
+
+  // Render Trial Table & Statistical Plot
+  $("#statSummaryBadge").textContent = `${stats.n} trials · Pref A:${stats.counts.A} B:${stats.counts.B} (p=${stats.prefP.toFixed(3)})`;
+  const tbody = $("#trialTbody");
+  tbody.replaceChildren(...state.ballot.trials.slice().reverse().map(t =>
+    el("tr", {},
+      el("td", {}, t.subject),
+      el("td", {}, t.track),
+      el("td", { style: `color:${t.pref === "A" ? "var(--slotA)" : t.pref === "B" ? "var(--slotB)" : "var(--muted)"};font-weight:600` }, t.pref),
+      el("td", {}, t.scoresA ? t.scoresA.overall.toFixed(1) : "—"),
+      el("td", {}, t.scoresB ? t.scoresB.overall.toFixed(1) : "—"),
+      el("td", { style: "max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" }, t.comment || "")
+    )
+  ));
+  drawStatChart(stats);
+}
+
+function drawStatChart(stats) {
+  const cv = $("#statCv");
+  if (!cv || !cv.clientWidth) return;
+  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = +cv.getAttribute("height");
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const g = cv.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, H);
+
+  const ink = css("--ink"), muted = css("--muted"), grid = css("--grid");
+  const x0 = 42, x1 = W - 14, y0 = 16, y1 = H - 28;
+  g.font = `11px ${css("--font-mono")}`;
+  for (let s = 1; s <= 5; s++) {
+    const y = y1 - ((s - 1) / 4) * (y1 - y0);
+    g.strokeStyle = grid; g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
+    g.fillStyle = muted; g.textAlign = "right"; g.fillText(`${s}.0`, x0 - 6, y + 3);
+  }
+
+  const attrs = [["bass", "Bass"], ["mid", "Mid (Voice)"], ["treble", "Treble"], ["overall", "Overall"]];
+  const colW = (x1 - x0) / attrs.length;
+  attrs.forEach(([k, label], idx) => {
+    const cx = x0 + (idx + 0.5) * colW;
+    g.fillStyle = muted; g.textAlign = "center";
+    g.fillText(label, cx, y1 + 15);
+    if (!stats.n) return;
+
+    for (const [slot, off, col] of [["A", -14, css("--slotA")], ["B", 14, css("--slotB")]]) {
+      const st = stats.summary[slot][k];
+      const ym = y1 - ((Math.max(1, Math.min(5, st.mean)) - 1) / 4) * (y1 - y0);
+      const yHi = y1 - ((Math.max(1, Math.min(5, st.mean + st.ci95)) - 1) / 4) * (y1 - y0);
+      const yLo = y1 - ((Math.max(1, Math.min(5, st.mean - st.ci95)) - 1) / 4) * (y1 - y0);
+
+      g.fillStyle = col; g.globalAlpha = 0.78;
+      g.fillRect(cx + off - 9, ym, 18, y1 - ym);
+      g.globalAlpha = 1;
+
+      // 95% CI Error bar
+      g.strokeStyle = ink; g.lineWidth = 1.5;
+      g.beginPath();
+      g.moveTo(cx + off, yHi); g.lineTo(cx + off, yLo);
+      g.moveTo(cx + off - 5, yHi); g.lineTo(cx + off + 5, yHi);
+      g.moveTo(cx + off - 5, yLo); g.lineTo(cx + off + 5, yLo);
+      g.stroke();
+    }
+  });
+}
+
+// ======================================================================== Real-Time Animation Loop (RTA, Meters, Sweep Cursor)
+let rtaFreqBytes = null;
+function startAnimationLoop() {
+  const t0 = performance.now();
+  const tick = now => {
+    requestAnimationFrame(tick);
+    if (document.hidden) return;
+
+    if (audio.playing && audio.ctx) {
+      const elapsed = (audio.ctx.currentTime - audio.startTime) % (audio.duration || 8);
+      $("#timeTxt").textContent = `${elapsed.toFixed(1)}s / ${(audio.duration || 8).toFixed(1)}s`;
+      drawWaveform();
+
+      // If playing the synchronized log sweep (20 Hz -> 18 kHz over 8s), move the probe frequency live!
+      if (state.trackId === "log_sweep") {
+        const L = 8.0 / Math.log(18000 / 20);
+        state.probeFreq = 20 * Math.exp(elapsed / L);
+      }
+
+      // Update live per-driver energy meters & RTA bars from WebAudio AnalyserNode
+      if (audio.analyserPre) {
+        if (!rtaFreqBytes) rtaFreqBytes = new Uint8Array(audio.analyserPre.frequencyBinCount);
+        audio.analyserPre.getByteFrequencyData(rtaFreqBytes);
+        const sr = audio.ctx.sampleRate, nBins = rtaFreqBytes.length;
+        const kAct = effectiveSlotKey(), c = calc[kAct];
+        const act = activeDriversMap();
+
+        // Compute weighted band energy per driver
+        const eDrv = { woof: 0, mid: 0, tw: 0 };
+        const bars = [];
+        const level = calc.A.m.on.level;
+        for (let i = 0; i < E.N; i += 6) {
+          const fx = E.f[i];
+          const bin = Math.min(nBins - 1, Math.max(1, Math.round(fx * (nBins * 2) / sr)));
+          const inDb = (rtaFreqBytes[bin] / 255) * 55 - 55;
+          const sysMag = Math.hypot(c.on.sum.re[i], c.on.sum.im[i]) || 1e-9;
+          bars.push([fx, level + inDb + (20 * Math.log10(sysMag) - level)]);
+          for (const u of ["woof", "mid", "tw"]) {
+            if (!act[u]) continue;
+            const uMag = Math.hypot(c.on[u].re[i], c.on[u].im[i]);
+            eDrv[u] += (rtaFreqBytes[bin] / 255) * uMag;
+          }
+        }
+        for (const u of ["woof", "mid", "tw"]) {
+          const node = document.getElementById(`meter-${u}`);
+          if (node) {
+            const pct = act[u] ? Math.min(100, Math.sqrt(eDrv[u] / 18) * 100) : 0;
+            node.style.width = `${pct.toFixed(1)}%`;
+          }
+        }
+        if (state.view === "room" && scopes["#scopeRoom"]?.cfg) {
+          scopes["#scopeRoom"].cfg.rtaBars = bars;
+          scopes["#scopeRoom"].cfg.vlines[2].x = state.probeFreq;
+          scopes["#scopeRoom"].cfg.vlines[2].label = `probe ${fmtF(state.probeFreq)}`;
+          drawScope(scopes["#scopeRoom"]);
+        }
+      }
+      if (state.view === "room") {
+        drawRoomStage(((now - t0) / 1400) % 1);
+        if (state.trackId === "log_sweep") drawElevStage();
+      }
+    }
+  };
+  requestAnimationFrame(tick);
+}
+
+// ======================================================================== Export Modal (WAV IR, MiniDSP, LTspice, Task 4 LaTeX, JSON)
+let sheetTab = "wav";
+function downloadBlob(bytes, filename, mime = "audio/wav") {
+  const blob = new Blob([bytes], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = el("a", { href: url, download: filename });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function copyText(text, btn) {
+  navigator.clipboard?.writeText(text).then(() => {
+    const old = btn.textContent; btn.textContent = "✓ Copied";
+    setTimeout(() => { btn.textContent = old; }, 1200);
+  });
+}
+
+function copyBlock(title, text) {
+  return el("div", { style: "display:grid;gap:6px" },
+    el("div", { class: "card-head" }, el("strong", {}, title), el("button", { class: "btn", on: { click: e => copyText(text, e.target) } }, "Copy")),
+    el("pre", {}, text)
+  );
+}
+
+const SHEETS = {
+  wav: ["WAV Impulse Responses", () => {
+    buildActiveIRBuffer();
+    return [
+      el("p", { class: "explain" }, "Download 16-bit 48 kHz mono WAV Impulse Responses synthesized from your exact System D crossover, box tuning, listener angle, and room environment (for use in MATLAB, REW, or any convolution plugin):"),
+      el("div", { style: "display:flex;gap:10px;flex-wrap:wrap" },
+        el("button", {
+          class: "btn primary",
+          on: { click: () => downloadBlob(E.encodeWAV(audio.irCache.A.ir, 48000), "SystemD_SlotA_IR_48k.wav") },
+        }, "⬇ Download Slot A Impulse Response (.wav)"),
+        el("button", {
+          class: "btn",
+          on: { click: () => downloadBlob(E.encodeWAV(audio.irCache.B.ir, 48000), "SystemD_SlotB_IR_48k.wav") },
+        }, "⬇ Download Slot B Impulse Response (.wav)")
+      ),
+    ];
+  }],
+  task4: ["Task 4 LaTeX & CSV", () => {
+    const stats = E.analyzeListeningTrials(state.ballot.trials);
+    const tex = stats.toLatex(state.slotName.A, state.slotName.B);
+    return [
+      el("p", { class: "explain" }, "Ready-to-include LaTeX table and macros for Section 4 (Task 4: Listening Test) of Project/report/Project_report.tex:"),
+      copyBlock("report/results_task4.tex", tex),
+    ];
+  }],
+  minidsp: ["MiniDSP & LTspice", () => {
+    const k = effectiveSlotKey(), dg = state.slots[k].digital;
+    const lp = E.ltspiceText(dg.fc, "LPF", dg.align), hp = E.ltspiceText(dg.fc, "HPF", dg.align);
+    return [
+      el("p", { class: "explain" }, `Active Slot ${k}: ${dg.align} at ${dg.fc} Hz, Output 1 (woofer) gain ${dg.g_woof_dB.toFixed(1)} dB.`),
+      copyBlock(`MiniDSP Output 1 · Woofer LPF`, E.minidspText(dg.fc, "LPF", dg.align)),
+      copyBlock(`MiniDSP Output 2 · Mid/Tweeter HPF`, E.minidspText(dg.fc, "HPF", dg.align)),
+      ...lp.map((s, i) => copyBlock(`LTspice E_LP${i + 1}`, s)),
+      ...hp.map((s, i) => copyBlock(`LTspice E_HP${i + 1}`, s)),
+    ];
+  }],
+  json: ["Design JSON & Sync", () => {
+    const k = state.editSlot;
+    const txt = JSON.stringify(state.slots[k], null, 2);
+    const ta = el("textarea", { rows: 10, spellcheck: "false" }, txt);
+    return [
+      el("p", { class: "explain" }, `Compatible with Project/design/design.json and Crossover Studio. Paste any design.json below to load into Slot ${k}, or push Slot ${k} directly to Crossover Studio.`),
+      ta,
+      el("div", { style: "display:flex;gap:8px;flex-wrap:wrap" },
+        el("button", { class: "btn", on: { click: e => copyText(ta.value, e.target) } }, "Copy JSON"),
+        el("button", {
+          class: "btn primary",
+          on: {
+            click: () => {
+              try {
+                state.slots[k] = cloneDesign(JSON.parse(ta.value));
+                refreshAll();
+                showToast(`Loaded JSON into Slot ${k}`);
+              } catch (err) { showToast("Invalid design.json: " + err.message); }
+            },
+          },
+        }, `Load into Slot ${k}`),
+        el("button", {
+          class: "btn",
+          on: {
+            click: () => {
+              localStorage.setItem(STUDIO_KEY, JSON.stringify(state.slots[k]));
+              showToast(`Pushed Slot ${k} to Crossover Studio!`);
+            },
+          },
+        }, `Push Slot ${k} → Crossover Studio`)
+      ),
+    ];
+  }],
+};
+
+function renderSheet() {
+  $("#sheetTabs").replaceChildren(...Object.entries(SHEETS).map(([k, [lab]]) =>
+    el("button", { "aria-selected": String(sheetTab === k), on: { click: () => { sheetTab = k; renderSheet(); } } }, lab)));
+  $("#sheetBody").replaceChildren(el("div", { style: "display:grid;gap:12px" }, SHEETS[sheetTab][1]()));
+}
+
+// ======================================================================== Event Wiring & Master Refresh
+function refreshAll(updateAudioIR = true) {
+  recomputeModels();
+  renderReadings();
+  renderDriverStrip();
+  renderRail();
+  renderMainView();
+  if (updateAudioIR && audio.ctx) buildActiveIRBuffer();
+}
+
+function selectSlot(slot) {
+  state.activeSlot = slot;
+  if (slot === "A" || slot === "B") state.editSlot = slot;
+  refreshAll(true);
+  if (!audio.playing) startPlayback(audio.pauseOffset);
+}
+
+$("#playBtn").addEventListener("click", togglePlayback);
+for (const s of ["A", "B", "X", "RAW"]) {
+  document.querySelector(`.ab-btn[data-slot="${s}"]`).addEventListener("click", () => selectSlot(s));
+}
+$("#trackSel").addEventListener("change", e => {
+  state.trackId = e.target.value;
+  audio.pauseOffset = 0;
+  if (audio.playing) startPlayback(0);
+  else drawWaveform();
+});
+$("#loudMatch").addEventListener("change", e => { state.loudnessMatch = e.target.checked; refreshAll(true); });
+$("#crossfeedChk").addEventListener("change", e => { state.crossfeed = e.target.checked; refreshAll(true); });
+$("#envAnechoic").addEventListener("click", () => {
+  state.roomMode = "anechoic";
+  $("#envAnechoic").setAttribute("aria-pressed", "true");
+  $("#envIec").setAttribute("aria-pressed", "false");
+  refreshAll(true);
+});
+$("#envIec").addEventListener("click", () => {
+  state.roomMode = "iec";
+  $("#envAnechoic").setAttribute("aria-pressed", "false");
+  $("#envIec").setAttribute("aria-pressed", "true");
+  refreshAll(true);
+});
+$("#resetPosBtn").addEventListener("click", () => { state.angleDeg = 0; state.listenerDy = 0; refreshAll(true); });
+
+$("#waveBar").addEventListener("click", e => {
+  const r = $("#waveBar").getBoundingClientRect();
+  const frac = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+  audio.pauseOffset = frac * (audio.duration || 8);
+  if (audio.playing) startPlayback(audio.pauseOffset);
+  else drawWaveform();
+});
+
+$("#fileInp").addEventListener("change", async e => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  try {
+    const ctx = ensureAudioContext();
+    const arr = await file.arrayBuffer();
+    audio.customBuffer = await ctx.decodeAudioData(arr);
+    audio.customName = file.name;
+    state.trackId = "custom";
+    populateTrackSelector();
+    startPlayback(0);
+    showToast(`Loaded "${file.name}"`);
+  } catch (err) {
+    showToast("Could not decode audio file: " + err.message);
+  }
+});
+
+// Sync from Crossover Studio (localStorage)
+function syncFromCrossoverStudio(notify = true) {
+  try {
+    const raw = localStorage.getItem(STUDIO_KEY);
+    if (!raw) { if (notify) showToast("No saved design found in Crossover Studio yet."); return; }
+    const parsed = JSON.parse(raw);
+    state.slots[state.editSlot] = cloneDesign(parsed);
+    state.slotName[state.editSlot] = "Crossover Studio Live";
+    refreshAll(true);
+    if (notify) showToast(`Synced Crossover Studio design → Slot ${state.editSlot}`);
+  } catch (e) {
+    if (notify) showToast("Could not parse Crossover Studio design.");
+  }
+}
+$("#syncBtn").addEventListener("click", () => syncFromCrossoverStudio(true));
+window.addEventListener("storage", e => { if (e.key === STUDIO_KEY) syncFromCrossoverStudio(true); });
+
+$("#themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  document.documentElement.setAttribute("data-theme", cur === "light" ? "dark" : "light");
+  renderMainView();
+  drawWaveform();
+});
+
+$("#expBtn").addEventListener("click", () => { renderSheet(); $("#sheet").hidden = false; });
+$("#sheetClose").addEventListener("click", () => { $("#sheet").hidden = true; });
+$("#sheet").addEventListener("click", e => { if (e.target.id === "sheet") $("#sheet").hidden = true; });
+
+// ABX & Task 4 Ballot Event Handlers
+$("#abxPlayA").addEventListener("click", () => selectSlot("A"));
+$("#abxPlayB").addEventListener("click", () => selectSlot("B"));
+$("#abxPlayX").addEventListener("click", () => selectSlot("X"));
+function submitAbxVote(guess) {
+  const correct = guess === state.secretX;
+  state.abx.total++;
+  if (correct) state.abx.hits++;
+  showToast(correct ? `✓ Correct! X was Slot ${state.secretX}. New X rolled.` : `✗ Missed! X was Slot ${state.secretX}. New X rolled.`);
+  state.secretX = Math.random() < 0.5 ? "A" : "B";
+  renderBlindView();
+}
+$("#abxGuessA").addEventListener("click", () => submitAbxVote("A"));
+$("#abxGuessB").addEventListener("click", () => submitAbxVote("B"));
+$("#abxNewX").addEventListener("click", () => { state.secretX = Math.random() < 0.5 ? "A" : "B"; showToast("Secret X re-randomized!"); });
+$("#abxReset").addEventListener("click", () => { state.abx = { hits: 0, total: 0 }; renderBlindView(); });
+
+$("#candBtn1").addEventListener("click", () => {
+  const blind = $("#blindPairChk").checked;
+  selectSlot(blind ? state.ballot.candOrder[0] : "A");
+});
+$("#candBtn2").addEventListener("click", () => {
+  const blind = $("#blindPairChk").checked;
+  selectSlot(blind ? state.ballot.candOrder[1] : "B");
+});
+$("#blindPairChk").addEventListener("change", renderBlindView);
+
+$("#logTrialBtn").addEventListener("click", () => {
+  const blind = $("#blindPairChk").checked;
+  const map1 = blind ? state.ballot.candOrder[0] : "A";
+  const scoresA = map1 === "A" ? { ...state.ballot.scores[1] } : { ...state.ballot.scores[2] };
+  const scoresB = map1 === "A" ? { ...state.ballot.scores[2] } : { ...state.ballot.scores[1] };
+  let pref = "none";
+  if (state.ballot.pref === "1") pref = map1;
+  else if (state.ballot.pref === "2") pref = map1 === "A" ? "B" : "A";
+
+  state.ballot.trials.push({
+    subject: $("#subjInp").value.trim() || `Subj ${state.ballot.trials.length + 1}`,
+    track: state.trackId,
+    pref,
+    scoresA,
+    scoresB,
+    comment: $("#commentInp").value.trim(),
+  });
+  $("#commentInp").value = "";
+  state.ballot.candOrder = Math.random() < 0.5 ? ["A", "B"] : ["B", "A"];
+  saveState();
+  renderBlindView();
+  showToast(`Recorded Trial #${state.ballot.trials.length} (Mapped: #1=${map1})`);
+});
+
+$("#seedDemoBtn").addEventListener("click", () => {
+  state.ballot.trials = [
+    { subject: "Louis", track: "ensemble", pref: "A", scoresA: { bass: 4.5, mid: 4.5, treble: 4.5, overall: 4.5 }, scoresB: { bass: 3.5, mid: 3.5, treble: 2.0, overall: 3.0 }, comment: "B is way too bright on cymbals" },
+    { subject: "Sophie", track: "vocal_keys", pref: "A", scoresA: { bass: 4.0, mid: 4.5, treble: 4.0, overall: 4.5 }, scoresB: { bass: 3.5, mid: 3.0, treble: 2.5, overall: 3.0 }, comment: "Vocals sound natural and chesty on A" },
+    { subject: "Mads", track: "bass_groove", pref: "A", scoresA: { bass: 4.5, mid: 4.0, treble: 4.5, overall: 4.5 }, scoresB: { bass: 3.0, mid: 3.5, treble: 2.5, overall: 2.5 }, comment: "160mm vent extends sub notes cleanly" },
+    { subject: "Subject 4", track: "guitar_cymbal", pref: "A", scoresA: { bass: 4.0, mid: 4.5, treble: 4.5, overall: 4.5 }, scoresB: { bass: 3.5, mid: 3.0, treble: 2.0, overall: 2.5 }, comment: "L-pad tames the tweeter harshness" },
+    { subject: "Subject 5", track: "ensemble", pref: "A", scoresA: { bass: 4.0, mid: 4.0, treble: 4.0, overall: 4.0 }, scoresB: { bass: 3.5, mid: 3.5, treble: 3.0, overall: 3.0 }, comment: "Better cohesion across 325 Hz" },
+    { subject: "Subject 6", track: "vocal_keys", pref: "B", scoresA: { bass: 4.0, mid: 4.0, treble: 3.5, overall: 4.0 }, scoresB: { bass: 3.5, mid: 4.0, treble: 4.0, overall: 4.0 }, comment: "Liked the extra treble sparkle on B" },
+  ];
+  saveState();
+  renderBlindView();
+  showToast("Loaded 6-Subject IEC 60268-13 dataset");
+});
+
+$("#exportLatexBtn").addEventListener("click", e => {
+  const stats = E.analyzeListeningTrials(state.ballot.trials);
+  copyText(stats.toLatex(state.slotName.A, state.slotName.B), e.target);
+  showToast("Copied Task 4 LaTeX table to clipboard!");
+});
+$("#clearTrialsBtn").addEventListener("click", () => { state.ballot.trials = []; saveState(); renderBlindView(); });
+
+// Global Keyboard Shortcuts
+document.addEventListener("keydown", e => {
+  if (e.target.matches("input, textarea, select")) return;
+  if (e.code === "Space") { e.preventDefault(); togglePlayback(); }
+  else if (e.key === "1") selectSlot("A");
+  else if (e.key === "2") selectSlot("B");
+  else if (e.key === "3") selectSlot("X");
+  else if (e.key === "0") selectSlot("RAW");
+  else if (e.key === "Escape") $("#sheet").hidden = true;
+});
+
+// ======================================================================== Boot
+populateTrackSelector();
+renderTabs();
+setupScope("#scopeRoom", "#tipRoom", fx => { state.probeFreq = Math.max(20, Math.min(18000, fx)); renderMainView(); });
+setupScope("#scopeBodeA", "#tipBodeA");
+setupScope("#scopeBodeB", "#tipBodeB");
+setupScope("#scopeTimeA", "#tipTimeA");
+setupScope("#scopeTimeB", "#tipTimeB");
+setupStageCanvases();
+refreshAll(false);
+drawWaveform();
+startAnimationLoop();
+</script>
+</body>
+</html>
