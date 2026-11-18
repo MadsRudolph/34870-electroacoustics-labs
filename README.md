@@ -1,5 +1,8 @@
 # 34870 Electroacoustics — labs
 
+> **Overleaf (18 Nov 2026):** do not push from the old Overleaf project; it deletes files. Moving to a small
+> Overleaf repo: see [`tools/OVERLEAF_HANDOFF.md`](tools/OVERLEAF_HANDOFF.md).
+
 ## Going to the lab? Copy `LabPC/`
 
 `LabPC/` holds both lab GUIs ready to copy to the lab PC (MATLAB R2019b). Start with
