@@ -135,7 +135,7 @@
   steps.push({ id: 'C-run', where: 'Part C', render: () => renderChoice('Part C', 'Is Part C being run for you?',
     'C_run', ['yes', 'no'], ['Yes', 'No, skip it'], 'The test leader will tell you.'), check: () => checkChoice('C_run') });
   ['X', 'Y'].forEach(s => steps.push({ id: 'C-' + s, where: 'Part C', skip: () => answers.C_run === 'no',
-    render: () => renderScales(`Part C · Sample ${s}`, 'Track 4, then track 2. You will be asked to step outside for a minute before each sample.', 'C', s, PART_C_ITEMS),
+    render: () => renderScales(`Part C · Sample ${s}`, 'Track 4, then track 2. Judge this sample on its own.', 'C', s, PART_C_ITEMS),
     check: () => checkScales('C', s, PART_C_ITEMS) }));
   steps.push({ id: 'C-pref', where: 'Part C', skip: () => answers.C_run === 'no',
     render: () => renderChoice('Part C', 'Which did you prefer?', 'C_pref', ['X', 'Y', 'no difference'], ['Sample X', 'Sample Y', 'No difference']),

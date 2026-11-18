@@ -62,7 +62,7 @@ The Modi puts out about 2\,V; start with the PC volume low and watch the MiniDSP
 \subsection*{Set up in the IEC room}
 \begin{chk}
 \item Box at the room's marked loudspeaker position, tweeter at ear height of a seated listener if possible; \textbf{three chairs}: Middle at the marked listening position (on axis), Left and Right beside it, as close as is comfortable, all facing the box. Use the same three chair positions in every session.
-\item Board inside the room, wired as in the chamber: amplifier channel 1 $\rightarrow$ woofer, channel 2 $\rightarrow$ board $\rightarrow$ mid + tweeter. Red to + on every driver.
+\item Board \textbf{outside the room} with the MiniDSP and amplifier (only the speaker is inside), wired as in the chamber: amplifier channel 1 $\rightarrow$ woofer, channel 2 $\rightarrow$ board $\rightarrow$ mid + tweeter. Red to + on every driver.
 \item MiniDSP (the room's own card): routing \textbf{Input 1 and Input 2} $\rightarrow$ Output 1 and Output 2 (Spotify is stereo). PEQ, Comp, FIR \textbf{bypassed}; only Xover active.
 \item Output 1 Xover $\rightarrow$ Advanced: delete everything, paste \texttt{MiniDSP\_woofer\_out1.txt}, Process. Output 2: the same with \texttt{MiniDSP\_midtw\_out2.txt}.
 \item \warn{Output 2 must hold exactly two biquads and no other high-pass.} On 12 Nov it held the filter twice (a $-11$\,dB hole at 400\,Hz). Check the basic Xover page too.
@@ -116,17 +116,16 @@ The operator looks up that session's order in the table below.
 \item \textbf{Guide reads aloud:} ``You will hear one loudspeaker playing music excerpts. Please stay in your seat, keep your head still and face
 the speaker. Don't talk, don't react, and don't look at each other's answers. Nobody in this room knows the settings. There are no right
 answers; rate what you hear. The scales are explained at the top of the sheet.'' Let them read page 1.
-\item \textbf{Part A} (design settings): tracks 1, 2, 3, 4, each once, with about 40\,s between tracks to fill in the column.
-\item \textbf{Part B}: four samples. Each sample = track 1 then track 3. Between samples the operator sets Out 1 to the next
-value in the session's order (Part B table) and waits 40\,s, until all three have rated. Same order of tracks every time.
+\item \textbf{Part A} (design settings): tracks 1, 2, 3, 4, each once. After each, the voice asks for the rating and a 40\,s countdown runs (control panel, \emph{Auto} on).
+\item \textbf{Part B}: four samples. Each sample = track 1 then track 3. During each 40\,s rating countdown the operator sets Out 1 to the next
+value in the session's order (Part B table) and clicks \emph{\checkmark\ Set done} in the panel; the next sample then plays by itself. Same order of tracks every time.
 \item Put Out 1 back to $-5.8$\,dB.
-\item \textbf{Part C}: the guide takes \textbf{all three listeners} outside, away from the door. The operator goes in and sets Rp for sample X
-(Part C table), even if it is already right: always unscrew and refit, so the sound of a swap gives nothing away. Listeners and guide
-return; track 4 then track 2; rate X. Out again, the operator sets the Y value, back in, track 4 then track 2, rate Y.
-Leave Rp at \textbf{8.2\,$\Omega$} afterwards.
+\item \textbf{Part C}: the board is outside the room, so the listeners \textbf{stay seated}. Before sample X the operator sets Rp
+(Part C table) and starts X by hand; track 4 then track 2; rate X. During X's rating countdown the operator swaps Rp to the Y value and
+clicks \emph{\checkmark\ Set done}; Y plays by itself. Leave Rp at \textbf{8.2\,$\Omega$} afterwards.
 \item Last question, thank them, collect the sheets (check that each has the session number and a seat). The operator fills in the grey line at the bottom of page 2.
 \end{enumerate}
-Each session takes about 35 minutes (Part A 9, Part B 15, Part C 9, intro 2) for three listeners: two sessions (6 listeners) need about 1 h 15 min. Short on time: stop each Part B and C sample after the first track, or run Part C with only some listeners; Parts A and B matter most.
+Each session takes about 35 minutes (Part A 9, Part B 15, Part C 9, intro 2) for three listeners: two sessions (6 listeners) need about 1 h 15 min. Short on time: shorten the excerpts in the panel (Tracks, End), or run Part C with only some listeners; Parts A and B matter most.
 
 \section{Sample orders}
 Part B conditions (MiniDSP Output 1 gain): \textbf{L} $=-7.8$\,dB (bass $-2$\,dB), \textbf{D} $=-5.8$\,dB (design),
