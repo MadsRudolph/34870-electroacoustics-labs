@@ -369,11 +369,21 @@ class Mpris:
         out = out.strip()
         return json.loads(out) if out else {}
 
-    def names(self):
+    def names(self, local_only=False):
         r = self.busctl('call', 'org.freedesktop.DBus', '/org/freedesktop/DBus', 'org.freedesktop.DBus', 'ListNames')
         if not r:
             return []
-        return sorted(n for n in r['data'][0] if n.startswith(MPRIS_PREFIX))
+        names = sorted(n for n in r['data'][0] if n.startswith(MPRIS_PREFIX))
+        return [n for n in names if not self.is_remote(n)] if local_only else names
+
+    def is_remote(self, name, identity=None):
+        """A player on another device, mirrored here by KDE Connect ("Spotify - Desktop"). Never control it:
+        with Spotify Connect, pausing the desktop's Spotify pauses the account, i.e. the song playing here."""
+        if 'kdeconnect' in name.lower():
+            return True
+        if identity is None:
+            identity = (self.props(name, 'org.mpris.MediaPlayer2') or {}).get('Identity', '')
+        return str(identity).endswith(' - Desktop')
 
     def props(self, name, iface=PLAYER_IFACE):
         r = self.busctl('call', name, MPRIS_PATH, 'org.freedesktop.DBus.Properties', 'GetAll', 's', iface)
@@ -399,7 +409,7 @@ class Mpris:
                     volume=p.get('Volume'), art=str(md.get('mpris:artUrl', '')))
 
     def pause_all_playing(self, except_name=None):
-        for n in self.names():
+        for n in self.names(local_only=True):
             if n == except_name:
                 continue
             p = self.props(n)
@@ -749,7 +759,7 @@ class Panel:
                 self.cur, self.mode, self.chain = None, None, None
 
     def resolve_player(self, wanted):
-        names = self.mpris.names()
+        names = self.mpris.names(local_only=True)
         if wanted in names:
             return wanted
         fam = family(wanted)
@@ -1064,7 +1074,7 @@ class Panel:
 
     # ---------- streaming players (Players tab) ----------
     def player_action(self, name, action):
-        if action not in ('PlayPause', 'Play', 'Pause', 'Next', 'Previous', 'Stop'):
+        if action not in ('PlayPause', 'Play', 'Pause', 'Next', 'Previous', 'Stop') or self.mpris.is_remote(name):
             return
         if action in ('PlayPause', 'Play'):
             with self.lock:                     # never two sources at once
@@ -1160,6 +1170,7 @@ class Panel:
                                    sink=sinks.get(it.get('sink'), {}).get('description', '?')))
             info['family'] = family(n)
             info['streams'] = st
+            info['remote'] = self.mpris.is_remote(n, info['identity'])
             res.append(info)
         return res
 

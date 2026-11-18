@@ -595,9 +595,9 @@ function libraryOptions(sel) {
 }
 function playerOptions(sel) {
   let found = false;
-  let h = PLAYERS.map(p => { const on = !found && (p.name === sel || p.family === fam(sel)); found ||= on; return `<option value="${esc(p.name)}"${on ? ' selected' : ''}>${esc(p.identity)}</option>`; }).join('');
+  let h = PLAYERS.filter(p => !p.remote).map(p => { const on = !found && (p.name === sel || p.family === fam(sel)); found ||= on; return `<option value="${esc(p.name)}"${on ? ' selected' : ''}>${esc(p.identity)}</option>`; }).join('');
   if (!found) h = `<option value="${esc(sel)}" selected>${esc(fam(sel) || 'player')} · not running</option>` + h;
-  if (!PLAYERS.some(p => p.family === 'spotify') && fam(sel) !== 'spotify') h += `<option value="org.mpris.MediaPlayer2.spotify">Spotify · not running</option>`;
+  if (!PLAYERS.some(p => !p.remote && p.family === 'spotify') && fam(sel) !== 'spotify') h += `<option value="org.mpris.MediaPlayer2.spotify">Spotify · not running</option>`;
   return h;
 }
 function renderTracks() {
@@ -646,7 +646,7 @@ function renderTrackInfo() {
     const el = $('tinfo' + i); if (!el) return;
     const inf = ST.tracks[i] || {}; let h = '';
     if (t.kind === 'stream') {
-      const live = PLAYERS.find(p => p.name === t.player || p.family === fam(t.player));
+      const live = PLAYERS.find(p => !p.remote && (p.name === t.player || p.family === fam(t.player)));
       h += `<span class="mini"><span class="dot ${live ? 'ok' : 'err'}" style="margin:0"></span>${esc(live ? live.identity : fam(t.player))} ${live ? 'running' : 'not running'}</span>`;
       if (isSpotify(t.player) && !t.uri) h += `<span class="w">Paste a Spotify link</span>`;
       h += t.title ? `<span>♪ <span style="color:var(--text)">${esc(t.title)}</span></span>` : `<span>Title appears after the first play</span>`;
@@ -972,7 +972,10 @@ $('openSpotify').onclick = () => api('/api/spotify/open', {}).then(() => toast('
 async function pollPlayers() {
   try { PLAYERS = await api('/api/players'); } catch (e) { return; }
   const box = $('players');
-  const h = PLAYERS.length ? PLAYERS.map(p => {
+  const card = p => {
+    if (p.remote) return `<div class="card pl" style="opacity:.6"><div class="art"><svg width="26" height="26"><use href="#i-disc"/></svg></div>
+      <div style="min-width:0"><div class="id">${esc(p.identity)} · ${esc(p.status)}</div><div class="ti">${esc(p.title || 'Nothing loaded')}</div><div class="ar">${esc(p.artist)}</div></div>
+      <div class="ctl"><div class="st">Remote (KDE Connect), not controlled</div></div></div>`;
     const art = /^https?:/.test(p.art) ? `<img src="${esc(p.art)}" alt="">` : `<svg width="26" height="26"><use href="#i-disc"/></svg>`;
     const st = p.streams.length ? p.streams.map(s => `${esc(s.sink.replace(/\s*\(.*?\)/g, ''))} · ${esc(s.volume)}${s.mute ? ' · muted' : ''}`).join('<br>') : 'No audio stream yet';
     const odd = p.streams.some(s => s.mute || s.volume !== '100%');
@@ -983,7 +986,9 @@ async function pollPlayers() {
         <button class="play" data-n="${esc(p.name)}" data-a="PlayPause" aria-label="Play or pause"><svg width="16" height="16"><use href="#i-${p.status === 'Playing' ? 'pause' : 'play'}"/></svg></button>
         <button class="ibtn" data-n="${esc(p.name)}" data-a="Next" aria-label="Next"><svg width="16" height="16"><use href="#i-next"/></svg></button>
         <div class="st">${st}${odd ? `<br><button class="linkb" data-reset="${esc(p.name)}">Reset stream to 100 %</button>` : ''}</div></div></div>`;
-  }).join('') : '<p class="sub">No media players are running. Start Spotify, or open Tidal or Qobuz in a browser tab and press play once.</p>';
+  };
+  const loc = PLAYERS.filter(p => !p.remote), rem = PLAYERS.filter(p => p.remote);
+  const h = PLAYERS.length ? loc.map(card).join('') + (rem.length ? `<p class="sub" style="grid-column:1/-1;margin:8px 0 0">On other devices (KDE Connect): shown only, the panel never pauses or controls these.</p>` + rem.map(card).join('') : '') : '<p class="sub">No media players are running. Start Spotify, or open Tidal or Qobuz in a browser tab and press play once.</p>';
   if (box.dataset.h !== h) {
     box.dataset.h = h; box.innerHTML = h;
     box.querySelectorAll('[data-a]').forEach(b => b.onclick = () => api('/api/player', { name: b.dataset.n, action: b.dataset.a }).then(pollPlayers));
