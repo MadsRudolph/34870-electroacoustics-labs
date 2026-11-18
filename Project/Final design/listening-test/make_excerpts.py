@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Cut the four listening-test excerpts from the vinyl FLAC rips.
 
-Each excerpt: 35-50 s (length per excerpt below), 0.5 s fades, dual mono (left = right = (L+R)/2, so the MiniDSP only needs Input 1),
+Each excerpt: 90 s (length per excerpt below), 0.5 s fades, dual mono (left = right = (L+R)/2, so the MiniDSP only needs Input 1),
 levelled to the same integrated loudness (TARGET_LUFS, plain gain, no compression), 24-bit 48 kHz FLAC.
 
     python3 make_excerpts.py <output folder>
@@ -14,10 +14,10 @@ from pathlib import Path
 VINYL = Path('/mnt/homeserver/media/music/Vinyl')
 TARGET_LUFS = -23.0
 EXCERPTS = [  # (file name, source, start s, length s)
-    ('Track1_female_voice.flac', 'Fugees/The Score (1996) [Vinyl]/1-03 - Ready or Not.flac', 60, 50),
-    ('Track2_male_voice.flac', 'Michael Bublé/Christmas (2014) [Vinyl]/08 - Have Yourself a Merry Little Christmas.flac', 25, 35),
-    ('Track3_bass.flac', 'Miles Davis/Kind of Blue (1987) [Vinyl]/01 - So What.flac', 32, 35),
-    ('Track4_full_band.flac', 'Electric Light Orchestra/Out of the Blue (1977) [Vinyl]/1-01 - Turn to Stone.flac', 40, 35),
+    ('Track1_female_voice.flac', 'Fugees/The Score (1996) [Vinyl]/1-03 - Ready or Not.flac', 60, 90),
+    ('Track2_male_voice.flac', 'Michael Bublé/Christmas (2014) [Vinyl]/08 - Have Yourself a Merry Little Christmas.flac', 25, 90),
+    ('Track3_bass.flac', 'Miles Davis/Kind of Blue (1987) [Vinyl]/01 - So What.flac', 32, 90),
+    ('Track4_full_band.flac', 'Electric Light Orchestra/Out of the Blue (1977) [Vinyl]/1-01 - Turn to Stone.flac', 40, 90),
 ]
 MONO = 'pan=stereo|c0=0.5*c0+0.5*c1|c1=0.5*c0+0.5*c1'
 
