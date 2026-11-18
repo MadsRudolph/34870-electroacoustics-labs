@@ -1,7 +1,8 @@
 # 34870 Electroacoustics — labs
 
-> **Overleaf (18 Nov 2026):** do not push from the old Overleaf project; it deletes files. Moving to a small
-> Overleaf repo: see [`tools/OVERLEAF_HANDOFF.md`](tools/OVERLEAF_HANDOFF.md).
+> **Overleaf (since 18 Nov 2026):** Overleaf is linked to the small repo `34870-labs-overleaf`, not to
+> this one. Workflow: [`tools/OVERLEAF.md`](tools/OVERLEAF.md). The old Overleaf project is archived:
+> never push from it, it deletes files here.
 
 ## Going to the lab? Copy `LabPC/`
 
@@ -9,9 +10,8 @@
 [`LabPC/README.md`](LabPC/README.md).
 
 Shared lab repo for the group (DTU 34870, autumn 2026). One folder per lab; every lab has
-`report/` (LaTeX), `figures/` and its working files. The repo is linked to an Overleaf
-project through Overleaf's GitHub synchronisation, so the reports can be edited either in
-Overleaf or locally.
+`report/` (LaTeX), `figures/` and its working files. The reports can be edited either in
+Overleaf or locally; Overleaf goes through a small separate repo (see below).
 
 | Lab | Topic | Period | Quiz deadline |
 |---|---|---|---|
@@ -35,18 +35,22 @@ The guide source is `docs/getting-started.html`; hosting details are in
 
 ## Working with Overleaf
 
-[Open our Overleaf project](https://www.overleaf.com/project/6aaff1032e7b434d4389c28f).
-Ask Mads for an invitation if you need access.
+The Overleaf project is imported from the small private repo
+[`MadsRudolph/34870-labs-overleaf`](https://github.com/MadsRudolph/34870-labs-overleaf), which holds
+only the report sources and figures.
+[Open the Overleaf project](https://www.overleaf.com/project/6afe0b5b02e06a98c0638cc2); ask Mads for an invitation. Edit the reports in
+Overleaf; data and scripts stay in this repo.
 
-- In Overleaf: **Menu → GitHub** shows *Pull GitHub changes into Overleaf* and *Push Overleaf
-  changes to GitHub*. The sync is manual in both directions: push from Overleaf when you stop
-  editing, pull into Overleaf after someone has pushed from a PC.
-- Each lab has its own main document. In Overleaf set **Menu → Main document** to the report
-  you are compiling, e.g. `Lab A/report/LabA_report.tex`.
-- Locally: `git pull`, edit, build with `tectonic "Lab A/report/LabA_report.tex"` (or latexmk),
-  commit, `git push`, then pull into Overleaf.
-- Do not edit the same file in both places between syncs; Overleaf will not merge conflicts
-  for you.
+`tools/overleaf_sync.py` moves the files between the two repos. The full workflow, step by step, is
+in [`tools/OVERLEAF.md`](tools/OVERLEAF.md). In short:
+
+- **Overleaf → here first:** push from Overleaf (*Menu → GitHub*), pull the small repo,
+  `python3 tools/overleaf_sync.py import`, check `git diff`, commit here.
+- **Here → Overleaf:** commit here, `python3 tools/overleaf_sync.py export`, commit + push the small
+  repo, then *Pull GitHub changes into Overleaf*.
+- Each lab has its own main document. In Overleaf set **Menu → Main document** to the report you are
+  compiling, e.g. `Lab A/report/LabA_report.tex`.
+- Don't edit the same file in both places between syncs; nothing merges it for you.
 
 ## Lab A layout
 
