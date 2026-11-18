@@ -228,7 +228,7 @@
 
   function renderReview() {
     if (sent) return `<div class="done"><div class="big">✓</div><h1>Thank you for listening!</h1>
-      <p class="sub">Your answers have been sent. Please hand the phone back to the test leader.</p></div>`;
+      <p class="sub">Your answers have been sent. You can close this page now.</p></div>`;
     return `<h2>Ready to send</h2><div class="card"><p>Listener <b>${esc(answers.listener)}</b>. Tap <b>Send answers</b> to finish.
       You can still go back and change anything.</p></div><p class="err">${esc(sendError)}</p>`;
   }
@@ -247,7 +247,8 @@
     const vis = visible(), pos = vis.indexOf(idx);
     document.getElementById('progress').style.width = `${Math.round(100 * pos / (vis.length - 1))}%`;
     backBtn.style.visibility = (idx === 0 || sent) ? 'hidden' : 'visible';
-    nextBtn.textContent = s.submit ? (sent ? 'Start a new listener' : 'Send answers') : 'Next';
+    nextBtn.textContent = s.submit ? 'Send answers' : 'Next';
+    document.getElementById('nav').style.display = sent ? 'none' : '';
     nextBtn.disabled = sending;
     window.scrollTo(0, 0);
   }
@@ -277,7 +278,6 @@
   nextBtn.addEventListener('click', async () => {
     const s = steps[idx];
     if (s.submit) {
-      if (sent) { answers = {}; idx = 0; sent = false; clear(); render(); return; }
       await send(); return;
     }
     if (!s.check()) { document.getElementById('steperr').textContent = 'Please answer the questions marked in red.'; return; }
