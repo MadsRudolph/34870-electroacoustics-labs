@@ -138,6 +138,14 @@ details.disc > summary:hover { color: var(--text); }
 .playval .v { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
 .playval .t { color: var(--muted); font-size: 13px; margin-top: 2px; }
 .after { color: var(--muted); font-size: 14px; max-width: 760px; }
+.autobox { margin: 4px 0 0; padding: 12px 14px; border: 1px solid var(--accent); border-radius: 12px; background: var(--accent-soft); display: none; gap: 14px; align-items: center; flex-wrap: wrap; }
+.autobox.on { display: flex; }
+.autobox .cd { font: 700 26px var(--mono); color: var(--accent); min-width: 64px; }
+.autobox .txt { flex: 1; min-width: 260px; font-size: 13.5px; line-height: 1.4; }
+.autobox .txt b { color: var(--text); }
+.autobox .bar { flex-basis: 100%; height: 3px; background: var(--border2); border-radius: 2px; overflow: hidden; }
+.autobox .bar > div { height: 100%; background: var(--accent); width: 0; }
+.autobox .btn.ok { background: var(--accent); color: #062a26; border-color: var(--accent); font-weight: 650; }
 .hnav { display: flex; gap: 8px; justify-content: flex-end; align-items: center; padding-top: 14px; border-top: 1px solid var(--border); }
 .timeline { display: flex; gap: 24px; margin-top: 16px; flex-wrap: wrap; }
 .tgroup .tl { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 7px; }
@@ -377,6 +385,7 @@ li.ok .what { color: var(--muted); }
         <span class="sp"></span>
         <span id="rowInfo" class="sub mono"></span>
         <label class="switch" title="A voice announces each step (&quot;Part B. Sample one.&quot;) before the music. It never says the setting."><input type="checkbox" id="cues">Voice</label>
+        <label class="switch" title="After each step: a voice asks for the rating, a countdown runs, then the next step plays by itself. Stops for any setting change until you click ✓ Set done."><input type="checkbox" id="autoRun">Auto</label>
         <label class="switch" title="Vent open vs both plugged, with track 3. Not on the questionnaire yet."><input type="checkbox" id="partD">Part D</label>
         <button class="btn" id="lNext">Next session</button>
       </div>
@@ -387,6 +396,9 @@ li.ok .what { color: var(--muted); }
         <div class="hrow"><div class="lbl">PLAY</div><div class="playval"><div class="v" id="hPlay"></div><div class="t" id="hPlayT"></div></div>
           <div style="display:flex;align-items:center;gap:12px"><kbd>P</kbd><button class="play" id="sPlay" style="width:64px;height:64px" aria-label="Play this step"><svg width="28" height="28"><use href="#i-play"/></svg></button></div></div>
         <div class="hrow"><div class="lbl">AFTER</div><div class="after" id="hAfter"></div><div></div></div>
+        <div class="autobox" id="autoBox"><div class="cd" id="autoCd"></div><div class="txt" id="autoTxt"></div>
+          <button class="btn ok" id="autoSet" style="display:none">✓ Set done</button><button class="btn" id="autoGo">Go now</button><button class="btn ghost" id="autoCancel">Cancel auto</button>
+          <div class="bar"><div id="autoBar"></div></div></div>
         <div class="hnav"><button class="btn ghost" id="sPrev">← Back</button><button class="btn" id="sNext">Next step <kbd>N</kbd></button></div>
       </div>
       <div class="timeline" id="timeline"></div>
@@ -552,7 +564,7 @@ const trackPatch = (i, f, v) => { const tr = S.tracks.map(() => ({})); tr[i][f] 
 const tracksPatch = (i, obj) => { const tr = S.tracks.map(() => ({})); Object.assign(tr[i], obj); return saveSettings({ tracks: tr }); };
 const parseT = v => { v = String(v).trim().replace(',', '.'); if (!v) return 0;
   const p = v.split(':').map(Number); return p.some(isNaN) ? NaN : p.reduce((a, x) => a * 60 + x, 0); };
-const playTracks = (list, label) => api('/api/play', { tracks: list, label });
+const playTracks = (list, label) => { cancelAuto(); return api('/api/play', { tracks: list, label }); };
 
 // ---------------- streaming notes ----------------
 const STREAM_NOTES = `<p><b>Local files are the most controllable source.</b> With a local file the panel sets start, length, 0.5 s fades,
@@ -664,7 +676,7 @@ $('bPartC').onclick = () => playTracks([3, 1], 'Part C sample');
 
 // ---------------- transport ----------------
 let lastMsg = '';
-$('tStop').onclick = () => api('/api/stop', {});
+$('tStop').onclick = () => { cancelAuto(); api('/api/stop', {}); };
 $('tPause').onclick = () => api('/api/pause', {});
 $('tExt15').onclick = () => api('/api/extend', { seconds: 15 });
 $('tExt30').onclick = () => api('/api/extend', { seconds: 30 });
@@ -678,7 +690,7 @@ function renderNow() {
   const n = ST.now, trk = n.track !== undefined ? S?.tracks[n.track] : null;
   const test = n.mode === 'test' || n.mode === 'stream', lib = n.mode === 'library';
   let title = 'Nothing playing', sub = '', el = 0, len = 0;
-  if (n.cue) { title = n.title; sub = 'Spoken announcement, the music follows'; el = n.elapsed; }
+  if (n.cue) { title = n.title; sub = n.rate ? 'Rating time starts after this' : 'The music follows'; el = n.elapsed; }
   else if (test) {
     title = `Test track ${n.track + 1} · ${trk ? trk.label : ''}`;
     sub = n.phase === 'loading' ? 'Loading in the player …' : (n.title || '') + (n.source === 'stream' ? ' · streaming' : n.gain !== undefined ? ` · ${sgn(n.gain)} dB` : '');
@@ -686,6 +698,7 @@ function renderNow() {
   } else if (n.mode === 'gap') { title = `Next: ${n.next}`; sub = `Starts in ${n.gap_left.toFixed(1)} s`; }
   else if (lib) { title = n.finished ? 'Album finished' : (n.title || ''); sub = `Library · ${(n.playlist_pos ?? 0) + 1} of ${n.playlist_count || '?'}${n.gain_note ? ' · ' + n.gain_note : ''}`; el = n.elapsed; len = n.length; }
   else if (n.mode === 'tone') { title = n.title.replace(/ \(loops until Stop\)/, ''); sub = 'Check tone · loops until Stop'; el = n.elapsed; }
+  else if (AUTO && AUTO.phase !== 'playing') { title = AUTO.phase === 'count' ? `Rating time · next in ${fmt((AUTO.until - Date.now()) / 1000)}` : 'Waiting for ✓ Set done'; sub = 'Auto-run · Cancel in the Steps view'; }
   else if (n.since_end !== undefined) { title = 'Finished'; sub = `${fmt(n.since_end)} ago · rating time`; }
   $('npTitle').textContent = title; $('npSub').textContent = sub;
   $('np').classList.toggle('idle', !n.mode && n.since_end === undefined);
@@ -722,7 +735,7 @@ function renderNow() {
   if (lib && n.gain_note) $('libGain').textContent = 'Level ' + n.gain_note;
 }
 async function poll() {
-  try { ST = await api('/api/status'); renderNow(); renderTrackInfo(); }
+  try { ST = await api('/api/status'); autoTick(); renderNow(); renderTrackInfo(); }
   catch (e) { $('npTitle').textContent = 'Panel not reachable · is control_panel.py running?'; }
   setTimeout(poll, 250);
 }
@@ -742,13 +755,13 @@ function steps(n) {
                after: `Seat three listeners: Left, Middle (reference seat, on axis, at the marked chair), Right. Each writes session ${n} and their seat on the sheet or phone form. No talking, no reactions, don't look at each other's answers.` }];
   for (let k = 0; k < 4; k++) s.push({ g: 'A', chip: 'A' + (k + 1), t: `Part A · Track ${k + 1}`,
     set: k === 0 ? { design: true, note: 'Check it is the design, nothing else.' } : { none: 'The design settings stay' },
-    play: [k], cue: 'a' + (k + 1), after: 'About 40 s while they rate it, then Next.' });
+    play: [k], cue: 'a' + (k + 1), after: 'The voice asks for the rating, then 40 s rating time. Auto continues by itself; without Auto, press Next.' });
   let prev = 'D';
   B.forEach((c, j) => {
     s.push({ g: 'B', chip: c, t: `Part B · Sample ${j + 1}`,
       set: c === prev ? { none: `Out 1 stays at ${GAIN[c]}`, badge: c, note: `Condition ${c}, ${CDESC[c]}.` }
                       : { k: 'Out 1', v: GAIN[c], badge: c, note: `Condition ${c}, ${CDESC[c]}. MiniDSP Output 1 gain, now at ${GAIN[prev]}.`, change: true },
-      play: [0, 2], cue: 'b' + (j + 1), after: 'About 40 s for the rating, then Next.' });
+      play: [0, 2], cue: 'b' + (j + 1), after: 'The voice asks for the rating, then 40 s rating time. Set the next Out 1 during it and click ✓ Set done.' });
     prev = c;
   });
   s.push({ g: 'B', chip: 'undo', t: 'After Part B', set: prev === 'D' ? { none: 'Out 1 is already −5.8 dB' } : { k: 'Out 1', v: '−5.8 dB', note: 'Back to the design.', change: true },
@@ -756,8 +769,8 @@ function steps(n) {
   let rp = 'R8';
   ['X', 'Y'].forEach((xy, j) => {
     s.push({ g: 'C', chip: xy, t: `Part C · Sample ${xy}`,
-      set: { k: 'Rp', v: RP[C[j]], badge: C[j], change: true, note: `Send ALL listeners and the guide outside. Unscrew and refit Rp even if it is already ${RP[C[j]]}, then bring everyone back in.` },
-      play: [3, 1], cue: 'c' + xy.toLowerCase(), after: `About 40 s while they rate ${xy}, then Next.` });
+      set: { k: 'Rp', v: RP[C[j]], badge: C[j], change: true, note: `Swap Rp on the board, outside the room; the listeners stay seated. If it is already ${RP[C[j]]}, leave it.` },
+      play: [3, 1], cue: 'c' + xy.toLowerCase(), after: `The voice asks for the rating of ${xy}, then 40 s rating time. Swap Rp for the next sample during it and click ✓ Set done.` });
     rp = C[j];
   });
   s.push({ g: 'C', chip: 'undo', t: 'After Part C', set: rp === 'R8' ? { none: 'Rp is already 8.2 Ω, leave it' } : { k: 'Rp', v: '8.2 Ω', note: 'Back to the design.', change: true },
@@ -777,7 +790,7 @@ function steps(n) {
 function renderSteps() {
   if (!S) return;
   const n = Math.max(1, S.listener | 0), st = steps(n), cur = Math.min(S.step | 0, st.length - 1), x = st[cur];
-  $('lNum').value = n; $('partD').checked = !!S.part_d; $('cues').checked = S.cues !== false;
+  $('lNum').value = n; $('partD').checked = !!S.part_d; $('cues').checked = S.cues !== false; $('autoRun').checked = S.auto !== false;
   $('stepCount').textContent = `Step ${cur + 1} of ${st.length}`;
   $('hGroup').textContent = { Prep: 'Before the session', A: 'Part A · the design', B: 'Part B · woofer level', C: 'Part C · tweeter level', D: 'Part D · vent', End: 'End of the session' }[x.g];
   $('hName').textContent = x.t;
@@ -806,8 +819,8 @@ function renderSteps() {
   $('ordTable').innerHTML = t + '</table>';
   $('ordLegend').textContent = 'L = Out 1 −7.8 dB · D = −5.8 dB (design) · H = −3.8 dB · R8 = Rp 8.2 Ω · R3 = Rp 3.3 Ω' + (S.part_d ? ' · Part D open = one vent open, plugged = both plugged' : '') + ' · session 7 uses row 1, 8 row 2, and so on.';
 }
-function setStep(k) { S.step = k; renderSteps(); saveSettings({ step: k }); }
-function setSession(n) { n = Math.max(1, n | 0); S.listener = n; S.step = 0; renderSteps(); saveSettings({ listener: n, step: 0 }); }
+function setStep(k, keepAuto) { if (!keepAuto) cancelAuto(); S.step = k; renderSteps(); saveSettings({ step: k }); }
+function setSession(n) { cancelAuto(); n = Math.max(1, n | 0); S.listener = n; S.step = 0; renderSteps(); saveSettings({ listener: n, step: 0 }); }
 $('lMinus').onclick = () => setSession(S.listener - 1);
 $('lPlus').onclick = () => setSession(S.listener + 1);
 $('lNum').onchange = () => setSession(+$('lNum').value);
@@ -816,8 +829,65 @@ $('cues').onchange = async () => { S.cues = $('cues').checked; await saveSetting
 $('partD').onchange = async () => { S.part_d = $('partD').checked; await saveSettings({ part_d: S.part_d }); renderSteps(); };
 function playStep() {
   const x = steps(S.listener)[S.step];
-  if (x && x.play) api('/api/play', { tracks: x.play, label: x.t, cue: S.cues === false ? null : x.cue });
+  if (!x || !x.play) return;
+  const voice = S.cues !== false && x.cue;
+  api('/api/play', { tracks: x.play, label: x.t, cue: voice ? x.cue : null, after_cue: voice ? 'r' + x.cue : null });
+  AUTO = S.auto !== false ? { phase: 'playing', step: S.step, session: S.listener, saw: false } : null;
+  renderAuto();
 }
+
+// ---------------- auto-run: rating prompt, countdown, next step ----------------
+// Plays on by itself only when nothing has to be changed, or after the operator clicks ✓ Set done.
+// Part D (the vent plug is on the speaker, inside the room) is never started automatically.
+let AUTO = null;
+const RATE_S = () => +(S?.rate_secs || 40);
+const nextOf = a => steps(a.session)[a.step + 1];
+const needsSet = x => !!(x && x.play && x.set && x.set.change);
+const autoPlayable = x => !!(x && x.play && x.g !== 'D');
+function cancelAuto() { if (AUTO) { AUTO = null; renderAuto(); } }
+function autoTick() {
+  if (!AUTO) return;
+  const n = ST.now;
+  if (AUTO.phase === 'playing') {
+    if (n.mode) AUTO.saw = true;
+    else if (AUTO.saw && n.since_end !== undefined) { AUTO.phase = 'count'; AUTO.until = Date.now() + RATE_S() * 1000; AUTO.setDone = false; }
+    else if (AUTO.saw) { AUTO = null; }                               // stopped by the operator
+  } else if (AUTO.phase === 'count' && Date.now() >= AUTO.until) {
+    const nx = nextOf(AUTO);
+    if (autoPlayable(nx) && needsSet(nx) && !AUTO.setDone) AUTO.phase = 'waitset';
+    else autoAdvance();
+  }
+  renderAuto();
+}
+function autoAdvance() {
+  const a = AUTO, nx = nextOf(a); AUTO = null;
+  if (!nx) { renderAuto(); return; }
+  setStep(a.step + 1, true);
+  if (autoPlayable(nx) && (!needsSet(nx) || a.setDone)) playStep();
+  else { renderAuto(); toast(nx.play ? 'Auto-run paused: ' + nx.t + ' is started by hand.' : 'Auto-run paused: ' + nx.t + '. Do it, then Next.', true); }
+}
+function renderAuto() {
+  const box = $('autoBox'); if (!box) return;
+  const on = AUTO && AUTO.phase !== 'playing' && AUTO.session === S.listener;
+  box.classList.toggle('on', !!on);
+  if (!on) return;
+  const nx = nextOf(AUTO), left = Math.max(0, (AUTO.until - Date.now()) / 1000);
+  $('autoCd').textContent = AUTO.phase === 'count' ? fmt(left) : '❚❚';
+  $('autoBar').style.width = AUTO.phase === 'count' ? (100 * (1 - left / RATE_S())) + '%' : '100%';
+  let t;
+  if (!nx) t = '<b>Rating time.</b> That was the last step.';
+  else if (!autoPlayable(nx)) t = `<b>Rating time.</b> Next: ${esc(nx.t)}. ${nx.play ? 'This one is started by hand.' : 'The panel moves there and waits for you.'}`;
+  else if (needsSet(nx)) t = `<b>Now set: ${esc(nx.set.k)} → ${esc(nx.set.v)}</b>${nx.set.badge ? ' (' + esc(nx.set.badge) + ')' : ''} for ${esc(nx.t)}, then click ✓ Set done. ` +
+    (AUTO.setDone ? '<b>Done.</b> It plays when the countdown ends.' : AUTO.phase === 'waitset' ? 'Waiting for you.' : 'It will not play before you confirm.');
+  else t = `<b>Rating time.</b> Then ${esc(nx.t)} plays by itself (no setting to change).`;
+  $('autoTxt').innerHTML = t;
+  $('autoSet').style.display = nx && autoPlayable(nx) && needsSet(nx) && !AUTO.setDone ? '' : 'none';
+}
+$('autoSet').onclick = () => { if (!AUTO) return; AUTO.setDone = true; if (AUTO.phase === 'waitset') autoAdvance(); else renderAuto(); };
+$('autoGo').onclick = () => { if (!AUTO) return; const nx = nextOf(AUTO);
+  if (autoPlayable(nx) && needsSet(nx) && !AUTO.setDone) { toast('Click ✓ Set done first: ' + nx.set.k + ' → ' + nx.set.v, true); return; } autoAdvance(); };
+$('autoCancel').onclick = cancelAuto;
+$('autoRun').onchange = async () => { S.auto = $('autoRun').checked; if (!S.auto) cancelAuto(); await saveSettings({ auto: S.auto }); };
 $('sPlay').onclick = playStep;
 $('sPrev').onclick = () => setStep(Math.max(0, S.step - 1));
 $('sNext').onclick = () => setStep(Math.min(steps(S.listener).length - 1, S.step + 1));
@@ -938,7 +1008,7 @@ document.addEventListener('keydown', e => {
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'select' || tag === 'textarea') { if (e.key === 'Escape') e.target.blur(); return; }
   const k = e.key.toLowerCase();
-  if (k === ' ' || k === 'escape') { e.preventDefault(); $('pop').classList.remove('on'); api('/api/stop', {}); }
+  if (k === ' ' || k === 'escape') { e.preventDefault(); $('pop').classList.remove('on'); cancelAuto(); api('/api/stop', {}); }
   else if ('1234'.includes(k) && k.length === 1) { e.preventDefault(); playTracks([+k - 1]); }
   else if (k === 'b') playTracks([0, 2], 'Part B sample');
   else if (k === 'c') playTracks([3, 1], 'Part C sample');

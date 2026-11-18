@@ -613,11 +613,17 @@ class Panel:
             self.message = ''
 
     # ---------- test tracks (local or stream), chained ----------
-    def play_tracks(self, idx_list, label=None, cue=None):
+    @staticmethod
+    def _cue_file(cue):
+        """cues/<name>.wav for a valid cue name (a1..d2 announcements, ra1..rd2 'please rate'), else None."""
+        if not cue or not re.fullmatch(r'r?[a-d][1-4xy]', str(cue)):
+            return None
+        p = HERE / 'cues' / f'{cue}.wav'
+        return p if p.exists() else None
+
+    def play_tracks(self, idx_list, label=None, cue=None, after_cue=None):
         idx_list = [int(i) for i in idx_list if 0 <= int(i) < 4]
-        cue_path = HERE / 'cues' / f'{cue}.wav' if cue and re.fullmatch(r'[a-d][1-4xy]', str(cue)) else None
-        if cue_path is not None and not cue_path.exists():
-            cue_path = None
+        cue_path, after_path = self._cue_file(cue), self._cue_file(after_cue)
         if not idx_list:
             return
         with self.lock:
@@ -628,10 +634,10 @@ class Panel:
             labels = [f'Track {i + 1}' for i in idx_list]
             self.chain = {'labels': labels, 'index': 0, 'name': label or ' → '.join(labels)}
             cancel = self.cancel
-            self.worker = threading.Thread(target=self._run_chain, args=(idx_list, cancel, cue_path), daemon=True)
+            self.worker = threading.Thread(target=self._run_chain, args=(idx_list, cancel, cue_path, after_path), daemon=True)
             self.worker.start()
 
-    def _run_chain(self, idx_list, cancel, cue_path=None):
+    def _run_chain(self, idx_list, cancel, cue_path=None, after_path=None):
         if cue_path is not None:                            # spoken step announcement before the music
             if not self._play_cue(cue_path, cancel) or cancel.wait(1.0):
                 return
@@ -652,6 +658,9 @@ class Panel:
             ok = (self._play_local(i, cancel) if t.get('kind') != 'stream' else self._play_stream(i, cancel))
             if not ok or cancel.is_set():
                 return
+        if after_path is not None:                          # "Please rate ... now." after the music
+            if cancel.wait(0.8) or not self._play_cue(after_path, cancel):
+                return
         with self.lock:
             if not cancel.is_set():
                 self.cur, self.mode, self.chain = None, None, None
@@ -670,7 +679,8 @@ class Panel:
             if r.get('error') != 'success' or eid is None:
                 return True                                 # a missing cue must never block the test: just skip it
             self.mode = 'test'
-            self.cur = {'kind': 'cue', 'title': 'Voice cue: ' + path.stem.upper()}
+            self.cur = {'kind': 'cue', 'rate': path.stem.startswith('r'),
+                        'title': 'Voice: please rate now' if path.stem.startswith('r') else 'Voice: step announcement'}
         reason = self.mpv.wait_end(eid, cancel)
         t_end = time.monotonic() + 2
         while reason == 'eof' and not self.mpv.props.get('idle-active') and time.monotonic() < t_end:
@@ -1117,7 +1127,7 @@ class Panel:
                        length=c['length'], source='stream', phase=c['phase'], paused=c.get('t_run') is None
                        and c['phase'] == 'playing')
         elif c.get('kind') == 'cue':
-            now.update(title=c['title'], elapsed=self.mpv.props.get('time-pos') or 0, length=0, cue=True)
+            now.update(title=c['title'], elapsed=self.mpv.props.get('time-pos') or 0, length=0, cue=True, rate=c.get('rate', False))
         elif c.get('kind') == 'gap':
             now.update(gap_left=max(0.0, c['until'] - time.monotonic()), next=c['next'])
         elif c.get('kind') == 'tone':
@@ -1183,10 +1193,10 @@ def update_settings(panel, body):
                     if k == 'uri':
                         t['title'] = ''
                 t[k] = v
-    for k in ('gap', 'target_lufs', 'lib_offset'):
+    for k in ('gap', 'target_lufs', 'lib_offset', 'rate_secs'):
         if k in body:
             s[k] = float(body[k])
-    for k in ('lib_mono', 'lib_match', 'part_d', 'cues'):
+    for k in ('lib_mono', 'lib_match', 'part_d', 'cues', 'auto'):
         if k in body:
             s[k] = bool(body[k])
     for k in ('listener', 'step'):
@@ -1244,7 +1254,7 @@ def make_handler(panel):
             res = {'ok': True}
             try:
                 if p == '/api/play':
-                    panel.play_tracks(body.get('tracks', []), body.get('label'), body.get('cue'))
+                    panel.play_tracks(body.get('tracks', []), body.get('label'), body.get('cue'), body.get('after_cue'))
                 elif p == '/api/stop':
                     panel.stop()
                 elif p == '/api/pause':
