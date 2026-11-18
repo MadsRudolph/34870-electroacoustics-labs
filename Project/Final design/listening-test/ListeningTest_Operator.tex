@@ -34,7 +34,7 @@ The listening test answers three questions the chamber cannot:
 \item USB stick \texttt{34870\_G10\_ListeningTest\_2026-11-18/}: MiniDSP filter files, check tones, the four test excerpts, the vinyl albums, these PDFs.
 \item Mads's PC with the \textbf{Schiit Modi} DAC, its USB cable, and an RCA cable (or RCA to the room's input). Play the FLAC files from the stick, no streaming, no Bluetooth; system volume at 100\,\% and player volume fixed (bit-perfect if the player allows).
 \item Multimeter (AC volts) for the electrical check. Tape and a pen to mark the volume knob.
-\item Printed: one questionnaire per listener plus 3 spares, this sheet, pens, a stopwatch (phone).
+\item Printed: one questionnaire per listener plus 3 spares, this sheet, pens, a stopwatch (phone). Three chairs, with seat labels Left / Middle / Right.
 \item A thin cloth to hang in front of the speaker and the board, if one is available (not required).
 \end{chk}
 
@@ -59,7 +59,7 @@ The Modi puts out about 2\,V; start with the PC volume low and watch the MiniDSP
 
 \subsection*{Set up in the IEC room}
 \begin{chk}
-\item Box at the room's marked loudspeaker position, tweeter at ear height of a seated listener if possible; chair at the marked listening position, facing the box.
+\item Box at the room's marked loudspeaker position, tweeter at ear height of a seated listener if possible; \textbf{three chairs}: Middle at the marked listening position (on axis), Left and Right beside it, as close as is comfortable, all facing the box. Use the same three chair positions in every session.
 \item Board inside the room, wired as in the chamber: amplifier channel 1 $\rightarrow$ woofer, channel 2 $\rightarrow$ board $\rightarrow$ mid + tweeter. Red to + on every driver.
 \item MiniDSP (the room's own card): routing only Input 1 (and 2) $\rightarrow$ Output 1 and Output 2. PEQ, Comp, FIR \textbf{bypassed}; only Xover active.
 \item Output 1 Xover $\rightarrow$ Advanced: delete everything, paste \texttt{MiniDSP\_woofer\_out1.txt}, Process. Output 2: the same with \texttt{MiniDSP\_midtw\_out2.txt}.
@@ -85,7 +85,7 @@ the amplifier channels are swapped (as in runs S and S\_2 on 12 Nov).
 
 \subsection*{Playback level}
 \begin{chk}
-\item With Out 1 at $-5.8$\,dB, play track 4 and set a comfortably loud level at the chair (about 75--80\,dB(A) if a sound level meter or phone app is at hand).
+\item With Out 1 at $-5.8$\,dB, play track 4 and set a comfortably loud level at the middle chair (about 75--80\,dB(A) if a sound level meter or phone app is at hand).
 \item Mark the volume knob with tape. \warn{Never touch the volume again during the test.} Write the setting here: \rule{3cm}{0.4pt}
 \end{chk}
 
@@ -93,46 +93,48 @@ the amplifier channels are swapped (as in runs S and S\_2 on 12 Nov).
 \begin{minipage}{0.2\linewidth}\includegraphics[width=\linewidth]{qr_form.png}\end{minipage}\hfill
 \begin{minipage}{0.76\linewidth}
 Listeners can answer on their phone instead of paper: \textbf{listening.madsrudolph.dev} (same questions, one screen at a time,
-saved even if the page reloads). The guide tells each listener their number. Results and CSV: the private results link
+saved even if the page reloads). Each listener enters the session number and their seat. Results and CSV: the private results link
 (key in \texttt{web/.admin-key}); it fills in the blind conditions automatically from the table in Section~4.
 \end{minipage}
 
 \section{Roles}
 \begin{tabularx}{\linewidth}{@{}lX@{}}\toprule
-Operator (outside) & plays the excerpts, changes Out 1 between samples, swaps Rp in Part C, holds the order table. Never talks to the listener about the settings.\\
+Operator (outside) & plays the excerpts, changes Out 1 between samples, swaps Rp in Part C, holds the order table. Never talks to the listeners about the settings.\\
 Guide (inside) & reads the script, hands out the sheet, keeps time. \textbf{Does not know the order}, so cannot give anything away (double blind).\\
-Listeners & 5 or more; people outside the group if possible. Group members may listen too: tick it on their sheet, analyse them separately.\\\bottomrule
+Listeners & \textbf{three per session} (Left, Middle, Right), two sessions or more; people outside the group if possible. Group members may listen too: they tick it on their sheet, analyse them separately.\\\bottomrule
 \end{tabularx}
-Agree on a signal between guide and operator before the first listener (a text message ``next'' works; keep the door closed).
+Agree on a signal between guide and operator before the first session (a text message ``next'' works; keep the door closed).
 
-\section{Procedure per listener (about 35 minutes)}
+\section{Procedure per session: three listeners at once (about 35 minutes)}
+All three hear the same playback, so the sample order belongs to the \textbf{session}, not to the person.
 \begin{enumerate}[itemsep=2pt]
 \item \textbf{Before they enter:} Out 1 at \textbf{$-5.8$\,dB}, Rp \textbf{8.2\,$\Omega$} (Part A plays the design).
-Write the next listener number on their sheet; the operator looks up that number's orders in the table below.
-\item \textbf{Guide reads aloud:} ``You will hear one loudspeaker playing short excerpts. Please sit still, face the speaker and
-don't talk. Nobody in this room knows the settings. There are no right answers; rate what you hear. The scales are
-explained at the top of the sheet.'' Let them read page 1.
+The guide tells the three listeners the \textbf{session number}; each writes it and their seat (Left / Middle / Right) on the sheet or the phone form.
+The operator looks up that session's order in the table below.
+\item \textbf{Guide reads aloud:} ``You will hear one loudspeaker playing music excerpts. Please stay in your seat, keep your head still and face
+the speaker. Don't talk, don't react, and don't look at each other's answers. Nobody in this room knows the settings. There are no right
+answers; rate what you hear. The scales are explained at the top of the sheet.'' Let them read page 1.
 \item \textbf{Part A} (design settings): tracks 1, 2, 3, 4, each once, with about 40\,s between tracks to fill in the column.
 \item \textbf{Part B}: four samples. Each sample = track 1 then track 3. Between samples the operator sets Out 1 to the next
-value in the listener's order (Part B table) and waits 40\,s for the rating. Same order of tracks every time.
+value in the session's order (Part B table) and waits 40\,s, until all three have rated. Same order of tracks every time.
 \item Put Out 1 back to $-5.8$\,dB.
-\item \textbf{Part C}: the guide takes the listener outside, away from the door. The operator goes in and sets Rp for sample X
-(Part C table), even if it is already right: always unscrew and refit, so the sound of a swap gives nothing away. Listener and guide
+\item \textbf{Part C}: the guide takes \textbf{all three listeners} outside, away from the door. The operator goes in and sets Rp for sample X
+(Part C table), even if it is already right: always unscrew and refit, so the sound of a swap gives nothing away. Listeners and guide
 return; track 4 then track 2; rate X. Out again, the operator sets the Y value, back in, track 4 then track 2, rate Y.
 Leave Rp at \textbf{8.2\,$\Omega$} afterwards.
-\item Last question, thank them, collect the sheet. The operator fills in the grey line at the bottom of page 2.
+\item Last question, thank them, collect the sheets (check that each has the session number and a seat). The operator fills in the grey line at the bottom of page 2.
 \end{enumerate}
-Each listener takes about 35 minutes (Part A 9, Part B 15, Part C 9, intro 2): five listeners need about 3 hours. Short on time: stop each Part B and C sample after the first track, or run Part C with only some listeners; Parts A and B matter most.
+Each session takes about 35 minutes (Part A 9, Part B 15, Part C 9, intro 2) for three listeners: two sessions (6 listeners) need about 1 h 15 min. Short on time: stop each Part B and C sample after the first track, or run Part C with only some listeners; Parts A and B matter most.
 
 \section{Sample orders}
 Part B conditions (MiniDSP Output 1 gain): \textbf{L} $=-7.8$\,dB (bass $-2$\,dB), \textbf{D} $=-5.8$\,dB (design),
-\textbf{H} $=-3.8$\,dB (bass $+2$\,dB). D is played twice as a hidden repeat: if one listener's two D ratings differ by more than 3 points,
+\textbf{H} $=-3.8$\,dB (bass $+2$\,dB). D is played twice as a hidden repeat: if a listener's two D ratings differ by more than 3 points,
 that listener is guessing. Part C: \textbf{R8} $=$ Rp 8.2\,$\Omega$, \textbf{R3} $=$ Rp 3.3\,$\Omega$.
 
 \begin{center}
 \renewcommand{\arraystretch}{1.25}
 \begin{tabular}{@{}c|cccc|cc|l@{}}\toprule
-Listener & \multicolumn{4}{c|}{Part B, sample 1 -- 4 (Out 1 gain)} & \multicolumn{2}{c|}{Part C} & Name / initials\\
+Session & \multicolumn{4}{c|}{Part B, sample 1 -- 4 (Out 1 gain)} & \multicolumn{2}{c|}{Part C} & Time / notes\\
 no. & 1 & 2 & 3 & 4 & X & Y & \\\midrule
 1 & D $-5.8$ & L $-7.8$ & D $-5.8$ & H $-3.8$ & R8 & R3 & \rule{4cm}{0.4pt}\\
 2 & H $-3.8$ & D $-5.8$ & L $-7.8$ & D $-5.8$ & R3 & R8 & \rule{4cm}{0.4pt}\\
@@ -140,11 +142,10 @@ no. & 1 & 2 & 3 & 4 & X & Y & \\\midrule
 4 & L $-7.8$ & D $-5.8$ & H $-3.8$ & D $-5.8$ & R3 & R8 & \rule{4cm}{0.4pt}\\
 5 & D $-5.8$ & H $-3.8$ & D $-5.8$ & L $-7.8$ & R8 & R3 & \rule{4cm}{0.4pt}\\
 6 & D $-5.8$ & L $-7.8$ & H $-3.8$ & D $-5.8$ & R3 & R8 & \rule{4cm}{0.4pt}\\\midrule
-7 & \multicolumn{6}{l|}{as listener 1 \quad(8 = 2, 9 = 3, \dots)} & \rule{4cm}{0.4pt}\\
-8 & \multicolumn{6}{l|}{as listener 2} & \rule{4cm}{0.4pt}\\\bottomrule
+7 & \multicolumn{6}{l|}{as session 1 \quad(8 = 2, 9 = 3, \dots)} & \rule{4cm}{0.4pt}\\\bottomrule
 \end{tabular}
 \end{center}
-Assign listener numbers in arrival order, write the number on the sheet before it goes into the room, and do not show this table to anyone inside.
+Number the sessions 1, 2, 3, \dots\ in order, and do not show this table to anyone inside. Each listener is identified by session + seat (e.g.\ 2M); the results page uses the same.
 
 \section{Afterwards}
 \begin{chk}

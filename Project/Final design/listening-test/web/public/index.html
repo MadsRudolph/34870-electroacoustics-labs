@@ -39,6 +39,7 @@
   .scale.n11 { grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 4px; }
   .scale.n3, .scale.n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .scale.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scale.n3s { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .opt { position: relative; }
   .opt input { position: absolute; opacity: 0; inset: 0; margin: 0; }
   .opt span { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 46px; padding: 4px 2px;
@@ -165,18 +166,20 @@
   }
 
   function renderIntro() {
-    const L = answers.listener ?? '';
+    const L = answers.session ?? '';
     return `<h1>Listening test</h1>
       <p class="sub">One loudspeaker, music excerpts of about 1&frac12; minutes. About 35 minutes in all.</p>
-      <div class="card" data-name="listener"><p class="q">Listener number</p>
-        <p class="hint">The test leader gives you this number.</p>
-        <input type="number" id="listener" inputmode="numeric" min="1" max="200" value="${esc(L)}" aria-label="Listener number"></div>
+      <div class="card" data-name="session"><p class="q">Session number</p>
+        <p class="hint">The test leader tells you this number. The three of you in the room share it.</p>
+        <input type="number" id="session" inputmode="numeric" min="1" max="100" value="${esc(L)}" aria-label="Session number"></div>
+      ${choiceCard('seat', 'Which seat are you in?', ['L', 'M', 'R'], ['Left', 'Middle', 'Right'], 'Seen from your chair, facing the loudspeaker.')}
       ${choiceCard('hearing', 'Do you have any known hearing problems?', ['no', 'yes'], ['No', 'Yes'])}
       ${answers.hearing === 'yes' ? `<div class="card"><p class="q">Which?</p><input type="text" id="hearing_note" maxlength="300" value="${esc(answers.hearing_note || '')}"></div>` : ''}
       ${choiceCard('experience', 'Listening experience', ['none', 'music', 'audio'], ['None', 'I play music', 'I work with audio or study acoustics'])}
       ${choiceCard('group_member', 'Have you worked on this loudspeaker?', ['no', 'yes'], ['No', 'Yes'])}
       <div class="card"><p class="q">Instructions</p><ul class="tight">
-        <li>Sit in the marked chair, keep your head still and face the loudspeaker. Please don't talk during the test.</li>
+        <li>Stay in your seat, keep your head still and face the loudspeaker.</li>
+        <li>Please don't talk, react or look at the others' answers: rate on your own.</li>
         <li>You do <b>not</b> know which settings are used, and nobody in the room does either.</li>
         <li>There are no right answers. Rate what <i>you</i> hear; if unsure, make your best guess.</li>
         <li>Each excerpt is played once. Ask the test leader if you need to hear it again.</li>
@@ -184,16 +187,16 @@
       </ul></div>`;
   }
   function checkIntro() {
-    const n = Number(answers.listener);
-    const ok = Number.isInteger(n) && n >= 1 && n <= 200;
-    mark('listener', !ok);
-    const a = ['hearing', 'experience', 'group_member'].map(k => { const m = answers[k] == null; mark(k, m); return m; });
+    const n = Number(answers.session);
+    const ok = Number.isInteger(n) && n >= 1 && n <= 100;
+    mark('session', !ok);
+    const a = ['seat', 'hearing', 'experience', 'group_member'].map(k => { const m = answers[k] == null; mark(k, m); return m; });
     return ok && !a.some(Boolean);
   }
 
   function choiceCard(name, title, values, labels, hint) {
     const cur = answers[name];
-    const n = values.length <= 2 ? 'n2' : 'n3';
+    const n = values.length <= 2 ? 'n2' : (labels.every(l => l.length <= 8) ? 'n3s' : 'n3');
     const opts = values.map((v, i) => `<label class="opt"><input type="radio" name="${name}" value="${esc(v)}" ${cur === v ? 'checked' : ''}><span>${esc(labels[i])}</span></label>`).join('');
     return `<fieldset class="card" data-name="${name}"><legend class="q">${esc(title)}</legend>${hint ? `<p class="hint">${esc(hint)}</p>` : ''}
       <div class="scale ${n}">${opts}</div></fieldset>`;
@@ -229,7 +232,7 @@
   function renderReview() {
     if (sent) return `<div class="done"><div class="big">✓</div><h1>Thank you for listening!</h1>
       <p class="sub">Your answers have been sent. You can close this page now.</p></div>`;
-    return `<h2>Ready to send</h2><div class="card"><p>Listener <b>${esc(answers.listener)}</b>. Tap <b>Send answers</b> to finish.
+    return `<h2>Ready to send</h2><div class="card"><p>Session <b>${esc(answers.session)}</b>, ${esc({ L: 'left', M: 'middle', R: 'right' }[answers.seat] || '')} seat. Tap <b>Send answers</b> to finish.
       You can still go back and change anything.</p></div><p class="err">${esc(sendError)}</p>`;
   }
 
@@ -264,7 +267,7 @@
   });
   app.addEventListener('input', e => {
     const t = e.target;
-    if (t.id === 'listener') answers.listener = t.value === '' ? null : Number(t.value);
+    if (t.id === 'session') answers.session = t.value === '' ? null : Number(t.value);
     else if (t.tagName === 'TEXTAREA' || t.type === 'text') answers[t.id] = t.value;
     save();
   });

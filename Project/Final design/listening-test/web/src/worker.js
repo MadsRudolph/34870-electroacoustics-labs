@@ -1,14 +1,16 @@
 // Listening test (34870, Group 10, System D): stores questionnaire answers in KV and shows the results.
 //   POST /api/submit                 one listener's answers (from public/index.html)
+// Three listeners sit in the room at once (seats L, M, R), so the sample order belongs to the SESSION:
+// order row = ((session - 1) mod 6) + 1. A listener is identified as <session><seat>, e.g. 3M.
 //   GET  /results?key=ADMIN_KEY      summary page for the day (means per condition, consistency check)
 //   GET  /results.csv?key=ADMIN_KEY  long-format CSV, same columns as ../results_template.csv (+ id, submitted)
 // The blind sample orders below must match the table in ListeningTest_Operator.pdf.
 
-const ORDER_B = { // listener row -> condition of samples 1..4 (Out 1 gain: L -7.8, D -5.8, H -3.8 dB)
+const ORDER_B = { // order row -> condition of samples 1..4 (Out 1 gain: L -7.8, D -5.8, H -3.8 dB)
   1: ['D', 'L', 'D', 'H'], 2: ['H', 'D', 'L', 'D'], 3: ['D', 'H', 'L', 'D'],
   4: ['L', 'D', 'H', 'D'], 5: ['D', 'H', 'D', 'L'], 6: ['D', 'L', 'H', 'D'],
 };
-const ORDER_C = { // listener row -> [X, Y] (R8 = Rp 8.2 ohm, R3 = Rp 3.3 ohm)
+const ORDER_C = { // order row -> [X, Y] (R8 = Rp 8.2 ohm, R3 = Rp 3.3 ohm)
   1: ['R8', 'R3'], 2: ['R3', 'R8'], 3: ['R8', 'R3'], 4: ['R3', 'R8'], 5: ['R8', 'R3'], 6: ['R3', 'R8'],
 };
 const row = n => ((n - 1) % 6) + 1;
@@ -53,7 +55,8 @@ async function submit(req, env) {
 function inRange(v, [lo, hi]) { return Number.isInteger(v) && v >= lo && v <= hi; }
 function validate(a) {
   if (!a || typeof a !== 'object') return 'no answers';
-  if (!inRange(a.listener, [1, 200])) return 'listener number';
+  if (!inRange(a.session, [1, 100])) return 'session number';
+  if (!['L', 'M', 'R'].includes(a.seat)) return 'seat';
   for (const k of ['hearing', 'experience', 'group_member']) if (typeof a[k] !== 'string') return k;
   for (const t of TRACKS) for (const [k, rg] of Object.entries(A_ATTR)) if (!inRange(a[`A_${t}_${k}`], rg)) return `A ${t} ${k}`;
   for (const s of SAMPLES_B) for (const [k, rg] of Object.entries(B_ATTR)) if (!inRange(a[`B_${s}_${k}`], rg)) return `B ${s} ${k}`;
@@ -86,8 +89,9 @@ async function loadAll(env) {
 function rows(subs) {
   const out = [];
   for (const s of subs) {
-    const a = s.answers, n = a.listener, rw = row(n);
-    const base = { id: s.id, submitted: s.submitted, listener: n, date: s.submitted.slice(0, 10), group_member: a.group_member,
+    const a = s.answers, rw = row(a.session);
+    const base = { id: s.id, submitted: s.submitted, listener: `${a.session}${a.seat}`, session: a.session, seat: a.seat,
+      date: s.submitted.slice(0, 10), group_member: a.group_member,
       experience: a.experience, hearing: a.hearing === 'yes' ? `yes: ${a.hearing_note || ''}` : a.hearing };
     const push = (part, item, condition, attribute, score) => out.push({ ...base, part, item, condition, attribute, score });
     for (const t of TRACKS) for (const k of Object.keys(A_ATTR)) push('A', t, 'D_R8', k, a[`A_${t}_${k}`]);
@@ -106,7 +110,7 @@ function rows(subs) {
   return out;
 }
 
-const COLS = ['listener', 'date', 'group_member', 'experience', 'hearing', 'part', 'item', 'condition', 'attribute', 'score', 'id', 'submitted'];
+const COLS = ['listener', 'session', 'seat', 'date', 'group_member', 'experience', 'hearing', 'part', 'item', 'condition', 'attribute', 'score', 'id', 'submitted'];
 const csvCell = v => { const s = v == null ? '' : String(v); return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 function toCsv(subs) { return [COLS.join(','), ...rows(subs).map(r => COLS.map(c => csvCell(r[c])).join(','))].join('\n') + '\n'; }
 
@@ -124,7 +128,7 @@ const cell = st => `<td>${st.m}<span class="sd"> ± ${st.sd}</span></td>`;
 function summaryHtml(subs, key) {
   const R = rows(subs).filter(r => r.attribute !== 'comment');
   const pick = (f) => R.filter(f).map(r => r.score);
-  const listeners = subs.map(s => s.answers.listener);
+  const listeners = subs.map(s => `${s.answers.session}${s.answers.seat}`);
   const dupes = [...new Set(listeners.filter((n, i) => listeners.indexOf(n) !== i))];
 
   const aRows = Object.keys(A_ATTR).map(k => `<tr><th>${k}</th>${TRACKS.map(t => cell(stats(pick(r => r.part === 'A' && r.item === t && r.attribute === k)))).join('')}
@@ -142,17 +146,17 @@ function summaryHtml(subs, key) {
   const cNone = R.filter(r => r.part === 'C' && r.attribute === 'preferred' && r.condition === 'none').length;
 
   const perL = subs.map(s => {
-    const a = s.answers, rw = row(a.listener);
+    const a = s.answers, rw = row(a.session);
     const dIdx = ORDER_B[rw].map((c, i) => c === 'D' ? i : -1).filter(i => i >= 0);
     const d = dIdx.map(i => a[`B_sample${i + 1}_overall`]);
     const diff = Math.abs(d[0] - d[1]);
     const meanA = stats(TRACKS.map(t => a[`A_${t}_overall`])).m;
-    return `<tr><td>${a.listener}</td><td>${rw}</td><td>${esc(a.group_member)}</td><td>${esc(a.experience)}</td><td>${meanA}</td>
+    return `<tr><td>${a.session}${esc(a.seat)}</td><td>${rw}</td><td>${esc(a.group_member)}</td><td>${esc(a.experience)}</td><td>${meanA}</td>
       <td>${d.join(' / ')}</td><td class="${diff > 3 ? 'bad' : ''}">${diff}${diff > 3 ? ' (inconsistent)' : ''}</td>
       <td>${a.C_run === 'no' ? 'skipped' : esc(a.C_pref)}</td><td class="sd">${esc(s.submitted.slice(11, 16))} UTC</td></tr>`;
   }).join('');
   const comments = rows(subs).filter(r => r.attribute === 'comment').map(r =>
-    `<li><b>L${r.listener}</b> <span class="sd">${r.part} ${r.item}${r.condition ? ' · ' + r.condition : ''}</span>: ${esc(r.score)}</li>`).join('');
+    `<li><b>${esc(r.listener)}</b> <span class="sd">${r.part} ${r.item}${r.condition ? ' · ' + r.condition : ''}</span>: ${esc(r.score)}</li>`).join('');
 
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex"><title>Listening Test Results</title><style>
@@ -165,14 +169,15 @@ a{color:var(--accent)}p{margin:4px 0}</style></head><body><main>
 <h1>Listening test results</h1>
 <p>${subs.length} submission(s). Values are mean ± standard deviation. Amount scales: −2 far too little, 0 just right, +2 far too much.
 <a href="/results.csv?key=${encodeURIComponent(key)}">Download CSV</a> · reload the page for new answers.</p>
-${dupes.length ? `<p class="bad">Listener number used more than once: ${dupes.join(', ')}. Check the sheets; both submissions are kept.</p>` : ''}
+${dupes.length ? `<p class="bad">Session + seat used more than once: ${dupes.join(', ')}. Check the sheets; both submissions are kept.</p>` : ''}
 <h2>Part A · the design (Out 1 −5.8 dB, Rp 8.2 Ω)</h2><div class="wrap"><table><tr><th></th>${TRACKS.map(t => `<th>${t}</th>`).join('')}<th>all tracks</th></tr>${aRows}</table></div>
+<h2>By seat · overall 0–10</h2><p class="sd">Left and right sit off axis, so treble may read lower there.</p><div class="wrap"><table><tr><th>seat</th><th>Part A, all tracks</th><th>Part A treble amount</th><th>Part B, D samples</th></tr>${['L', 'M', 'R'].map(st => `<tr><th>${{ L: 'Left', M: 'Middle', R: 'Right' }[st]}</th>${cell(stats(pick(r => r.seat === st && r.part === 'A' && r.attribute === 'overall')))}${cell(stats(pick(r => r.seat === st && r.part === 'A' && r.attribute === 'treble_amount')))}${cell(stats(pick(r => r.seat === st && r.part === 'B' && r.condition === 'D' && r.attribute === 'overall')))}</tr>`).join('')}</table></div>
 <h2>Part B · woofer level</h2><div class="wrap"><table><tr><th>condition</th><th>overall 0–10</th><th>bass amount</th><th>chosen best</th></tr>${bRows}
 <tr><th>no difference</th><td></td><td></td><td>${bNone}</td></tr></table></div>
 <p class="sd">Keep −5.8 dB if D's bass amount is near 0 and D scores at least as well as L and H.</p>
 <h2>Part C · tweeter level</h2><div class="wrap"><table><tr><th>condition</th><th>overall 0–10</th><th>treble amount</th><th>treble smoothness</th><th>preferred</th></tr>${cRows}
 <tr><th>no difference</th><td></td><td></td><td></td><td>${cNone}</td></tr></table></div>
-<h2>Per listener</h2><div class="wrap"><table><tr><th>listener</th><th>order row</th><th>group</th><th>experience</th><th>Part A overall</th><th>D repeat scores</th><th>|difference|</th><th>Part C pref.</th><th>sent</th></tr>${perL}</table></div>
+<h2>Per listener</h2><div class="wrap"><table><tr><th>session + seat</th><th>order row</th><th>group</th><th>experience</th><th>Part A overall</th><th>D repeat scores</th><th>|difference|</th><th>Part C pref.</th><th>sent</th></tr>${perL}</table></div>
 <h2>Comments</h2><ul>${comments || '<li class="sd">none yet</li>'}</ul>
 </main></body></html>`;
 }
