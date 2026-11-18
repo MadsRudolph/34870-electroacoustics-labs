@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Loudspeaker Listening Test</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --bg: #f6f6f4; --card: #ffffff; --text: #1b1c1e; --muted: #62656b; --line: #d9dadd;
+    --accent: #1f5fbf; --accent-text: #ffffff; --chip: #eef0f3; --err: #b3261e; --ok: #1e7a3c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #131416; --card: #1c1d20; --text: #ececee; --muted: #9a9ca3; --line: #34363b;
+      --accent: #6aa3ff; --accent-text: #0b1220; --chip: #26282c; --err: #ff8a80; --ok: #6fd28f; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body { font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
+  main { max-width: 560px; margin: 0 auto; padding: 16px 16px 120px; }
+  header.top { position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 10px 16px 8px; border-bottom: 1px solid var(--line); }
+  header.top .row { max-width: 560px; margin: 0 auto; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  header.top .title { font-weight: 600; font-size: 15px; }
+  header.top .where { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .bar { max-width: 560px; margin: 8px auto 0; height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+  .bar > div { height: 100%; background: var(--accent); width: 0; transition: width .2s; }
+  h1 { font-size: 24px; margin: 8px 0 4px; }
+  h2 { font-size: 20px; margin: 4px 0 2px; }
+  .sub { color: var(--muted); margin: 0 0 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 12px 0; }
+  .q { margin: 0 0 4px; font-weight: 600; }
+  .hint { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+  fieldset { padding: 14px; margin: 12px 0; min-width: 0; }
+  fieldset > legend { float: left; width: 100%; padding: 0; margin: 0 0 8px; }
+  fieldset > legend + * { clear: both; }
+  .scale { display: grid; gap: 6px; }
+  .scale.n5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .scale.n11 { grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 4px; }
+  .scale.n3, .scale.n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scale.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .opt { position: relative; }
+  .opt input { position: absolute; opacity: 0; inset: 0; margin: 0; }
+  .opt span { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 46px; padding: 4px 2px;
+    border: 1px solid var(--line); border-radius: 9px; background: var(--chip); font-size: 14px; line-height: 1.15; cursor: pointer;
+    user-select: none; -webkit-user-select: none; }
+  .scale.n11 .opt span { font-size: 15px; min-height: 44px; border-radius: 7px; }
+  .opt input:checked + span { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  .opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ends { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-top: 4px; gap: 12px; }
+  .ends span:last-child { text-align: right; }
+  .missing .q { color: var(--err); }
+  .missing { border-color: var(--err); }
+  textarea, input[type=text], input[type=number] { width: 100%; font: inherit; color: var(--text); background: var(--card);
+    border: 1px solid var(--line); border-radius: 9px; padding: 10px; }
+  textarea { min-height: 90px; resize: vertical; }
+  input[type=number] { font-size: 22px; max-width: 140px; }
+  ul.tight { margin: 6px 0; padding-left: 20px; }
+  ul.tight li { margin: 3px 0; }
+  .nav { position: fixed; left: 0; right: 0; bottom: 0; background: var(--bg); border-top: 1px solid var(--line);
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); }
+  .nav .row { max-width: 560px; margin: 0 auto; display: flex; gap: 10px; }
+  button { font: inherit; border-radius: 10px; padding: 13px 16px; border: 1px solid var(--line); background: var(--card); color: var(--text); cursor: pointer; }
+  button.primary { flex: 1; background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  button:disabled { opacity: .5; cursor: default; }
+  .err { color: var(--err); font-size: 14px; min-height: 1.2em; margin: 6px 0 0; }
+  .done { text-align: center; padding-top: 40px; }
+  .done .big { font-size: 48px; color: var(--ok); }
+  .tag { display: inline-block; font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; }
+  @media (max-width: 360px) { .opt span { font-size: 12.5px; } .scale.n11 .opt span { font-size: 13px; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="row"><span class="title">Loudspeaker listening test</span><span class="where" id="where"></span></div>
+  <div class="bar"><div id="progress"></div></div>
+</header>
+<main id="app" aria-live="polite"></main>
+<nav class="nav" id="nav">
+  <div class="row">
+    <button id="back" type="button">Back</button>
+    <button id="next" type="button" class="primary">Next</button>
+  </div>
+</nav>
+
+<script>
+(() => {
+  'use strict';
+  const STORE = 'lt-draft-v1';
+
+  // ---------- scales ----------
+  const AMOUNT = { kind: 'amount', values: [-2, -1, 0, 1, 2],
+    labels: ['far too little', 'too little', 'just right', 'too much', 'far too much'] };
+  const Q15 = (lo, hi) => ({ kind: 'q15', values: [1, 2, 3, 4, 5], labels: ['1', '2', '3', '4', '5'], lo, hi });
+  const OVERALL = { kind: 'overall', values: [0,1,2,3,4,5,6,7,8,9,10], labels: ['0','1','2','3','4','5','6','7','8','9','10'],
+    lo: '0 = as bad as you can imagine', hi: '10 = as good as you can imagine' };
+
+  const PART_A_ITEMS = [
+    ['bass_amount', 'Bass amount', AMOUNT],
+    ['bass_quality', 'Bass quality', Q15('1 boomy, muddy', '5 tight, clean')],
+    ['natural', 'Voices and instruments sound natural', Q15('1 not at all', '5 completely')],
+    ['treble_amount', 'Treble amount', AMOUNT],
+    ['treble_smooth', 'Treble smoothness', Q15('1 harsh, sharp "s" sounds', '5 smooth')],
+    ['clarity', 'Clarity', Q15('1 muffled, blurred', '5 clear, detailed')],
+    ['overall', 'Overall sound quality', OVERALL],
+  ];
+  const PART_B_ITEMS = [
+    ['bass_amount', 'Bass amount', AMOUNT],
+    ['overall', 'Overall sound quality', OVERALL],
+  ];
+  const PART_C_ITEMS = [
+    ['treble_amount', 'Treble amount', AMOUNT],
+    ['treble_smooth', 'Treble smoothness', Q15('1 harsh, sharp "s" sounds', '5 smooth')],
+    ['overall', 'Overall sound quality', OVERALL],
+  ];
+  const TRACKS = [['track1', 'Track 1', 'female voice'], ['track2', 'Track 2', 'male voice'],
+                  ['track3', 'Track 3', 'bass-rich'], ['track4', 'Track 4', 'full band']];
+
+  // ---------- steps ----------
+  const steps = [];
+  steps.push({ id: 'intro', where: 'Start', render: renderIntro, check: checkIntro });
+  TRACKS.forEach(([key, name, what], i) => steps.push({ id: 'A-' + key, where: `Part A · ${i + 1}/4`,
+    render: () => renderScales(`Part A · ${name}`, `${what[0].toUpperCase() + what.slice(1)}. Rate the loudspeaker as it is.`, 'A', key, PART_A_ITEMS),
+    check: () => checkScales('A', key, PART_A_ITEMS) }));
+  steps.push({ id: 'A-note', where: 'Part A', render: () => renderText('Part A', 'Anything that stood out?',
+    'A sound that seemed wrong, too loud or missing. Optional.', 'A_note'), check: () => true });
+  steps.push({ id: 'B-intro', where: 'Part B', render: renderBIntro, check: () => true });
+  [1, 2, 3, 4].forEach(k => steps.push({ id: 'B-' + k, where: `Part B · ${k}/4`,
+    render: () => renderScales(`Part B · Sample ${k}`, 'Track 1, then track 3. Judge this sample on its own.', 'B', 'sample' + k, PART_B_ITEMS, 'B_comment_sample' + k),
+    check: () => checkScales('B', 'sample' + k, PART_B_ITEMS) }));
+  steps.push({ id: 'B-best', where: 'Part B', render: () => renderChoice('Part B', 'Which sample did you like best?',
+    'B_best', ['1', '2', '3', '4', 'no difference'], ['Sample 1', 'Sample 2', 'Sample 3', 'Sample 4', 'No difference']),
+    check: () => checkChoice('B_best') });
+  steps.push({ id: 'C-run', where: 'Part C', render: () => renderChoice('Part C', 'Is Part C being run for you?',
+    'C_run', ['yes', 'no'], ['Yes', 'No, skip it'], 'The test leader will tell you.'), check: () => checkChoice('C_run') });
+  ['X', 'Y'].forEach(s => steps.push({ id: 'C-' + s, where: 'Part C', skip: () => answers.C_run === 'no',
+    render: () => renderScales(`Part C · Sample ${s}`, 'Track 4, then track 2. You will be asked to step outside for a minute before each sample.', 'C', s, PART_C_ITEMS),
+    check: () => checkScales('C', s, PART_C_ITEMS) }));
+  steps.push({ id: 'C-pref', where: 'Part C', skip: () => answers.C_run === 'no',
+    render: () => renderChoice('Part C', 'Which did you prefer?', 'C_pref', ['X', 'Y', 'no difference'], ['Sample X', 'Sample Y', 'No difference']),
+    check: () => checkChoice('C_pref') });
+  steps.push({ id: 'last', where: 'Last question', render: () => renderText('Last question',
+    'If you could change one thing about how this loudspeaker sounds, what would it be?', 'Optional, but very helpful.', 'last_change'),
+    check: () => true });
+  steps.push({ id: 'review', where: 'Send', render: renderReview, check: () => true, submit: true });
+
+  // ---------- state ----------
+  let answers = {}, idx = 0, sending = false, sent = false, sendError = '';
+  try { const d = JSON.parse(localStorage.getItem(STORE) || 'null'); if (d && d.answers) { answers = d.answers; idx = Math.min(d.idx || 0, steps.length - 1); } } catch (e) {}
+  const save = () => { try { localStorage.setItem(STORE, JSON.stringify({ answers, idx })); } catch (e) {} };
+  const clear = () => { try { localStorage.removeItem(STORE); } catch (e) {} };
+
+  const app = document.getElementById('app'), backBtn = document.getElementById('back'), nextBtn = document.getElementById('next');
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const key = (part, item, attr) => `${part}_${item}_${attr}`;
+
+  function scaleHtml(name, scale, title) {
+    const cur = answers[name];
+    const cls = scale.values.length === 11 ? 'n11' : 'n5';
+    const opts = scale.values.map((v, i) => `<label class="opt"><input type="radio" name="${name}" value="${v}" ${cur === v ? 'checked' : ''}
+      aria-label="${esc(title + ': ' + scale.labels[i])}"><span>${esc(scale.labels[i])}</span></label>`).join('');
+    const ends = scale.lo ? `<div class="ends"><span>${esc(scale.lo)}</span><span>${esc(scale.hi)}</span></div>` : '';
+    return `<fieldset class="card" data-name="${name}"><legend class="q">${esc(title)}</legend>
+      <div class="scale ${cls}">${opts}</div>${ends}</fieldset>`;
+  }
+
+  function renderIntro() {
+    const L = answers.listener ?? '';
+    return `<h1>Listening test</h1>
+      <p class="sub">One loudspeaker, short music excerpts. About 20 minutes.</p>
+      <div class="card" data-name="listener"><p class="q">Listener number</p>
+        <p class="hint">The test leader gives you this number.</p>
+        <input type="number" id="listener" inputmode="numeric" min="1" max="200" value="${esc(L)}" aria-label="Listener number"></div>
+      ${choiceCard('hearing', 'Do you have any known hearing problems?', ['no', 'yes'], ['No', 'Yes'])}
+      ${answers.hearing === 'yes' ? `<div class="card"><p class="q">Which?</p><input type="text" id="hearing_note" maxlength="300" value="${esc(answers.hearing_note || '')}"></div>` : ''}
+      ${choiceCard('experience', 'Listening experience', ['none', 'music', 'audio'], ['None', 'I play music', 'I work with audio or study acoustics'])}
+      ${choiceCard('group_member', 'Have you worked on this loudspeaker?', ['no', 'yes'], ['No', 'Yes'])}
+      <div class="card"><p class="q">Instructions</p><ul class="tight">
+        <li>Sit in the marked chair, keep your head still and face the loudspeaker. Please don't talk during the test.</li>
+        <li>You do <b>not</b> know which settings are used, and nobody in the room does either.</li>
+        <li>There are no right answers. Rate what <i>you</i> hear; if unsure, make your best guess.</li>
+        <li>Each excerpt is played once. Ask the test leader if you need to hear it again.</li>
+        <li><b>Amount</b> scales: middle = just right. <b>1–5</b>: 5 is best. <b>Overall 0–10</b>: 10 = as good as you can imagine.</li>
+      </ul></div>`;
+  }
+  function checkIntro() {
+    const n = Number(answers.listener);
+    const ok = Number.isInteger(n) && n >= 1 && n <= 200;
+    mark('listener', !ok);
+    const a = ['hearing', 'experience', 'group_member'].map(k => { const m = answers[k] == null; mark(k, m); return m; });
+    return ok && !a.some(Boolean);
+  }
+
+  function choiceCard(name, title, values, labels, hint) {
+    const cur = answers[name];
+    const n = values.length <= 2 ? 'n2' : 'n3';
+    const opts = values.map((v, i) => `<label class="opt"><input type="radio" name="${name}" value="${esc(v)}" ${cur === v ? 'checked' : ''}><span>${esc(labels[i])}</span></label>`).join('');
+    return `<fieldset class="card" data-name="${name}"><legend class="q">${esc(title)}</legend>${hint ? `<p class="hint">${esc(hint)}</p>` : ''}
+      <div class="scale ${n}">${opts}</div></fieldset>`;
+  }
+  function renderChoice(part, title, name, values, labels, hint) {
+    return `<h2>${esc(part)}</h2><p class="sub">&nbsp;</p>${choiceCard(name, title, values, labels, hint)}`;
+  }
+  const checkChoice = name => { const m = answers[name] == null; mark(name, m); return !m; };
+
+  function renderScales(head, sub, part, item, items, commentKey) {
+    return `<h2>${esc(head)}</h2><p class="sub">${esc(sub)}</p>` +
+      items.map(([attr, title, sc]) => scaleHtml(key(part, item, attr), sc, title)).join('') +
+      (commentKey ? `<div class="card"><p class="q">Short comment <span class="tag">optional</span></p>
+        <textarea id="${commentKey}" maxlength="500">${esc(answers[commentKey] || '')}</textarea></div>` : '');
+  }
+  function checkScales(part, item, items) {
+    let ok = true;
+    items.forEach(([attr]) => { const k = key(part, item, attr); const m = answers[k] == null; mark(k, m); if (m) ok = false; });
+    return ok;
+  }
+
+  function renderText(head, q, hint, name) {
+    return `<h2>${esc(head)}</h2><p class="sub">&nbsp;</p><div class="card"><p class="q">${esc(q)}</p><p class="hint">${esc(hint)}</p>
+      <textarea id="${name}" maxlength="1000">${esc(answers[name] || '')}</textarea></div>`;
+  }
+
+  function renderBIntro() {
+    return `<h2>Part B · compare four samples</h2>
+      <div class="card"><p>You will hear four samples. Each one is <b>track 1, then track 3</b>.</p>
+      <p>The samples may sound different or the same. Judge each one on its own, then pick your favourite at the end.</p></div>`;
+  }
+
+  function renderReview() {
+    if (sent) return `<div class="done"><div class="big">✓</div><h1>Thank you for listening!</h1>
+      <p class="sub">Your answers have been sent. Please hand the phone back to the test leader.</p></div>`;
+    return `<h2>Ready to send</h2><div class="card"><p>Listener <b>${esc(answers.listener)}</b>. Tap <b>Send answers</b> to finish.
+      You can still go back and change anything.</p></div><p class="err">${esc(sendError)}</p>`;
+  }
+
+  function mark(name, bad) {
+    const el = app.querySelector(`[data-name="${name}"]`);
+    if (el) el.classList.toggle('missing', !!bad);
+  }
+
+  // ---------- navigation ----------
+  const visible = () => steps.map((s, i) => i).filter(i => !(steps[i].skip && steps[i].skip()));
+  function render() {
+    const s = steps[idx];
+    app.innerHTML = s.render() + '<p class="err" id="steperr"></p>';
+    document.getElementById('where').textContent = s.where;
+    const vis = visible(), pos = vis.indexOf(idx);
+    document.getElementById('progress').style.width = `${Math.round(100 * pos / (vis.length - 1))}%`;
+    backBtn.style.visibility = (idx === 0 || sent) ? 'hidden' : 'visible';
+    nextBtn.textContent = s.submit ? (sent ? 'Start a new listener' : 'Send answers') : 'Next';
+    nextBtn.disabled = sending;
+    window.scrollTo(0, 0);
+  }
+  app.addEventListener('change', e => {
+    const t = e.target;
+    if (t.type === 'radio') {
+      const v = t.value, num = Number(v);
+      answers[t.name] = (v !== '' && !Number.isNaN(num) && /^-?\d+$/.test(v)) ? num : v;
+      const fs = t.closest('fieldset'); if (fs) fs.classList.remove('missing');
+      if (t.name === 'hearing') { save(); render(); return; }
+    }
+    save();
+  });
+  app.addEventListener('input', e => {
+    const t = e.target;
+    if (t.id === 'listener') answers.listener = t.value === '' ? null : Number(t.value);
+    else if (t.tagName === 'TEXTAREA' || t.type === 'text') answers[t.id] = t.value;
+    save();
+  });
+
+  function go(dir) {
+    const vis = visible(); let p = vis.indexOf(idx) + dir;
+    p = Math.max(0, Math.min(vis.length - 1, p));
+    idx = vis[p]; save(); render();
+  }
+  backBtn.addEventListener('click', () => go(-1));
+  nextBtn.addEventListener('click', async () => {
+    const s = steps[idx];
+    if (s.submit) {
+      if (sent) { answers = {}; idx = 0; sent = false; clear(); render(); return; }
+      await send(); return;
+    }
+    if (!s.check()) { document.getElementById('steperr').textContent = 'Please answer the questions marked in red.'; return; }
+    go(1);
+  });
+
+  async function send() {
+    if (sending) return;
+    sending = true; nextBtn.disabled = true; nextBtn.textContent = 'Sending…';
+    try {
+      const body = { answers, client_time: new Date().toISOString() };
+      const r = await fetch('/api/submit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) throw new Error(j.error || `HTTP ${r.status}`);
+      sent = true; sendError = ''; clear();
+    } catch (e) {
+      sendError = `Could not send (${e.message}). Check the connection and tap Send again; your answers are kept.`;
+    } finally {
+      sending = false; render();
+    }
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

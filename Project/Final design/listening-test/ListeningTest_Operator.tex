@@ -1,0 +1,158 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1.9cm,top=1.7cm]{geometry}
+\usepackage{graphicx,array,booktabs,tabularx,amssymb,xcolor,enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\pagestyle{fancy}\fancyhf{}
+\lhead{\small 34870 Loudspeaker project -- listening test, operator sheet}\rhead{\small Group 10, System D}\cfoot{\small\thepage}
+\setlength{\parskip}{3pt}\setlength{\parindent}{0pt}
+\newlist{chk}{itemize}{1}
+\setlist[chk]{label=$\square$,itemsep=1pt,leftmargin=1.6em}
+\newcommand{\warn}[1]{\textcolor{red!70!black}{\textbf{#1}}}
+\begin{document}
+
+{\LARGE\bfseries Listening test: operator sheet}\\[2pt]
+{\large Readiness checklist, procedure and sample orders}\\[2pt]
+{\small Keep this sheet \textbf{outside} the listening room: it holds the sample orders.\\
+Listener sheet: \texttt{ListeningTest\_Questionnaire.pdf}.\\
+Background: \texttt{lab-day/results\_2026-11-12/LabDay\_12Nov\_Results.pdf}.}
+
+\section*{What the test is for}
+The anechoic results say the speaker is flat to 5.5\,dB (150\,Hz--15\,kHz) once the MiniDSP is set right.
+The listening test answers three questions the chamber cannot:
+\begin{enumerate}[itemsep=0pt]
+\item \textbf{Part A:} how do listeners rate the final design, and does anything stand out (bass, the 1.5--3\,kHz plateau, treble)?
+\item \textbf{Part B:} is the woofer level right \emph{in this room with this amplifier}? Blind comparison of Out 1 at $-7.8$, $-5.8$ and $-3.8$\,dB.
+\item \textbf{Part C:} is the tweeter level right? Blind comparison of Rp $=8.2\,\Omega$ (now) and $3.3\,\Omega$ (before 12 Nov).
+\end{enumerate}
+
+\section{Readiness checklist}
+\subsection*{Bring}
+\begin{chk}
+\item The passive board with \textbf{Rp $=8.2\,\Omega$} fitted, plus a \textbf{3.3\,$\Omega$} resistor ($\geq5$\,W, course basket) for Part C, and a screwdriver.
+\item The vent plug (one vent open at 160\,mm, the other plugged).
+\item USB stick \texttt{34870\_G10\_ListeningTest\_2026-11-18/}: MiniDSP filter files, check tones, the four test excerpts, the vinyl albums, these PDFs.
+\item Mads's PC with the \textbf{Schiit Modi} DAC, its USB cable, and an RCA cable (or RCA to the room's input). Play the FLAC files from the stick, no streaming, no Bluetooth; system volume at 100\,\% and player volume fixed (bit-perfect if the player allows).
+\item Multimeter (AC volts) for the electrical check. Tape and a pen to mark the volume knob.
+\item Printed: one questionnaire per listener plus 3 spares, this sheet, pens, a stopwatch (phone).
+\item A thin cloth to hang in front of the speaker and the board, if one is available (not required).
+\end{chk}
+
+\subsection*{Music: four excerpts, 35\,s each, the same files for every listener}
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright}p{5.0cm}>{\raggedright\arraybackslash}X@{}}\toprule
+Track & What it tests & Excerpt (from Mads's vinyl rips, folder \texttt{4\_Test\_excerpts})\\\midrule
+1 female voice & midrange naturalness, the 1.5--3\,kHz plateau & Fugees -- \emph{Ready or Not}\\
+2 male voice & colouration, ``boxiness'', sibilance & Michael Bubl\'e -- \emph{Have Yourself a Merry Little Christmas}\\
+3 bass-rich & bass amount and boom (crossover at 325\,Hz) & Miles Davis -- \emph{So What}\\
+4 full band & treble, cymbals, clarity & Electric Light Orchestra -- \emph{Turn to Stone}\\\bottomrule
+\end{tabularx}
+
+The excerpts are cut, faded and levelled to the same loudness ($-23$\,LUFS) by \texttt{make\_excerpts.py}, and they are
+\textbf{dual mono} (left = right), so MiniDSP routing stays Input 1 $\rightarrow$ Outputs 1 and 2 only. Listen to all four once
+before the test and fix any start time in \texttt{make\_excerpts.py} if an excerpt starts in the wrong place.
+
+\subsection*{Signal chain}
+\textbf{PC $\rightarrow$ USB $\rightarrow$ Schiit Modi $\rightarrow$ RCA $\rightarrow$ MiniDSP input $\rightarrow$ MiniDSP outputs 1/2 $\rightarrow$ amplifier
+ch 1/2 $\rightarrow$ room pass-through $\rightarrow$ woofer / board.} \warn{Never connect the DAC straight to the amplifier:} without the
+MiniDSP there is no crossover, and the midrange (which has only a low-pass on the board) gets the full bass at full power.
+The Modi puts out about 2\,V; start with the PC volume low and watch the MiniDSP input level for clipping.
+
+\subsection*{Set up in the IEC room}
+\begin{chk}
+\item Box at the room's marked loudspeaker position, tweeter at ear height of a seated listener if possible; chair at the marked listening position, facing the box.
+\item Board inside the room, wired as in the chamber: amplifier channel 1 $\rightarrow$ woofer, channel 2 $\rightarrow$ board $\rightarrow$ mid + tweeter. Red to + on every driver.
+\item MiniDSP (the room's own card): routing only Input 1 (and 2) $\rightarrow$ Output 1 and Output 2. PEQ, Comp, FIR \textbf{bypassed}; only Xover active.
+\item Output 1 Xover $\rightarrow$ Advanced: delete everything, paste \texttt{MiniDSP\_woofer\_out1.txt}, Process. Output 2: the same with \texttt{MiniDSP\_midtw\_out2.txt}.
+\item \warn{Output 2 must hold exactly two biquads and no other high-pass.} On 12 Nov it held the filter twice (a $-11$\,dB hole at 400\,Hz). Check the basic Xover page too.
+\item Gains: \textbf{Out 1 $=-5.8$\,dB, Out 2 $=0$\,dB}. Invert off, delay 0, sample rate 96\,kHz. Save the configuration.
+\item Amplifier tone controls flat (bass and treble centred), loudness OFF, balance centred.
+\end{chk}
+
+\subsection*{Electrical check (5 minutes, volume low)}
+Play each check tone (\texttt{tone\_0100Hz}, \texttt{tone\_0325Hz}, \texttt{tone\_1000Hz}, $-12$\,dBFS) and read the AC
+voltage at the two amplifier outputs with the speaker connected. Only ratios matter, so any volume setting works.
+
+\begin{tabular}{@{}l>{\centering}p{3.5cm}>{\centering}p{3.5cm}>{\raggedright\arraybackslash}p{5.2cm}@{}}\toprule
+Tone & Ch 1 (woofer) & Ch 2 (mid + tw) & Expected\\\midrule
+100\,Hz & $V_1$ = \rule{1.5cm}{0.4pt} & \rule{1.5cm}{0.4pt} & ch 2 close to 0\\
+325\,Hz & \rule{1.5cm}{0.4pt} & \rule{1.5cm}{0.4pt} & both $=0.50\times$ their own reference. \warn{Ch 2 at $0.25\times$ = filter doubled}\\
+1\,kHz & \rule{1.5cm}{0.4pt} & $V_2$ = \rule{1.5cm}{0.4pt} & ch 1 close to 0\\\bottomrule
+\end{tabular}
+
+Also write down $V_1/V_2$ = \rule{1.5cm}{0.4pt}. It is 0.51 ($-5.8$\,dB) if the room amplifier's two channels have equal gain.
+\textbf{By ear:} at 100\,Hz only the woofer plays, at 1\,kHz only the midrange (and the tweeter faintly). If it is the other way round,
+the amplifier channels are swapped (as in runs S and S\_2 on 12 Nov).
+
+\subsection*{Playback level}
+\begin{chk}
+\item With Out 1 at $-5.8$\,dB, play track 4 and set a comfortably loud level at the chair (about 75--80\,dB(A) if a sound level meter or phone app is at hand).
+\item Mark the volume knob with tape. \warn{Never touch the volume again during the test.} Write the setting here: \rule{3cm}{0.4pt}
+\end{chk}
+
+\subsection*{Phone form}
+\begin{minipage}{0.2\linewidth}\includegraphics[width=\linewidth]{qr_form.png}\end{minipage}\hfill
+\begin{minipage}{0.76\linewidth}
+Listeners can answer on their phone instead of paper: \textbf{listening.madsrudolph.dev} (same questions, one screen at a time,
+saved even if the page reloads). The guide tells each listener their number. Results and CSV: the private results link
+(key in \texttt{web/.admin-key}); it fills in the blind conditions automatically from the table in Section~4.
+\end{minipage}
+
+\section{Roles}
+\begin{tabularx}{\linewidth}{@{}lX@{}}\toprule
+Operator (outside) & plays the excerpts, changes Out 1 between samples, swaps Rp in Part C, holds the order table. Never talks to the listener about the settings.\\
+Guide (inside) & reads the script, hands out the sheet, keeps time. \textbf{Does not know the order}, so cannot give anything away (double blind).\\
+Listeners & 5 or more; people outside the group if possible. Group members may listen too: tick it on their sheet, analyse them separately.\\\bottomrule
+\end{tabularx}
+Agree on a signal between guide and operator before the first listener (a text message ``next'' works; keep the door closed).
+
+\section{Procedure per listener (about 20 minutes)}
+\begin{enumerate}[itemsep=2pt]
+\item \textbf{Before they enter:} Out 1 at \textbf{$-5.8$\,dB}, Rp \textbf{8.2\,$\Omega$} (Part A plays the design).
+Write the next listener number on their sheet; the operator looks up that number's orders in the table below.
+\item \textbf{Guide reads aloud:} ``You will hear one loudspeaker playing short excerpts. Please sit still, face the speaker and
+don't talk. Nobody in this room knows the settings. There are no right answers; rate what you hear. The scales are
+explained at the top of the sheet.'' Let them read page 1.
+\item \textbf{Part A} (design settings): tracks 1, 2, 3, 4, each once, with about 40\,s between tracks to fill in the column.
+\item \textbf{Part B}: four samples. Each sample = track 1 then track 3. Between samples the operator sets Out 1 to the next
+value in the listener's order (Part B table) and waits 40\,s for the rating. Same order of tracks every time.
+\item Put Out 1 back to $-5.8$\,dB.
+\item \textbf{Part C}: the guide takes the listener outside, away from the door. The operator goes in and sets Rp for sample X
+(Part C table), even if it is already right: always unscrew and refit, so the sound of a swap gives nothing away. Listener and guide
+return; track 4 then track 2; rate X. Out again, the operator sets the Y value, back in, track 4 then track 2, rate Y.
+Leave Rp at \textbf{8.2\,$\Omega$} afterwards.
+\item Last question, thank them, collect the sheet. The operator fills in the grey line at the bottom of page 2.
+\end{enumerate}
+Short on time: run Part C with only some listeners; Parts A and B matter most.
+
+\section{Sample orders}
+Part B conditions (MiniDSP Output 1 gain): \textbf{L} $=-7.8$\,dB (bass $-2$\,dB), \textbf{D} $=-5.8$\,dB (design),
+\textbf{H} $=-3.8$\,dB (bass $+2$\,dB). D is played twice as a hidden repeat: if one listener's two D ratings differ by more than 3 points,
+that listener is guessing. Part C: \textbf{R8} $=$ Rp 8.2\,$\Omega$, \textbf{R3} $=$ Rp 3.3\,$\Omega$.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}c|cccc|cc|l@{}}\toprule
+Listener & \multicolumn{4}{c|}{Part B, sample 1 -- 4 (Out 1 gain)} & \multicolumn{2}{c|}{Part C} & Name / initials\\
+no. & 1 & 2 & 3 & 4 & X & Y & \\\midrule
+1 & D $-5.8$ & L $-7.8$ & D $-5.8$ & H $-3.8$ & R8 & R3 & \rule{4cm}{0.4pt}\\
+2 & H $-3.8$ & D $-5.8$ & L $-7.8$ & D $-5.8$ & R3 & R8 & \rule{4cm}{0.4pt}\\
+3 & D $-5.8$ & H $-3.8$ & L $-7.8$ & D $-5.8$ & R8 & R3 & \rule{4cm}{0.4pt}\\
+4 & L $-7.8$ & D $-5.8$ & H $-3.8$ & D $-5.8$ & R3 & R8 & \rule{4cm}{0.4pt}\\
+5 & D $-5.8$ & H $-3.8$ & D $-5.8$ & L $-7.8$ & R8 & R3 & \rule{4cm}{0.4pt}\\
+6 & D $-5.8$ & L $-7.8$ & H $-3.8$ & D $-5.8$ & R3 & R8 & \rule{4cm}{0.4pt}\\\midrule
+7 & \multicolumn{6}{l|}{as listener 1 \quad(8 = 2, 9 = 3, \dots)} & \rule{4cm}{0.4pt}\\
+8 & \multicolumn{6}{l|}{as listener 2} & \rule{4cm}{0.4pt}\\\bottomrule
+\end{tabular}
+\end{center}
+Assign listener numbers in arrival order, write the number on the sheet before it goes into the room, and do not show this table to anyone inside.
+
+\section{Afterwards}
+\begin{chk}
+\item Type every sheet into \texttt{listening-test/results.csv} (columns in \texttt{results\_template.csv}): one row per answer, with the condition taken from the table above.
+\item For the report: mean and spread per attribute in Part A; in Parts B and C, mean overall score and mean ``amount'' per condition.
+\item Decide: if ``bass amount'' for D averages near 0 and D scores at least as well as L and H, keep Out 1 $=-5.8$\,dB. If H wins and its bass amount is near 0, move to $-3.8$\,dB, and so on. The same rule for Rp in Part C.
+\item Whatever is changed: measure it in the chamber (one \texttt{S} run), so the report shows the final setting as a curve.
+\item Leave the room as found: MiniDSP configuration saved, board and plug back with the box, Rp at 8.2\,$\Omega$.
+\end{chk}
+
+\end{document}

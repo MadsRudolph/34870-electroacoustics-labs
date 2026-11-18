@@ -1,0 +1,6 @@
+listener,date,group_member,experience,part,item,condition,attribute,score
+1,2026-11-18,no,none,A,track1,D_R8,bass_amount,0
+1,2026-11-18,no,none,A,track1,D_R8,overall,7
+1,2026-11-18,no,none,B,sample1,D,bass_amount,0
+1,2026-11-18,no,none,B,sample1,D,overall,7
+1,2026-11-18,no,none,C,X,R8,treble_amount,1
