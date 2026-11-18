@@ -44,7 +44,8 @@ DEFAULT_TRACKS = [
     dict(label='Full band', source='Electric Light Orchestra/Out of the Blue (1977) [Vinyl]/1-01 - Turn to Stone.flac', start=40),
 ]
 for _t in DEFAULT_TRACKS:
-    _t.update(kind='local', length=90.0, player='org.mpris.MediaPlayer2.spotify', uri='', title='')
+    _t.update(kind='local', length=90.0, player='org.mpris.MediaPlayer2.spotify', uri='', title='', alts=[])
+SONG_FIELDS = ('kind', 'source', 'player', 'uri', 'title', 'start', 'length')   # what an alternative song remembers
 
 DEFAULT_SETTINGS = dict(
     tracks=DEFAULT_TRACKS, gap=2.0, target_lufs=-23.0, fade=0.5, library_dir='', audio_device='auto',
@@ -121,7 +122,7 @@ class Store:
                     self.s[k] = saved[k]
             for i, t in enumerate(self.s['tracks'][:4]):      # fill fields that older files lack
                 for k, v in DEFAULT_TRACKS[i].items():
-                    t.setdefault(k, v)
+                    t.setdefault(k, json.loads(json.dumps(v)))     # a copy: never share the default lists
             self.s['tracks'] = (self.s['tracks'] + json.loads(json.dumps(DEFAULT_TRACKS)))[:4]
             log('settings loaded from', self.path)
         except FileNotFoundError:
@@ -998,6 +999,33 @@ class Panel:
             run(['pactl', 'set-sink-input-mute', str(idx), '0'])
             run(['pactl', 'set-sink-input-volume', str(idx), '100%'])
 
+    def track_alt(self, i, action, j=None):
+        """Alternative songs per test track. save: keep a copy of the current song (then edit the row to the new one).
+        use: swap alternative j with the current song. delete: forget alternative j."""
+        t = self.s['tracks'][i]
+        alts = t.setdefault('alts', [])
+        cur = {k: t.get(k) for k in SONG_FIELDS}
+        if action == 'save':
+            if len(alts) >= 6:
+                return 'At most 6 alternatives per track.'
+            alts.append(cur)
+        elif action in ('use', 'delete') and j is not None and 0 <= int(j) < len(alts):
+            j = int(j)
+            if action == 'use':
+                new = alts[j]
+                alts[j] = cur
+                for k in SONG_FIELDS:
+                    if k in new:
+                        t[k] = new[k]
+                self.track_warn[i] = ''
+            else:
+                alts.pop(j)
+        else:
+            return 'Nothing changed.'
+        self.store.save()
+        threading.Thread(target=self._measure_all, daemon=True).start()
+        return ''
+
     def load_title(self, i):
         t = self.s['tracks'][i]
         name = self.resolve_player(t.get('player', ''))
@@ -1247,6 +1275,8 @@ def make_handler(panel):
                     panel.player_action(body['name'], body['action'])
                 elif p == '/api/player/reset_stream':
                     panel.reset_stream(body['name'])
+                elif p == '/api/track/alt':
+                    res['message'] = panel.track_alt(int(body['track']), body.get('action'), body.get('index'))
                 elif p == '/api/track/load_title':
                     res['message'] = panel.load_title(int(body['track']))
                 elif p == '/api/device':

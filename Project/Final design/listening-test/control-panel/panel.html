@@ -172,6 +172,14 @@ table.ord td:first-child { color: var(--muted); }
 .trow .nm:hover { border-color: var(--border); }
 .trow .meta { grid-column: 2 / -1; font-size: 12px; color: var(--muted); display: flex; gap: 6px 14px; flex-wrap: wrap; align-items: center; padding-left: 6px; }
 .trow .meta .mono { color: var(--text); }
+.trow .alts { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; padding-left: 6px; font-size: 12px; color: var(--muted); }
+.alt { display: inline-flex; align-items: center; border: 1px solid var(--border2); border-radius: 999px; overflow: hidden; background: var(--raised); }
+.alt button { background: none; border: 0; color: var(--text); font: inherit; padding: 4px 10px; cursor: pointer; }
+.alt button:hover { background: var(--accent-soft); }
+.alt button.x { color: var(--muted); padding: 4px 8px; border-left: 1px solid var(--border2); }
+.alt button.x:hover { color: var(--err, #e5484d); background: none; }
+.alt .t { font-family: var(--mono); color: var(--muted); margin-left: 6px; }
+.linkb.addalt { font-size: 12px; }
 .trow .meta .w { color: var(--warn); }
 .trow .meta .e { color: var(--err); }
 .trow .src { display: flex; gap: 8px; min-width: 0; }
@@ -519,6 +527,27 @@ async function saveSettings(patch) {
   try { const r = await api('/api/settings', patch); S = r.settings; $('saveState').textContent = '· saved'; return r; }
   catch (e) { $('saveState').textContent = '· not saved'; }
 }
+// Alternative songs per track: chips under the row; clicking one swaps it with the current song.
+const songName = a => a.title || (a.kind === 'stream' ? (a.uri || 'stream') : String(a.source || '').split('/').pop().replace(/\.flac$/i, ''));
+function altsHtml(t) {
+  const alts = t.alts || [];
+  return (alts.length ? '<span>Alternatives:</span>' : '') + alts.map((a, j) =>
+    `<span class="alt"><button data-alt="use" data-j="${j}" title="Use this song for this track (the current one becomes an alternative)">⇄ ${esc(songName(a))}<span class="t">${fmt(a.start)}–${fmt(a.start + a.length)}</span></button>` +
+    `<button class="x" data-alt="delete" data-j="${j}" title="Remove this alternative">×</button></span>`).join('') +
+    `<button class="linkb addalt" data-alt="save" data-j="0" title="Keeps this song and its times as an alternative. Then paste the new song's link and set its times on this row.">+ keep a copy as alternative</button>`;
+}
+async function altAction(i, action, j) {
+  if (action === 'delete' && !confirmDel(i, j)) return;
+  const r = await api('/api/track/alt', { track: i, action, index: j });
+  if (r.message) toast(r.message, true);
+  else if (action === 'save') toast('Saved. Now paste the new song and set its times; the copy stays one click away.', true);
+  S = await api('/api/settings'); renderTracks(); renderSteps();
+}
+function confirmDel(i, j) {          // no browser dialogs: a second click within 3 s confirms
+  const k = i + ':' + j, now = Date.now();
+  if (confirmDel.k === k && now - confirmDel.t < 3000) return true;
+  confirmDel.k = k; confirmDel.t = now; toast('Click × again to remove that alternative.', true); return false;
+}
 const trackPatch = (i, f, v) => { const tr = S.tracks.map(() => ({})); tr[i][f] = v; return saveSettings({ tracks: tr }); };
 const tracksPatch = (i, obj) => { const tr = S.tracks.map(() => ({})); Object.assign(tr[i], obj); return saveSettings({ tracks: tr }); };
 const parseT = v => { v = String(v).trim().replace(',', '.'); if (!v) return 0;
@@ -576,9 +605,11 @@ function renderTracks() {
       <input class="field num tin" data-f="start" value="${fmt(t.start)}" aria-label="Start">
       <input class="field num tin" data-f="end" value="${fmt(t.start + t.length)}" aria-label="End (time in the song)" title="Time in the song where the excerpt stops">
       <span class="len" title="Length of the excerpt = End − Start">${fmt(t.length)}</span>
-      <div class="meta" id="tinfo${i}"></div>`;
+      <div class="meta" id="tinfo${i}"></div>
+      <div class="alts">${altsHtml(t)}</div>`;
     box.appendChild(d);
     d.querySelector('[data-play]').onclick = () => playTracks([i]);
+    d.querySelectorAll('[data-alt]').forEach(b => b.onclick = () => altAction(i, b.dataset.alt, +b.dataset.j));
     d.querySelectorAll('[data-kind]').forEach(b => b.onclick = async () => { await trackPatch(i, 'kind', b.dataset.kind); renderTracks(); });
     d.querySelectorAll('[data-f]').forEach(el => el.onchange = async () => {
       const f = el.dataset.f, t0 = S.tracks[i], end0 = t0.start + t0.length;
