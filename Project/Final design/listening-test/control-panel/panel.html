@@ -783,7 +783,7 @@ function steps(n) {
     s.push({ g: 'D', chip: 'undo', t: 'After Part D', set: D[1] === 'open' ? { none: 'One vent is already open at 160 mm' } : { k: 'Vent', v: 'Open 160 mm', small: true, note: 'Back to the design: one vent open, the other plugged.', change: true },
              play: null, after: 'Then Next.' });
   }
-  s.push({ g: 'End', chip: 'end', t: 'Finish', set: { design: true, note: 'Check the design is back before the next session.' }, play: null,
+  s.push({ g: 'End', chip: 'end', t: 'Finish', set: { design: true, note: 'Check the design is back before the next session.' }, play: null, endCue: true,
     after: `Collect the three sheets. Grey line on page 2: session ${n}, Part B ${B.join(' ')}, Part C X = ${C[0]}, Y = ${C[1]}${S?.part_d ? `, Part D ${D.join(' then ')}` : ''}. Then Next session.` });
   return s;
 }
@@ -800,10 +800,11 @@ function renderSteps() {
   else h = `<span class="k">${z.k}</span><span class="v${z.small ? ' sm' : ''}">${z.v}</span>` + (z.badge ? `<span class="badge">${z.badge}</span>` : '');
   $('hSet').innerHTML = h;
   $('hNote').innerHTML = z.note ? `<span class="dot ${z.change ? 'warn' : ''}"></span><span>${esc(z.note)}</span>` : '';
-  $('hPlay').textContent = x.play ? x.play.map(k => 'Track ' + (k + 1)).join(' → ') : 'Nothing to play';
+  $('hPlay').textContent = x.play ? x.play.map(k => 'Track ' + (k + 1)).join(' → ') : x.endCue ? 'Closing message' : 'Nothing to play';
   $('hPlayT').textContent = x.play ? (S.cues !== false && x.cue ? 'Voice → ' : '') + x.play.map(k => S.tracks[k].label + (S.tracks[k].kind === 'stream' ? ' (stream)' : '')).join(' → ') : '';
-  $('hPlay').classList.toggle('muted', !x.play);
-  $('sPlay').disabled = !x.play;
+  if (x.endCue) $('hPlayT').textContent = 'Voice: "The test is now finished. Thank you very much for taking part!"';
+  $('hPlay').classList.toggle('muted', !x.play && !x.endCue);
+  $('sPlay').disabled = !x.play && !x.endCue;
   $('hAfter').textContent = x.after;
   $('sPrev').disabled = cur === 0; $('sNext').disabled = cur === st.length - 1;
   const groups = [];
@@ -829,12 +830,15 @@ $('cues').onchange = async () => { S.cues = $('cues').checked; await saveSetting
 $('partD').onchange = async () => { S.part_d = $('partD').checked; await saveSettings({ part_d: S.part_d }); renderSteps(); };
 function playStep() {
   const x = steps(S.listener)[S.step];
+  if (x && x.endCue) { cancelAuto(); playEnd(); return; }
   if (!x || !x.play) return;
   const voice = S.cues !== false && x.cue;
   api('/api/play', { tracks: x.play, label: x.t, cue: voice ? x.cue : null, after_cue: voice ? 'r' + x.cue : null });
   AUTO = S.auto !== false ? { phase: 'playing', step: S.step, session: S.listener, saw: false } : null;
   renderAuto();
 }
+
+const playEnd = () => api('/api/play', { tracks: [], label: 'End of the session', cue: 'end' });   // "…thank you for taking part"
 
 // ---------------- auto-run: rating prompt, countdown, next step ----------------
 // Plays on by itself only when nothing has to be changed, or after the operator clicks ✓ Set done.
@@ -859,8 +863,10 @@ function autoTick() {
   }
   renderAuto();
 }
+function lastPlayable(a) { const st = steps(a.session); return !st.slice(a.step + 1).some(y => y.play); }
 function autoAdvance() {
   const a = AUTO, nx = nextOf(a); AUTO = null;
+  if (lastPlayable(a) && S.cues !== false) playEnd();          // the session's last rating is over: thank the listeners
   if (!nx) { renderAuto(); return; }
   setStep(a.step + 1, true);
   if (autoPlayable(nx) && (!needsSet(nx) || a.setDone)) playStep();
@@ -875,7 +881,7 @@ function renderAuto() {
   $('autoCd').textContent = AUTO.phase === 'count' ? fmt(left) : '❚❚';
   $('autoBar').style.width = AUTO.phase === 'count' ? (100 * (1 - left / RATE_S())) + '%' : '100%';
   let t;
-  if (!nx) t = '<b>Rating time.</b> That was the last step.';
+  if (!nx || lastPlayable(AUTO)) t = '<b>Rating time.</b> That was the last sample: the voice then thanks the listeners and ends the test.';
   else if (!autoPlayable(nx)) t = `<b>Rating time.</b> Next: ${esc(nx.t)}. ${nx.play ? 'This one is started by hand.' : 'The panel moves there and waits for you.'}`;
   else if (needsSet(nx)) t = `<b>Now set: ${esc(nx.set.k)} → ${esc(nx.set.v)}</b>${nx.set.badge ? ' (' + esc(nx.set.badge) + ')' : ''} for ${esc(nx.t)}, then click ✓ Set done. ` +
     (AUTO.setDone ? '<b>Done.</b> It plays when the countdown ends.' : AUTO.phase === 'waitset' ? 'Waiting for you.' : 'It will not play before you confirm.');

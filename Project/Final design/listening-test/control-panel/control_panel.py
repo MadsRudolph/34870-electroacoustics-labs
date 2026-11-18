@@ -625,7 +625,7 @@ class Panel:
     @staticmethod
     def _cue_file(cue):
         """cues/<name>.wav for a valid cue name (a1..d2 announcements, ra1..rd2 'please rate'), else None."""
-        if not cue or not re.fullmatch(r'r?[a-d][1-4xy]', str(cue)):
+        if not cue or not re.fullmatch(r'r?[a-d][1-4xy]|end', str(cue)):
             return None
         p = HERE / 'cues' / f'{cue}.wav'
         return p if p.exists() else None
@@ -633,7 +633,7 @@ class Panel:
     def play_tracks(self, idx_list, label=None, cue=None, after_cue=None):
         idx_list = [int(i) for i in idx_list if 0 <= int(i) < 4]
         cue_path, after_path = self._cue_file(cue), self._cue_file(after_cue)
-        if not idx_list:
+        if not idx_list and cue_path is None:              # nothing to play (a voice-only step needs its cue)
             return
         with self.lock:
             self._stop_now()
@@ -689,7 +689,8 @@ class Panel:
                 return True                                 # a missing cue must never block the test: just skip it
             self.mode = 'test'
             self.cur = {'kind': 'cue', 'rate': path.stem.startswith('r'),
-                        'title': 'Voice: please rate now' if path.stem.startswith('r') else 'Voice: step announcement'}
+                        'title': 'Voice: please rate now' if path.stem.startswith('r') else
+                        'Voice: thank you, the test is finished' if path.stem == 'end' else 'Voice: step announcement'}
         reason = self.mpv.wait_end(eid, cancel)
         t_end = time.monotonic() + 2
         while reason == 'eof' and not self.mpv.props.get('idle-active') and time.monotonic() < t_end:
