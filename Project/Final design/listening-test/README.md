@@ -6,7 +6,7 @@
 | `ListeningTest_Questionnaire.pdf` | the listener sheet (2 pages, print one per listener + spares) |
 | `check_tones/` | 100 Hz, 325 Hz, 1 kHz sines at -12 dBFS for the multimeter check of the MiniDSP filters |
 | `results_template.csv` | columns for typing in the sheets (one row per answer) |
-| `make_excerpts.py` | cuts the four 35 s test excerpts from the vinyl rips (dual mono, -23 LUFS): `python3 make_excerpts.py <folder>`. Music stays out of git |
+| `make_excerpts.py` | cuts the four test excerpts (track 1 50 s, the others 35 s) from the vinyl rips (dual mono, -23 LUFS): `python3 make_excerpts.py <folder>`. Music stays out of git |
 | `qr_form.png` | QR code for the phone form |
 | `web/` | the phone form at **https://listening.madsrudolph.dev** (Cloudflare Worker + KV). Results: `https://listening.madsrudolph.dev/results?key=<web/.admin-key>`, CSV at `/results.csv?key=...`, with the blind conditions filled in |
 
