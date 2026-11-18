@@ -31,6 +31,7 @@ from pathlib import Path
 LABS = Path(__file__).resolve().parents[1]
 DEFAULT = Path(os.environ.get('OVERLEAF_REPO', Path.home() / 'overleaf' / '34870-labs-overleaf'))
 MANIFEST = '.overleaf_manifest'
+OWN = {MANIFEST, 'OVERLEAF.md', '.gitignore'}  # the Overleaf repo's own files, never imported
 SKIP_PREFIXES = ('LabPC/',)                # copies of the lab-PC kit, not reports
 SIDE_EXT = {'.tex', '.bib', '.sty', '.cls', '.bst', '.png', '.jpg', '.jpeg', '.pdf', '.eps', '.svg'}
 IMG_EXT = ['', '.pdf', '.png', '.jpg', '.jpeg', '.eps']
@@ -132,7 +133,7 @@ def import_(dest, dry):
     have = set(tracked())
     exported = set((dest / MANIFEST).read_text().split('\n')) - {''} if (dest / MANIFEST).exists() else set()
     out = subprocess.run(['git', '-C', str(dest), 'ls-files', '-z'], capture_output=True, check=True).stdout
-    theirs = [p for p in out.decode().split('\0') if p and p != MANIFEST and not p.startswith('.git')]
+    theirs = [p for p in out.decode().split('\0') if p and p not in OWN and not p.startswith('.git')]
     n = 0
     for f in theirs:
         s, t = dest / f, LABS / f
