@@ -31,25 +31,27 @@ The listening test answers three questions the chamber cannot:
 \begin{chk}
 \item The passive board with \textbf{Rp $=8.2\,\Omega$} fitted, plus a \textbf{3.3\,$\Omega$} resistor ($\geq5$\,W, course basket) for Part C, and a screwdriver.
 \item The vent plug (one vent open at 160\,mm, the other plugged).
-\item USB stick \texttt{34870\_G10\_ListeningTest\_2026-11-18/}: MiniDSP filter files, check tones, the four test excerpts, the vinyl albums, these PDFs.
-\item Mads's PC with the \textbf{Schiit Modi} DAC, its USB cable, and an RCA cable (or RCA to the room's input). Play the FLAC files from the stick, no streaming, no Bluetooth; system volume at 100\,\% and player volume fixed (bit-perfect if the player allows).
+\item USB stick \texttt{34870\_G10\_ListeningTest\_2026-11-18/}: MiniDSP filter files, check tones, these PDFs, and the old vinyl excerpts and albums as a backup if Spotify fails.
+\item Mads's PC with the \textbf{Schiit Modi} DAC, its USB cable, and an RCA cable (or RCA to the room's input). The \textbf{control panel} (\texttt{listening-test/control-panel}, \texttt{python3 control\_panel.py}) plays the four Spotify tracks at the right start and end times; Spotify logged in, no Bluetooth; system and Spotify volume fixed.
 \item Multimeter (AC volts) for the electrical check. Tape and a pen to mark the volume knob.
 \item Printed: one questionnaire per listener plus 3 spares, this sheet, pens, a stopwatch (phone). Three chairs, with seat labels Left / Middle / Right.
 \item A thin cloth to hang in front of the speaker and the board, if one is available (not required).
 \end{chk}
 
-\subsection*{Music: four excerpts, 90\,s each, the same files for every listener}
-\begin{tabularx}{\linewidth}{@{}l>{\raggedright}p{5.0cm}>{\raggedright\arraybackslash}X@{}}\toprule
-Track & What it tests & Excerpt (from Mads's vinyl rips, folder \texttt{4\_Test\_excerpts})\\\midrule
-1 female voice & midrange naturalness, the 1.5--3\,kHz plateau & Fugees -- \emph{Ready or Not}\\
-2 male voice & colouration, ``boxiness'', sibilance & Michael Bubl\'e -- \emph{Have Yourself a Merry Little Christmas}\\
-3 bass-rich & bass amount and boom (crossover at 325\,Hz) & Miles Davis -- \emph{So What}\\
-4 full band & treble, cymbals, clarity & Electric Light Orchestra -- \emph{Turn to Stone}\\\bottomrule
+\subsection*{Music: four Spotify tracks, the same excerpts for every listener}
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright}p{4.6cm}>{\raggedright\arraybackslash}Xc@{}}\toprule
+Track & What it exposes & Song (Spotify) & Excerpt\\\midrule
+1 female vocal & midrange naturalness, the 1.5--3\,kHz plateau & Alison Krauss \& Union Station -- \emph{When You Say Nothing At All} & 0:11--1:21\\
+2 male vocal + band & midrange colouration, and treble (hi-hats, clavinet, brass) & Stevie Wonder -- \emph{Superstition} (single version) & 0:28--1:23\\
+3 bass, electronic & bass amount and boom, the 325\,Hz crossover & The Prodigy -- \emph{Breathe} & 0:00--1:04\\
+4 full band & treble, space, clarity & Pink Floyd -- \emph{Shine On You Crazy Diamond (Pts.\ 1--5)} & 4:24--5:20\\\bottomrule
 \end{tabularx}
 
-The excerpts are cut, faded and levelled to the same loudness ($-23$\,LUFS) by \texttt{make\_excerpts.py}, and they are
-\textbf{dual mono} (left = right), so MiniDSP routing stays Input 1 $\rightarrow$ Outputs 1 and 2 only. Listen to all four once
-before the test and fix any start time in \texttt{make\_excerpts.py} if an excerpt starts in the wrong place.
+Every track is rated on bass, midrange and treble: the songs differ in what they expose first, not in what is asked.
+\textbf{Spotify settings:} audio quality Lossless (or Very high), Normalize volume ON at Normal, Crossfade and Automix OFF,
+Spotify volume 100\,\%. Spotify plays \textbf{stereo}: route MiniDSP \textbf{Input 1 and Input 2} to both outputs, and keep the PC
+volume low enough that the MiniDSP inputs do not clip (the two summed channels can add up to 6\,dB). Backup if Spotify fails: the
+panel's local vinyl excerpts (\texttt{4\_Test\_excerpts} on the stick, dual mono, $-23$\,LUFS).
 
 \subsection*{Signal chain}
 \textbf{PC $\rightarrow$ USB $\rightarrow$ Schiit Modi $\rightarrow$ RCA $\rightarrow$ MiniDSP input $\rightarrow$ MiniDSP outputs 1/2 $\rightarrow$ amplifier
@@ -61,7 +63,7 @@ The Modi puts out about 2\,V; start with the PC volume low and watch the MiniDSP
 \begin{chk}
 \item Box at the room's marked loudspeaker position, tweeter at ear height of a seated listener if possible; \textbf{three chairs}: Middle at the marked listening position (on axis), Left and Right beside it, as close as is comfortable, all facing the box. Use the same three chair positions in every session.
 \item Board inside the room, wired as in the chamber: amplifier channel 1 $\rightarrow$ woofer, channel 2 $\rightarrow$ board $\rightarrow$ mid + tweeter. Red to + on every driver.
-\item MiniDSP (the room's own card): routing only Input 1 (and 2) $\rightarrow$ Output 1 and Output 2. PEQ, Comp, FIR \textbf{bypassed}; only Xover active.
+\item MiniDSP (the room's own card): routing \textbf{Input 1 and Input 2} $\rightarrow$ Output 1 and Output 2 (Spotify is stereo). PEQ, Comp, FIR \textbf{bypassed}; only Xover active.
 \item Output 1 Xover $\rightarrow$ Advanced: delete everything, paste \texttt{MiniDSP\_woofer\_out1.txt}, Process. Output 2: the same with \texttt{MiniDSP\_midtw\_out2.txt}.
 \item \warn{Output 2 must hold exactly two biquads and no other high-pass.} On 12 Nov it held the filter twice (a $-11$\,dB hole at 400\,Hz). Check the basic Xover page too.
 \item Gains: \textbf{Out 1 $=-5.8$\,dB, Out 2 $=0$\,dB}. Invert off, delay 0, sample rate 96\,kHz. Save the configuration.

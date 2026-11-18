@@ -1,0 +1,4 @@
+panel_settings.json
+loudness_cache.json
+*.tmp
+__pycache__/
