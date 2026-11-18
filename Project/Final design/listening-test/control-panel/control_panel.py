@@ -439,8 +439,7 @@ class StreamVolume:
     def grab(self):
         for it in self.inputs():
             if it['index'] not in self.orig:
-                vols = [c['value'] for c in it.get('volume', {}).values()] or [65536]
-                self.orig[it['index']] = max(vols)
+                self.orig[it['index']] = 65536    # restore to 100 % (Spotify must sit at 100 % for the test)
         return bool(self.orig)
 
     def scale(self, f):
@@ -779,7 +778,7 @@ class Panel:
                 return False
             self.mode = 'stream'
             self.cur = dict(kind='stream', track=i, name=name, phase='loading', start=start, length=length,
-                            title=info['identity'], sv=sv, running=False, base=0.0, t_run=None)
+                            title=info['identity'], sv=sv, running=False, t_run=None)
             if self.mpv.props.get('idle-active') is False:
                 self.mpv.fade_stop()
             self.mpris.pause_all_playing(except_name=name)
@@ -803,6 +802,14 @@ class Panel:
                     sv.restore()
                     self._fail(cancel, f'Track {i + 1}: {info["identity"]} did not load {uri} within 10 s.')
                     return False
+            # OpenUri's own start lands late and would undo our seek: wait until the new track really plays
+            t_end = time.monotonic() + 5
+            while time.monotonic() < t_end:
+                p = self.mpris.props(name) or {}
+                if p.get('PlaybackStatus') == 'Playing' and (p.get('Position') or 0) >= 0.3e6:
+                    break
+                if cancel.wait(0.05):
+                    return False
         with self.lock:
             if cancel.is_set():
                 return False
@@ -822,54 +829,119 @@ class Panel:
             sv.grab()                          # the stream may only exist now
             sv.scale(0)
             self.mpris.call(name, 'Play')
-            self.cur.update(phase='playing', running=True, t_run=time.monotonic(),
-                            title=f'{info["artist"]} – {info["title"]}' if info['title'] else info['identity'])
+            self.cur.update(title=f'{info["artist"]} – {info["title"]}' if info['title'] else info['identity'])
             if info['title']:
                 t['title'] = f'{info["artist"]} – {info["title"]}'
-        sv.ramp(0, 1, fade)
-        # check that the seek really happened (Position after a moment of playing); retry once if not
-        for attempt in (1, 2):
-            if cancel.wait(0.6):
+        # Spotify's clock is the truth. Stay silent until it really plays at the start position.
+        # Spotify undoes the first seek after a track change about 0.6 s later, so the position must hold
+        # for 0.8 s; then one more seek to the start (that one sticks), and only then the fade-in.
+        seekable = info['can_seek'] and bool(info['trackid']) and (start > 0 or info['position'] > 1 or bool(uri))
+
+        def seek_to(x):
+            with self.lock:
+                if cancel.is_set():
+                    return False
+                self.mpris.call(name, 'SetPosition', 'ox', info['trackid'], int(x * 1e6))
+            return True
+
+        t0, seeks, ok_since, final = time.monotonic(), 0, None, False
+        while True:
+            if cancel.wait(0.05):
                 return False
-            pos = self.mpris.info(name)['position']
-            el = self._elapsed()
-            if not (info['can_seek'] and abs(pos - (start + el)) > 3):
+            p = self.mpris.props(name) or {}
+            st, pos = p.get('PlaybackStatus'), (p.get('Position') or 0) / 1e6
+            now = time.monotonic()
+            if st == 'Playing' and not seekable:
                 break
-            if attempt == 1 and info['trackid']:
-                log(f'Track {i + 1}: position {pos:.1f} s instead of {start + el:.1f} s, seeking again')
-                with self.lock:
-                    if cancel.is_set():
+            if st == 'Playing' and start - 0.5 <= pos <= start + 3:
+                ok_since = ok_since or now
+                if final and pos <= start + 0.5:
+                    break
+                if not final and now - ok_since >= 0.8:
+                    if not seek_to(start):
                         return False
-                    self.mpris.call(name, 'SetPosition', 'ox', info['trackid'], int((start + el) * 1e6))
+                    final, ok_since, t0 = True, None, now
+                    continue
             else:
-                warn.append(f'{info["identity"]} did not seek: starts at {fmt_time(max(0, pos - el))}')
+                ok_since = None
+                if st == 'Playing' and seekable and pos < start - 0.5 and seeks < 3 and now - t0 > 0.3:
+                    log(f'Track {i + 1}: position {pos:.1f} s instead of {start:.1f} s, seeking again')
+                    if not seek_to(start):
+                        return False
+                    seeks, final, t0 = seeks + 1, False, now
+            if now - t0 > 6:
+                if st == 'Playing':
+                    warn.append(f'{info["identity"]} did not seek: starts at {fmt_time(pos)}')
+                    break
+                sv.restore()
+                self._fail(cancel, f'Track {i + 1}: {info["identity"]} did not start playing within 6 s.')
+                return False
+        with self.lock:
+            if cancel.is_set():
+                return False
+            now = time.monotonic()
+            self.cur.update(phase='playing', running=True, t_run=now, pos=pos, pos_at=now, playing=True)
         self.track_warn[i] = '; '.join(warn)
         if warn:
             log(f'Track {i + 1}:', self.track_warn[i])
         self.store.save()                      # keeps the title on the row
-        # timed by the panel: pause when the length is reached
-        while not cancel.is_set():
+        sv.ramp(0, 1, min(fade, 0.5))
+        # follow Spotify's Position: fade out over the last `fade` seconds, pause at start + length.
+        # Safety: if Position stops moving, give up after length + 10 s of playing time.
+        played, last = 0.0, time.monotonic()
+        while True:
+            with self.lock:
+                c = self.cur
+                end = start + c['length']
+                near = c['pos'] >= end - fade - 0.4
+            if cancel.wait(0.05 if near else 0.25):
+                return False
+            p = self.mpris.props(name)
             with self.lock:
                 if cancel.is_set():
                     return False
-                el = self._elapsed()
-                if el >= self.cur['length'] - (fade if sv.orig else 0):   # the fade is part of the length
+                now = time.monotonic()
+                if c.get('t_run') and c.get('playing'):
+                    played += now - last
+                last = now
+                if p:
+                    c['pos'] = (p.get('Position') or 0) / 1e6
+                    c['pos_at'] = now
+                    c['playing'] = p.get('PlaybackStatus') == 'Playing'
+                pos = c['pos']
+                end = start + c['length']
+                if seekable and c['playing'] and played < 5 and pos < start - 1 and info['trackid']:
+                    log(f'Track {i + 1}: Spotify jumped back to {pos:.1f} s, seeking to {start:.1f} s again')
+                    sv.scale(0)
+                    self.mpris.call(name, 'SetPosition', 'ox', info['trackid'], int(start * 1e6))
+                    c['pos'], c['pos_at'] = start, now
+                    continue
+                if pos >= end - 0.15:          # Spotify needs ~0.2 s to act on Pause; the fade is at 0 by then
                     break
-            cancel.wait(0.05)
+                if played > c['length'] + 10:
+                    log(f'Track {i + 1}: Spotify position stuck at {pos:.1f} s, stopping on the safety timeout')
+                    break
+                if sv.orig and fade > 0:
+                    sv.scale(min(1.0, max(0.0, (end - 0.15 - pos) / fade)))
         with self.lock:
             if cancel.is_set():
                 return False
-            sv.ramp(1, 0, fade)
+            sv.scale(0)
             self.mpris.call(name, 'Pause')
             sv.restore()
             self.cur['running'] = False
+            self.cur['t_run'] = None
         return True
 
     def _elapsed(self):
+        """Stream items: Spotify's Position minus the start (extrapolated between reads, at most 1 s)."""
         c = self.cur or {}
-        if c.get('kind') != 'stream':
+        if c.get('kind') != 'stream' or 'pos' not in c:
             return 0.0
-        return c['base'] + ((time.monotonic() - c['t_run']) if c.get('t_run') else 0.0)
+        pos = c['pos']
+        if c.get('t_run') and c.get('playing'):
+            pos += min(1.0, time.monotonic() - c['pos_at'])
+        return max(0.0, pos - c['start'])
 
     # ---------- transport (pause, extend, seek, next/prev) ----------
     def pause_toggle(self):
@@ -877,10 +949,11 @@ class Panel:
             c = self.cur or {}
             if c.get('kind') == 'stream' and c.get('phase') == 'playing':
                 if c.get('t_run'):
-                    c['base'] = self._elapsed(); c['t_run'] = None
                     self.mpris.call(c['name'], 'Pause')
+                    c['t_run'], c['playing'] = None, False
                 else:
-                    self.mpris.call(c['name'], 'Play'); c['t_run'] = time.monotonic()
+                    self.mpris.call(c['name'], 'Play')
+                    c['t_run'], c['pos_at'] = time.monotonic(), time.monotonic()
             elif self.mode in ('test', 'library', 'tone'):
                 self.mpv.cmd(['cycle', 'pause'])
 
@@ -1123,7 +1196,7 @@ class Panel:
         elif c.get('kind') == 'measuring':
             now.update(track=c['track'], title='measuring loudness …', elapsed=0, length=0)
         elif c.get('kind') == 'stream':
-            now.update(track=c['track'], title=c['title'], elapsed=self._elapsed() if c.get('running') else 0,
+            now.update(track=c['track'], title=c['title'], elapsed=self._elapsed(),
                        length=c['length'], source='stream', phase=c['phase'], paused=c.get('t_run') is None
                        and c['phase'] == 'playing')
         elif c.get('kind') == 'cue':
