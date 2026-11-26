@@ -1,0 +1,87 @@
+Listening test 2, 26 Nov 2026, IEC listening room, System D
+source: listening_results_2026-11-26.csv, 142 rows
+
+Listeners
+  2L: session 2, seat left, group member no, experience none, hearing issue no
+  2M: session 2, seat middle, group member yes, experience music, hearing issue no
+  2R: session 2, seat right, group member no, experience none, hearing issue no
+
+Part A, the loudspeaker as designed (Out 1 -5.8 dB, Rp 8.2 ohm); mean per track, then all tracks
+  bass_amount    -0.33  -0.67  -0.33   0.33   all -0.25 (sd 0.87, n=12)
+  bass_quality    3.67   3.00   4.00   5.00   all  3.92 (sd 1.16, n=12)
+  natural         4.67   4.00   4.33   5.00   all  4.50 (sd 0.67, n=12)
+  treble_amount   0.00   0.00   0.33   0.00   all  0.08 (sd 0.29, n=12)
+  treble_smooth   4.33   4.00   4.33   4.00   all  4.17 (sd 0.58, n=12)
+  clarity         4.67   4.00   4.00   5.00   all  4.42 (sd 0.67, n=12)
+  overall         8.67   8.33   8.00   9.33   all  8.58 (sd 0.79, n=12)
+  by seat, overall:        left 8.75  middle 9.00  right 8.00
+  by seat, treble amount:  left +0.00  middle +0.00  right +0.25
+
+Part B, woofer level (Out 1: L -7.8, D -5.8, H -3.8 dB); D was played twice
+  L (-7.8 dB): overall  7.67 (sd 0.58, n=3), bass amount -0.67 (sd 0.58, n=3), chosen best 0
+  D (-5.8 dB): overall  8.50 (sd 1.05, n=6), bass amount -0.50 (sd 0.55, n=6), chosen best 2
+  H (-3.8 dB): overall  9.33 (sd 0.58, n=3), bass amount -0.33 (sd 0.58, n=3), chosen best 0
+  repeat of D, overall (first, second):
+    2L: 10, 8  (difference 2)
+    2M: 9, 9  (difference 0)
+    2R: 7, 8  (difference 1)
+
+Part C, tweeter L-pad (R8 = Rp 8.2 ohm, R3 = Rp 3.3 ohm, i.e. tweeter 2.9 dB lower)
+  PROVISIONAL: track 4 failed to play five times during the run (12:52, 13:09 twice, 13:10, 13:13);
+  which samples were heard with track 2 only or after retries is not known yet.
+  Woofer level during Part C not recorded; the operator sheet says Out 1 back to -5.8 dB after Part B
+  (Part B for this session ended on D, -5.8 dB, anyway).
+  R8: overall  4.00 (sd 1.00, n=3), treble amount -1.67 (sd 0.58, n=3), smoothness  2.67 (sd 0.58, n=3), preferred 0
+  R3: overall  8.33 (sd 1.15, n=3), treble amount  1.00 (sd 0.00, n=3), smoothness  3.67 (sd 1.53, n=3), preferred 3
+  no difference: 0
+
+Comments (verbatim)
+  2M A note D_R8: sometimes a bit boxy, maybe because there is only one speaker, would be cool to have a pair to try that out
+  2M B sample1 H: Lower on Stevie's mix, couldn't hear correctly whereas prodigy sounded good
+  2M B sample2 D: Seems tightly higher on the bass. Mid and high good. Doesn't make much of a difference with only 2db. We should've increased the difference
+  2M B sample3 L: Again, the bass in stevie's song is so low, it doesn't make sense to compare it (sorry). a bit lower i felt.
+  2M B sample4 D: No apparent changes. good bass on prodigy
+  2M end last : idk i love it already
+  2L A note D_R8: The bass quality was genuinely good, but it lacked volume in my opinion.
+  2L B sample2 D: Second sample sounded a bit clearer in the mid/high ranges
+  2L B sample3 L: A bit more muddy, slightly suppressed high/mid ranges, mostly for the first track
+  2L end last : The bass volume was consistently too low, the quality of the bass was good, but you could only hear it, not feel it. For the most part it was crisp audio.
+
+Comparison with test 1 (18 Nov, session 1, 3 listeners) -- test 1 | test 2 | both pooled
+  group members in test 2: 2M (test 1: none)
+  Part A, all tracks:
+    bass_amount     0.00 (n=12) | -0.25 (n=12) | -0.12 (n=24)    test 2 without group members -0.50 (n= 8)
+    bass_quality    3.67 (n=12) |  3.92 (n=12) |  3.79 (n=24)    test 2 without group members  3.75 (n= 8)
+    natural         3.83 (n=12) |  4.50 (n=12) |  4.17 (n=24)    test 2 without group members  4.38 (n= 8)
+    treble_amount   0.33 (n=12) |  0.08 (n=12) |  0.21 (n=24)    test 2 without group members  0.12 (n= 8)
+    treble_smooth   3.25 (n=12) |  4.17 (n=12) |  3.71 (n=24)    test 2 without group members  4.00 (n= 8)
+    clarity         3.75 (n=12) |  4.42 (n=12) |  4.08 (n=24)    test 2 without group members  4.38 (n= 8)
+    overall         7.75 (n=12) |  8.58 (n=12) |  8.17 (n=24)    test 2 without group members  8.38 (n= 8)
+  Part A overall per track (test 1 | test 2):
+    track 1 Alison Krauss   8.00 (n= 3) |  8.67 (n= 3)
+    track 2 Stevie Wonder   6.67 (n= 3) |  8.33 (n= 3)
+    track 3 The Prodigy     7.67 (n= 3) |  8.00 (n= 3)
+    track 4 Pink Floyd      8.67 (n= 3) |  9.33 (n= 3)
+  Part A treble smoothness on the vocal tracks 1+2 (test 1 | test 2):  2.50 (n= 6) |  4.17 (n= 6)
+  Part B (test 1 | test 2 | pooled):
+    L overall       8.67 (n= 3) |  7.67 (n= 3) |  8.17 (n= 6)
+    L bass_amount  -0.33 (n= 3) | -0.67 (n= 3) | -0.50 (n= 6)
+    L chosen best   1 | 0
+    D overall       7.67 (n= 6) |  8.50 (n= 6) |  8.08 (n=12)
+    D bass_amount   0.17 (n= 6) | -0.50 (n= 6) | -0.17 (n=12)
+    D chosen best   2 | 2
+    H overall       7.67 (n= 3) |  9.33 (n= 3) |  8.50 (n= 6)
+    H bass_amount   1.33 (n= 3) | -0.33 (n= 3) |  0.50 (n= 6)
+    H chosen best   0 | 0
+    no difference chosen: 0 | 1
+  Part C (test 1 | test 2), PROVISIONAL for test 2. Test 1: X = R8, Y = R3, woofer -3.8 dB. Test 2: X = R3, Y = R8.
+    R8 overall         7.33 (n= 3) |  4.00 (n= 3)
+    R8 treble_amount   0.33 (n= 3) | -1.67 (n= 3)
+    R8 treble_smooth   2.67 (n= 3) |  2.67 (n= 3)
+    R8 preferred      0 | 0
+    R3 overall         8.67 (n= 3) |  8.33 (n= 3)
+    R3 treble_amount   0.00 (n= 3) |  1.00 (n= 3)
+    R3 treble_smooth   3.33 (n= 3) |  3.67 (n= 3)
+    R3 preferred      2 | 3
+    order: R3 was played second in test 1 and first in test 2 and was preferred in both, so the preference is not only "the second sample"
+    test 2 treble amount is inverted (R3 +1.00, i.e. too much; R8 -1.67, too little) although R3 puts the tweeter 2.9 dB LOWER: check the track 4 failures and the Rp swap before using Part C
