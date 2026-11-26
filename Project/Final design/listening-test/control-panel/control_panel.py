@@ -800,6 +800,7 @@ class Panel:
             before = info['trackid']
             if uri:
                 self.mpris.call(name, 'OpenUri', 's', uri)
+        t_open = None                          # when the new track appeared after OpenUri
         if uri:                                # wait until the player shows the new track
             tid = uri.rsplit(':', 1)[1]
             t_end = time.monotonic() + 10
@@ -815,6 +816,7 @@ class Panel:
                     sv.restore()
                     self._fail(cancel, f'Track {i + 1}: {info["identity"]} did not load {uri} within 10 s.')
                     return False
+            t_open = time.monotonic()
             # OpenUri's own start lands late and would undo our seek: wait until the new track really plays
             t_end = time.monotonic() + 5
             while time.monotonic() < t_end:
@@ -848,6 +850,9 @@ class Panel:
         # Spotify's clock is the truth. Stay silent until it really plays at the start position.
         # Spotify undoes the first seek after a track change about 0.6 s later, so the position must hold
         # for 0.8 s; then one more seek to the start (that one sticks), and only then the fade-in.
+        # About 1.8 s after OpenUri Spotify also jumps on its own: back to 0:00, or forward to where a
+        # track it played before was left. So the final seek waits until 2.5 s after the track appeared,
+        # and any position outside the start window (before or after it) is sought again.
         seekable = info['can_seek'] and bool(info['trackid']) and (start > 0 or info['position'] > 1 or bool(uri))
 
         def seek_to(x):
@@ -870,14 +875,14 @@ class Panel:
                 ok_since = ok_since or now
                 if final and pos <= start + 0.5:
                     break
-                if not final and now - ok_since >= 0.8:
+                if not final and now - ok_since >= 0.8 and (t_open is None or now - t_open >= 2.5):
                     if not seek_to(start):
                         return False
                     final, ok_since, t0 = True, None, now
                     continue
             else:
                 ok_since = None
-                if st == 'Playing' and seekable and pos < start - 0.5 and seeks < 3 and now - t0 > 0.3:
+                if st == 'Playing' and seekable and seeks < 4 and now - t0 > 0.3:
                     log(f'Track {i + 1}: position {pos:.1f} s instead of {start:.1f} s, seeking again')
                     if not seek_to(start):
                         return False
@@ -930,8 +935,9 @@ class Panel:
                     c['playing'] = p.get('PlaybackStatus') == 'Playing'
                 pos = c['pos']
                 end = start + c['length']
-                if seekable and c['playing'] and played < 5 and pos < start - 1 and info['trackid']:
-                    log(f'Track {i + 1}: Spotify jumped back to {pos:.1f} s, seeking to {start:.1f} s again')
+                if (seekable and c['playing'] and played < 5 and info['trackid']
+                        and (pos < start - 1 or pos > start + played + 3)):
+                    log(f'Track {i + 1}: Spotify jumped to {pos:.1f} s, seeking to {start:.1f} s again')
                     sv.scale(0)
                     self.mpris.call(name, 'SetPosition', 'ox', info['trackid'], int(start * 1e6))
                     c['pos'], c['pos_at'] = start, now
