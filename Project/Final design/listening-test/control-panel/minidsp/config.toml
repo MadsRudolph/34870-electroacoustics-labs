@@ -1,0 +1,10 @@
+# MiniDSP daemon configuration (~/.config/minidsp/config.toml)
+# Default Unix socket is always exposed at /tmp/minidsp.sock
+
+[http_server]
+bind_address = "127.0.0.1:5380"
+# Uncomment to allow web apps / external origins to access the HTTP/WS API:
+# allowed_origins = "*"
+
+[[tcp_server]]
+bind_address = "127.0.0.1:5333"

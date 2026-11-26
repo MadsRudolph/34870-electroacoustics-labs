@@ -392,7 +392,7 @@ li.ok .what { color: var(--muted); }
       <div class="card hero">
         <div class="grp" id="hGroup"></div>
         <h2 id="hName"></h2>
-        <div class="hrow"><div class="lbl">SET</div><div><div class="setval" id="hSet"></div><div class="setnote" id="hNote"></div></div><div></div></div>
+        <div class="hrow"><div class="lbl">SET</div><div><div class="setval" id="hSet"></div><div class="setnote" id="hNote"></div><div class="setnote" id="hDsp"></div></div><div></div></div>
         <div class="hrow"><div class="lbl">PLAY</div><div class="playval"><div class="v" id="hPlay"></div><div class="t" id="hPlayT"></div></div>
           <div style="display:flex;align-items:center;gap:12px"><kbd>P</kbd><button class="play" id="sPlay" style="width:64px;height:64px" aria-label="Play this step"><svg width="28" height="28"><use href="#i-play"/></svg></button></div></div>
         <div class="hrow"><div class="lbl">AFTER</div><div class="after" id="hAfter"></div><div></div></div>
@@ -455,6 +455,11 @@ li.ok .what { color: var(--muted); }
     <section class="view" id="v-out">
       <div class="vhead"><h1>Output</h1></div>
       <div class="rows">
+        <div class="orow"><div class="l">MiniDSP gains<small>USB control through the open-source minidsp-rs CLI</small></div>
+          <div><label class="switch"><input type="checkbox" id="dspAuto"> Apply test gains automatically</label>
+            <div class="sub" id="dspStatus" style="margin-top:8px"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn" id="dspCheck">Check connection</button><button class="btn ghost" id="dspDesign">Set design now (Out 1 −5.8 / Out 2 0 dB)</button></div>
+            <div class="sub" style="margin-top:8px">2x4 HD on USB to this PC. Before each guided step plays, the panel sets Output 1 to that step's level (L −11.6, D −5.8, H 0 dB) and Output 2 to 0 dB. It never touches the crossover, routing or anything else. If the gain cannot be set, the step does not play. Off = the old manual way (set Out 1 by hand, ✓ Set done).</div></div></div>
         <div class="orow"><div class="l">System output<small>PipeWire default. Spotify and browsers always play here.</small></div>
           <div><div class="big" id="sinkInfo"></div><div class="sub" id="sinkSub" style="margin-top:4px"></div></div></div>
         <div class="orow"><div class="l">Panel output<small>Local files and check tones.</small></div>
@@ -735,7 +740,7 @@ function renderNow() {
   if (lib && n.gain_note) $('libGain').textContent = 'Level ' + n.gain_note;
 }
 async function poll() {
-  try { ST = await api('/api/status'); autoTick(); renderNow(); renderTrackInfo(); }
+  try { ST = await api('/api/status'); autoTick(); renderNow(); renderTrackInfo(); renderMiniDsp(); renderDspNote(); }
   catch (e) { $('npTitle').textContent = 'Panel not reachable · is control_panel.py running?'; }
   setTimeout(poll, 250);
 }
@@ -743,6 +748,8 @@ async function poll() {
 // ---------------- steps (one session = three listeners at once) ----------------
 const B_ORDER = { 1: 'DLDH', 2: 'HDLD', 3: 'DHLD', 4: 'LDHD', 5: 'DHDL', 6: 'DLHD' };   // operator sheet, section 4
 const GAIN = { L: '−11.6 dB', D: '−5.8 dB', H: '0 dB' };
+const GAIN_DB = { L: -11.6, D: -5.8, H: 0 };
+const DESIGN_GAINS = { output1: -5.8, output2: 0 };
 const CDESC = { L: 'bass −2 dB', D: 'the design', H: 'bass +2 dB' };
 const RP = { R8: '8.2 Ω', R3: '3.3 Ω' };
 const row = n => ((n - 1) % 6) + 1;
@@ -751,39 +758,39 @@ const dOrder = n => (row(n) % 2 === 1 ? ['open', 'plugged'] : ['plugged', 'open'
 const DESIGN = [['Out 1', '−5.8 dB'], ['Rp', '8.2 Ω'], ['Vent', '160 mm']];
 function steps(n) {
   const B = B_ORDER[row(n)].split(''), C = cOrder(n), D = dOrder(n);
-  const s = [{ g: 'Prep', chip: '·', t: 'Before the session', set: { design: true, note: 'Out 2 0 dB, one vent open, the other plugged. These are the design settings for Part A.' }, play: null,
+  const s = [{ g: 'Prep', chip: '·', t: 'Before the session', set: { design: true, note: 'Out 2 0 dB, one vent open, the other plugged. These are the design settings for Part A.' }, dsp: DESIGN_GAINS, play: null,
                after: `Seat three listeners: Left, Middle (reference seat, on axis, at the marked chair), Right. Each writes session ${n} and their seat on the sheet or phone form. No talking, no reactions, don't look at each other's answers.` }];
   for (let k = 0; k < 4; k++) s.push({ g: 'A', chip: 'A' + (k + 1), t: `Part A · Track ${k + 1}`,
     set: k === 0 ? { design: true, note: 'Check it is the design, nothing else.' } : { none: 'The design settings stay' },
-    play: [k], cue: 'a' + (k + 1), after: 'The voice asks for the rating, then 40 s rating time. Auto continues by itself; without Auto, press Next.' });
+    dsp: DESIGN_GAINS, play: [k], cue: 'a' + (k + 1), after: 'The voice asks for the rating, then 40 s rating time. Auto continues by itself; without Auto, press Next.' });
   let prev = 'D';
   B.forEach((c, j) => {
     s.push({ g: 'B', chip: c, t: `Part B · Sample ${j + 1}`,
       set: c === prev ? { none: `Out 1 stays at ${GAIN[c]}`, badge: c, note: `Condition ${c}, ${CDESC[c]}.` }
                       : { k: 'Out 1', v: GAIN[c], badge: c, note: `Condition ${c}, ${CDESC[c]}. MiniDSP Output 1 gain, now at ${GAIN[prev]}.`, change: true },
-      play: [1, 2], cue: 'b' + (j + 1), after: 'The voice asks for the rating, then 40 s rating time. Set the next Out 1 during it and click ✓ Set done.' });
+      dsp: { output1: GAIN_DB[c], output2: 0 }, play: [1, 2], cue: 'b' + (j + 1), after: 'The voice asks for the rating, then 40 s rating time. Set the next Out 1 during it and click ✓ Set done.' });
     prev = c;
   });
   s.push({ g: 'B', chip: 'undo', t: 'After Part B', set: prev === 'D' ? { none: 'Out 1 is already −5.8 dB' } : { k: 'Out 1', v: '−5.8 dB', note: 'Back to the design.', change: true },
-           play: null, after: 'Then Next for Part C.' });
+           dsp: DESIGN_GAINS, play: null, after: 'Then Next for Part C.' });
   let rp = 'R8';
   ['X', 'Y'].forEach((xy, j) => {
     s.push({ g: 'C', chip: xy, t: `Part C · Sample ${xy}`,
       set: { k: 'Rp', v: RP[C[j]], badge: C[j], change: true, note: `Swap Rp on the board, outside the room; the listeners stay seated. If it is already ${RP[C[j]]}, leave it.` },
-      play: [3, 1], cue: 'c' + xy.toLowerCase(), after: `The voice asks for the rating of ${xy}, then 40 s rating time. Swap Rp for the next sample during it and click ✓ Set done.` });
+      dsp: DESIGN_GAINS, play: [3, 1], cue: 'c' + xy.toLowerCase(), after: `The voice asks for the rating of ${xy}, then 40 s rating time. Swap Rp for the next sample during it and click ✓ Set done.` });
     rp = C[j];
   });
   s.push({ g: 'C', chip: 'undo', t: 'After Part C', set: rp === 'R8' ? { none: 'Rp is already 8.2 Ω, leave it' } : { k: 'Rp', v: '8.2 Ω', note: 'Back to the design.', change: true },
-           play: null, after: S?.part_d ? 'Then Next for Part D.' : 'Then Next.' });
+           dsp: DESIGN_GAINS, play: null, after: S?.part_d ? 'Then Next for Part D.' : 'Then Next.' });
   if (S?.part_d) {
     D.forEach((v, j) => s.push({ g: 'D', chip: v === 'open' ? 'O' : 'P', t: `Part D · Sample ${j + 1}`,
       set: { k: 'Vent', v: v === 'open' ? 'Open 160 mm' : 'Both plugged', badge: v === 'open' ? 'open' : 'plug', change: true, small: true,
              note: 'All listeners step out. Always pull the plug and refit it, even if nothing changes.' },
-      play: [2], cue: 'd' + (j + 1), after: 'Wait for the rating (Part D is not on the questionnaire yet: write it on the back of the sheet), then Next.' }));
+      dsp: DESIGN_GAINS, play: [2], cue: 'd' + (j + 1), after: 'Wait for the rating (Part D is not on the questionnaire yet: write it on the back of the sheet), then Next.' }));
     s.push({ g: 'D', chip: 'undo', t: 'After Part D', set: D[1] === 'open' ? { none: 'One vent is already open at 160 mm' } : { k: 'Vent', v: 'Open 160 mm', small: true, note: 'Back to the design: one vent open, the other plugged.', change: true },
-             play: null, after: 'Then Next.' });
+             dsp: DESIGN_GAINS, play: null, after: 'Then Next.' });
   }
-  s.push({ g: 'End', chip: 'end', t: 'Finish', set: { design: true, note: 'Check the design is back before the next session.' }, play: null, endCue: true,
+  s.push({ g: 'End', chip: 'end', t: 'Finish', set: { design: true, note: 'Check the design is back before the next session.' }, dsp: DESIGN_GAINS, play: null, endCue: true,
     after: `Collect the three sheets. Grey line on page 2: session ${n}, Part B ${B.join(' ')}, Part C X = ${C[0]}, Y = ${C[1]}${S?.part_d ? `, Part D ${D.join(' then ')}` : ''}. Then Next session.` });
   return s;
 }
@@ -805,7 +812,10 @@ function renderSteps() {
   if (x.endCue) $('hPlayT').textContent = 'Voice: "The test is now finished. Thank you very much for taking part!"';
   $('hPlay').classList.toggle('muted', !x.play && !x.endCue);
   $('sPlay').disabled = !x.play && !x.endCue;
-  $('hAfter').textContent = x.after;
+  $('hAfter').textContent = S.minidsp_auto && x.g === 'B' && x.play
+    ? 'The voice asks for the rating, then 40 s rating time. The panel sets the next Out 1 over USB before the next sample plays; no ✓ Set done needed.'
+    : x.after;
+  renderDspNote();
   $('sPrev').disabled = cur === 0; $('sNext').disabled = cur === st.length - 1;
   const groups = [];
   st.forEach((y, k) => { let g = groups.find(q => q.g === y.g); if (!g) groups.push(g = { g: y.g, items: [] }); g.items.push(k); });
@@ -820,20 +830,58 @@ function renderSteps() {
   $('ordTable').innerHTML = t + '</table>';
   $('ordLegend').textContent = 'L = Out 1 −11.6 dB · D = −5.8 dB (design) · H = 0 dB · R8 = Rp 8.2 Ω · R3 = Rp 3.3 Ω' + (S.part_d ? ' · Part D open = one vent open, plugged = both plugged' : '') + ' · session 7 uses row 1, 8 row 2, and so on.';
 }
-function setStep(k, keepAuto) { if (!keepAuto) cancelAuto(); S.step = k; renderSteps(); saveSettings({ step: k }); }
-function setSession(n) { cancelAuto(); n = Math.max(1, n | 0); S.listener = n; S.step = 0; renderSteps(); saveSettings({ listener: n, step: 0 }); }
+function setStep(k, keepAuto) { if (!keepAuto) cancelAuto(); S.step = k; renderSteps(); saveSettings({ step: k });
+  if (!keepAuto) dspOnEnter(steps(S.listener)[k]); }       // auto-run restores the design itself when it pauses there
+function setSession(n) { cancelAuto(); n = Math.max(1, n | 0); S.listener = n; S.step = 0; renderSteps(); saveSettings({ listener: n, step: 0 }); dspOnEnter(steps(n)[0]); }
 $('lMinus').onclick = () => setSession(S.listener - 1);
 $('lPlus').onclick = () => setSession(S.listener + 1);
 $('lNum').onchange = () => setSession(+$('lNum').value);
 $('lNext').onclick = () => { if (confirm(`Start session ${S.listener + 1}? Check the design settings are back first.`)) setSession(S.listener + 1); };
 $('cues').onchange = async () => { S.cues = $('cues').checked; await saveSettings({ cues: S.cues }); };
 $('partD').onchange = async () => { S.part_d = $('partD').checked; await saveSettings({ part_d: S.part_d }); renderSteps(); };
-function playStep() {
+// ---------------- MiniDSP gains over USB (minidsp-rs) ----------------
+// With "Apply test gains automatically" on, every guided step that plays first sets its Out 1 / Out 2
+// gains; if that fails, the step does NOT play. Steps without music (Prep, After Part B/C/D, Finish)
+// put the design back when they are entered. Off: nothing is sent and the operator sets Out 1 by hand.
+let DSP_BUSY = false, DSP_ERR = '';
+const dspHandles = x => !!(S?.minidsp_auto && x && x.set && x.set.k === 'Out 1');   // the panel sets it, no ✓ Set done
+const needsManualSet = x => needsSet(x) && !dspHandles(x);
+const sameGains = (a, b) => !!(a && b && a.output1 === b.output1 && a.output2 === b.output2);
+async function applyDsp(g) {
+  if (DSP_BUSY) { toast('MiniDSP is still being set, wait a moment.'); return false; }
+  DSP_BUSY = true; renderMiniDsp();
+  try { await api('/api/dsp/gains', g); DSP_ERR = ''; return true; }
+  catch (e) { DSP_ERR = e.message || 'MiniDSP gain could not be set'; return false; }   // api() already showed the error
+  finally { DSP_BUSY = false; renderMiniDsp(); renderDspNote(); }
+}
+async function dspOnEnter(x) {      // entering a step without music: restore its gains (the design) if needed
+  if (!S.minidsp_auto || !x || x.play || !x.dsp || sameGains(ST?.minidsp?.last_gains, x.dsp)) return;
+  await applyDsp(x.dsp);            // the step's note shows the result; api() shows any error
+}
+function renderDspNote() {
+  const el = $('hDsp'); if (!el || !S) return;
+  const x = steps(S.listener)[Math.min(S.step | 0, steps(S.listener).length - 1)];
+  let h = '';
+  if (S.minidsp_auto && x && x.dsp) {
+    const d = ST?.minidsp || {};
+    h = DSP_BUSY ? '<span class="dot warn"></span><span>Setting the MiniDSP over USB …</span>'
+      : DSP_ERR ? `<span class="dot err"></span><span style="color:var(--err)"><b>MiniDSP not set:</b> ${esc(DSP_ERR)}. Fix it (Output view) or turn automatic gains off and set Out 1 by hand.</span>`
+      : d.available === false && !d.null_audio ? '<span class="dot err"></span><span style="color:var(--err)">MiniDSP automatic gains are on, but the minidsp CLI is missing: steps will not play.</span>'
+      : `<span class="dot ok"></span><span>MiniDSP over USB: ${x.play ? 'set to' : 'back to'} Out 1 ${dB(x.dsp.output1)}, Out 2 ${dB(x.dsp.output2)} ${x.play ? 'before this step plays' : 'when this step opens'}${d.null_audio ? ' (simulated in test mode)' : ''}.</span>`;
+  }
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+async function playStep() {
   const x = steps(S.listener)[S.step];
   if (x && x.endCue) { cancelAuto(); playEnd(); return; }
   if (!x || !x.play) return;
+  if (DSP_BUSY) { toast('MiniDSP is still being set, wait a moment.'); return; }
+  if (S.minidsp_auto && !(await applyDsp(x.dsp || DESIGN_GAINS))) {   // unknown gain: never play
+    cancelAuto(); toast('Not played: the MiniDSP gain could not be set. ' + DSP_ERR); return;
+  }
   const voice = S.cues !== false && x.cue;
-  api('/api/play', { tracks: x.play, label: x.t, cue: voice ? x.cue : null, after_cue: voice ? 'r' + x.cue : null });
+  try { await api('/api/play', { tracks: x.play, label: x.t, cue: voice ? x.cue : null, after_cue: voice ? 'r' + x.cue : null }); }
+  catch (e) { cancelAuto(); return; }
   AUTO = S.auto !== false ? { phase: 'playing', step: S.step, session: S.listener, saw: false } : null;
   renderAuto();
 }
@@ -858,7 +906,7 @@ function autoTick() {
     else if (AUTO.saw) { AUTO = null; }                               // stopped by the operator
   } else if (AUTO.phase === 'count' && Date.now() >= AUTO.until) {
     const nx = nextOf(AUTO);
-    if (autoPlayable(nx) && needsSet(nx) && !AUTO.setDone) AUTO.phase = 'waitset';
+    if (autoPlayable(nx) && needsManualSet(nx) && !AUTO.setDone) AUTO.phase = 'waitset';
     else autoAdvance();
   }
   renderAuto();
@@ -869,8 +917,8 @@ function autoAdvance() {
   if (lastPlayable(a) && S.cues !== false) playEnd();          // the session's last rating is over: thank the listeners
   if (!nx) { renderAuto(); return; }
   setStep(a.step + 1, true);
-  if (autoPlayable(nx) && (!needsSet(nx) || a.setDone)) playStep();
-  else { renderAuto(); toast(nx.play ? 'Auto-run paused: ' + nx.t + ' is started by hand.' : 'Auto-run paused: ' + nx.t + '. Do it, then Next.', true); }
+  if (autoPlayable(nx) && (!needsManualSet(nx) || a.setDone)) playStep();
+  else { renderAuto(); dspOnEnter(nx); toast(nx.play ? 'Auto-run paused: ' + nx.t + ' is started by hand.' : 'Auto-run paused: ' + nx.t + '. Do it, then Next.', true); }
 }
 function renderAuto() {
   const box = $('autoBox'); if (!box) return;
@@ -883,15 +931,16 @@ function renderAuto() {
   let t;
   if (!nx || lastPlayable(AUTO)) t = '<b>Rating time.</b> That was the last sample: the voice then thanks the listeners and ends the test.';
   else if (!autoPlayable(nx)) t = `<b>Rating time.</b> Next: ${esc(nx.t)}. ${nx.play ? 'This one is started by hand.' : 'The panel moves there and waits for you.'}`;
+  else if (dspHandles(nx) && needsSet(nx)) t = `<b>Rating time.</b> Then the panel sets ${esc(nx.set.k)} → ${esc(nx.set.v)} over USB and starts ${esc(nx.t)}. Nothing to do by hand.`;
   else if (needsSet(nx)) t = `<b>Now set: ${esc(nx.set.k)} → ${esc(nx.set.v)}</b>${nx.set.badge ? ' (' + esc(nx.set.badge) + ')' : ''} for ${esc(nx.t)}, then click ✓ Set done. ` +
     (AUTO.setDone ? '<b>Done.</b> It plays when the countdown ends.' : AUTO.phase === 'waitset' ? 'Waiting for you.' : 'It will not play before you confirm.');
   else t = `<b>Rating time.</b> Then ${esc(nx.t)} plays by itself (no setting to change).`;
   $('autoTxt').innerHTML = t;
-  $('autoSet').style.display = nx && autoPlayable(nx) && needsSet(nx) && !AUTO.setDone ? '' : 'none';
+  $('autoSet').style.display = nx && autoPlayable(nx) && needsManualSet(nx) && !AUTO.setDone ? '' : 'none';
 }
 $('autoSet').onclick = () => { if (!AUTO) return; AUTO.setDone = true; if (AUTO.phase === 'waitset') autoAdvance(); else renderAuto(); };
 $('autoGo').onclick = () => { if (!AUTO) return; const nx = nextOf(AUTO);
-  if (autoPlayable(nx) && needsSet(nx) && !AUTO.setDone) { toast('Click ✓ Set done first: ' + nx.set.k + ' → ' + nx.set.v, true); return; } autoAdvance(); };
+  if (autoPlayable(nx) && needsManualSet(nx) && !AUTO.setDone) { toast('Click ✓ Set done first: ' + nx.set.k + ' → ' + nx.set.v, true); return; } autoAdvance(); };
 $('autoCancel').onclick = cancelAuto;
 $('autoRun').onchange = async () => { S.auto = $('autoRun').checked; if (!S.auto) cancelAuto(); await saveSettings({ auto: S.auto }); };
 $('sPlay').onclick = playStep;
@@ -1012,6 +1061,35 @@ async function loadDevices() {
     + (r.devices.find(d => d.name === r.selected) ? '' : `<option selected value="${esc(r.selected)}">${esc(r.selected)} (not connected)</option>`);
 }
 $('devSel').onchange = () => api('/api/device', { device: $('devSel').value }).then(() => toast('Panel output changed.', true));
+$('dspAuto').onchange = async () => {
+  S.minidsp_auto = $('dspAuto').checked;
+  await saveSettings({ minidsp_auto: S.minidsp_auto });
+  renderSteps(); renderAuto(); renderMiniDsp();
+};
+const dB = v => (v === 0 ? '0' : (v < 0 ? '−' : '+') + Math.abs(v)) + ' dB';
+function renderMiniDsp() {
+  if (!S || !$('dspAuto')) return;
+  if (document.activeElement !== $('dspAuto')) $('dspAuto').checked = !!S.minidsp_auto;
+  const d = ST?.minidsp || {}, g = d.last_gains;
+  const last = g ? `Last set${d.simulated ? ' (simulated)' : ''}: Out 1 ${dB(g.output1)}, Out 2 ${dB(g.output2)}` : 'Gains not set by the panel yet (unknown)';
+  let h;
+  if (d.null_audio) h = `<span class="dot"></span>Silent test mode: commands are <b>simulated</b>, nothing is sent to the MiniDSP. ${esc(last)}.`;
+  else if (!d.available) h = `<span class="dot err"></span><b>minidsp CLI not found.</b> Install minidsp-rs (see README), then restart the panel.`;
+  else h = `<span class="dot ${d.last_error ? 'err' : g ? 'ok' : 'warn'}"></span>minidsp CLI found · ${esc(last)}.`;
+  if (d.last_error) h += `<br><span style="color:var(--err)">Last error: ${esc(d.last_error)}</span>`;
+  if (d.check) h += `<br><span class="faint">Connection check: ${esc(d.check)}</span>`;
+  if ($('dspStatus').dataset.h !== h) { $('dspStatus').dataset.h = h; $('dspStatus').innerHTML = h; }
+  $('dspCheck').disabled = $('dspDesign').disabled = DSP_BUSY;
+}
+$('dspCheck').onclick = async () => {
+  DSP_BUSY = true; renderMiniDsp();
+  try { const r = await api('/api/dsp/check', {}); toast(r.message || 'MiniDSP found.', true); } catch (e) {}
+  finally { DSP_BUSY = false; renderMiniDsp(); }
+};
+$('dspDesign').onclick = async () => {
+  if (!S.minidsp_auto) { toast('Turn on "Apply test gains automatically" first.'); return; }
+  if (await applyDsp(DESIGN_GAINS)) toast('MiniDSP set to the design: Out 1 −5.8 dB, Out 2 0 dB.', true);
+};
 
 // ---------------- keyboard ----------------
 document.addEventListener('keydown', e => {

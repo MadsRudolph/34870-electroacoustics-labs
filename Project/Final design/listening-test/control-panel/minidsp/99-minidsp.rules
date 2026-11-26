@@ -1,0 +1,4 @@
+# MiniDSP devices (Vendor ID 2752, e.g. MiniDSP 2x4 HD = 2752:0011)
+# Upstream rule adapted for Arch Linux (TAG+="uaccess" + MODE="0666" since Arch does not use the Debian 'plugdev' group)
+SUBSYSTEM=="usb", ATTR{idVendor}=="2752", MODE="0666", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="2752", MODE="0666", TAG+="uaccess"

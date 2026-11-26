@@ -13,9 +13,10 @@ One local web page controls:
 
 Local files play through one mpv process controlled over its JSON IPC socket. Streaming players are
 controlled over D-Bus (MPRIS) with `busctl`. Settings live in panel_settings.json next to this script.
-Only the Python standard library is used, plus mpv, ffmpeg, busctl and pactl.
+Only the Python standard library is used, plus mpv, ffmpeg, busctl and pactl (and optionally the minidsp
+CLI from minidsp-rs, which sets the MiniDSP 2x4 HD output gains over USB; see README).
 """
-import argparse, ctypes, json, os, re, signal, socket, subprocess, sys, threading, time, webbrowser
+import argparse, ctypes, json, math, os, re, shutil, signal, socket, subprocess, sys, threading, time, webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -49,7 +50,7 @@ SONG_FIELDS = ('kind', 'source', 'player', 'uri', 'title', 'start', 'length')   
 
 DEFAULT_SETTINGS = dict(
     tracks=DEFAULT_TRACKS, gap=2.0, target_lufs=-23.0, fade=0.5, library_dir='', audio_device='auto',
-    listener=1, step=0, lib_mono=True, lib_match=True, lib_offset=0.0, part_d=False)
+    listener=1, step=0, lib_mono=True, lib_match=True, lib_offset=0.0, part_d=False, minidsp_auto=False)
 
 MPRIS_PREFIX = 'org.mpris.MediaPlayer2.'
 MPRIS_PATH = '/org/mpris/MediaPlayer2'
@@ -105,6 +106,121 @@ def spotify_uri(text):
     """Normalise a Spotify link or URI to spotify:track:<id>; '' if it is not one."""
     m = re.search(r'(?:open\.spotify\.com/(?:intl-[a-z]+/)?track/|spotify:track:)([A-Za-z0-9]{22})', text or '')
     return f'spotify:track:{m.group(1)}' if m else ''
+
+
+class MiniDSPError(RuntimeError):
+    """A MiniDSP command could not be run or was refused. The message is shown to the operator."""
+
+
+class MiniDSPControl:
+    """Sets the two output gains of the MiniDSP 2x4 HD over USB with the open-source minidsp-rs CLI.
+
+    Only output gains are ever written: Output 1 (woofer) to one of the three listening-test levels,
+    Output 2 (mid + tweeter) to 0 dB. Crossover, routing, PEQ etc. are never touched. In silent test
+    mode (--test) nothing is sent: the commands are only logged and remembered as "simulated".
+    minidsp-rs cannot read gains back from the device, so last_gains is what this panel last sent.
+    """
+    USB_ID = '2752:0011'                       # miniDSP vendor id : 2x4 HD product id
+    OUTPUT1_GAINS = (-11.6, -5.8, 0.0)          # L, D (design), H
+    OUTPUT2_GAIN = 0.0
+    TIMEOUT = 10
+
+    def __init__(self, null_audio=False, exe_name='minidsp'):
+        self.null_audio = null_audio
+        self.exe_name = exe_name
+        self.lock = threading.Lock()
+        self.last_gains = None      # dict(output1, output2) once a full set succeeded, None = unknown
+        self.last_error = ''
+        self.last_check = ''
+        self.simulated = False
+
+    def exe(self):
+        return shutil.which(self.exe_name)
+
+    def status(self, enabled):
+        return dict(enabled=bool(enabled), available=self.exe() is not None, null_audio=self.null_audio,
+                    last_gains=self.last_gains, simulated=self.simulated, last_error=self.last_error,
+                    check=self.last_check, busy=self.lock.locked())
+
+    @classmethod
+    def validate(cls, output1, output2):
+        """Return (output1, output2) as floats, or raise ValueError for anything but the test levels."""
+        try:
+            g1, g2 = float(output1), float(output2)
+        except (TypeError, ValueError):
+            raise ValueError('MiniDSP gains must be numbers')
+        if not (math.isfinite(g1) and math.isfinite(g2)):
+            raise ValueError('MiniDSP gains must be finite numbers')
+        match = [g for g in cls.OUTPUT1_GAINS if abs(g1 - g) < 1e-6]
+        if not match or abs(g2 - cls.OUTPUT2_GAIN) > 1e-6:
+            raise ValueError('Refused: the listening test only uses Output 1 at -11.6, -5.8 or 0 dB '
+                             f'and Output 2 at 0 dB (got {g1:g} / {g2:g} dB)')
+        return match[0], cls.OUTPUT2_GAIN
+
+    def gain_command(self, exe, index, gain):
+        # `--` before the value, or the CLI reads a negative gain such as -5.8 as an option.
+        return [exe, '--usb', self.USB_ID, 'output', str(index), 'gain', '--', f'{gain:g}']
+
+    def _run(self, cmd, what):
+        try:
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=self.TIMEOUT)
+        except subprocess.TimeoutExpired:
+            raise MiniDSPError(f'{what}: no answer within {self.TIMEOUT} s (is the 2x4 HD connected over USB?)')
+        except OSError as e:
+            raise MiniDSPError(f'{what}: could not run minidsp ({e})')
+        if r.returncode != 0:
+            detail = (r.stderr or r.stdout or '').strip().splitlines()
+            detail = detail[-1] if detail else f'exit code {r.returncode}'
+            raise MiniDSPError(f'{what} failed: {detail}')
+        return r.stdout
+
+    def set_gains(self, output1, output2):
+        """Set Output 1 then Output 2. Raises MiniDSPError/ValueError; on any failure the gains are unknown."""
+        g1, g2 = self.validate(output1, output2)
+        if self.null_audio:
+            with self.lock:
+                log(f'MiniDSP (simulated, --test): Out 1 {g1:g} dB, Out 2 {g2:g} dB')
+                self.last_gains, self.simulated, self.last_error = dict(output1=g1, output2=g2), True, ''
+            return self.last_gains
+        exe = self.exe()
+        if not exe:
+            self.last_error = 'minidsp CLI not found: install minidsp-rs (see README) and restart the panel'
+            raise MiniDSPError(self.last_error)
+        with self.lock:
+            self.last_gains, self.simulated = None, False         # unknown until both commands succeed
+            try:
+                for index, gain in ((0, g1), (1, g2)):
+                    self._run(self.gain_command(exe, index, gain), f'MiniDSP Output {index + 1} gain {gain:g} dB')
+            except MiniDSPError as e:
+                self.last_error = str(e) + ('' if 'Output 1' in str(e) else ' (Output 1 may already have changed)')
+                log(self.last_error)
+                raise MiniDSPError(self.last_error) from None
+            self.last_gains, self.last_error = dict(output1=g1, output2=g2), ''
+            log(f'MiniDSP set: Out 1 {g1:g} dB, Out 2 {g2:g} dB')
+            return self.last_gains
+
+    def check(self):
+        """Read-only: ask the 2x4 HD for its status summary. Returns a short message or raises."""
+        if self.null_audio:
+            self.last_check = 'skipped in silent test mode'
+            return 'Silent test mode: the MiniDSP is not contacted.'
+        exe = self.exe()
+        if not exe:
+            self.last_check = 'minidsp CLI not found'
+            raise MiniDSPError('minidsp CLI not found: install minidsp-rs (see README) and restart the panel')
+        with self.lock:
+            try:
+                out = self._run([exe, '--usb', self.USB_ID, '-o', 'json'], 'MiniDSP status read')
+            except MiniDSPError as e:
+                self.last_check = str(e)
+                raise
+        try:
+            m = json.loads(out.strip().splitlines()[-1]).get('master', {})
+            msg = f"2x4 HD answered: preset {m.get('preset', '?')}, master volume {m.get('volume', '?')}, mute {m.get('mute', '?')}"
+        except (ValueError, IndexError, AttributeError):
+            msg = '2x4 HD answered: ' + (out.strip().splitlines() or ['(no output)'])[0][:120]
+        self.last_check = msg + time.strftime(' (%H:%M:%S)')
+        return msg
 
 
 # ----------------------------------------------------------------------------------------------------
@@ -488,6 +604,7 @@ class Panel:
         self.players_cache, self.output_cache = [], {}
         self.lib = {'root': None, 'artists': [], 'scanned': 0}
         self.lib_gain_note = ''
+        self.minidsp = MiniDSPControl(null_audio)
         self.mpv = Mpv(null_audio, self.s.get('audio_device', 'auto'), self._mpv_event)
         self.null_audio = null_audio
         self.scan_library()
@@ -1255,7 +1372,13 @@ class Panel:
         return dict(now=now, tracks=tracks, mpv_ok=self.mpv.alive, null_audio=self.null_audio,
                     library_root=self.lib['root'], output=self.output_cache,
                     audio_device=self.s.get('audio_device', 'auto'),
+                    minidsp=self.minidsp.status(self.s.get('minidsp_auto', False)),
                     mpv_device=pr.get('audio-device'))
+
+    def set_minidsp_gains(self, body):
+        if not self.s.get('minidsp_auto', False):
+            raise MiniDSPError('MiniDSP control is off: turn on "Apply test gains automatically" in Output first')
+        return self.minidsp.set_gains(body.get('output1'), body.get('output2'))
 
     def close(self):
         with self.lock:
@@ -1300,7 +1423,7 @@ def update_settings(panel, body):
     for k in ('gap', 'target_lufs', 'lib_offset', 'rate_secs'):
         if k in body:
             s[k] = float(body[k])
-    for k in ('lib_mono', 'lib_match', 'part_d', 'cues', 'auto'):
+    for k in ('lib_mono', 'lib_match', 'part_d', 'cues', 'auto', 'minidsp_auto'):
         if k in body:
             s[k] = bool(body[k])
     for k in ('listener', 'step'):
@@ -1381,6 +1504,10 @@ def make_handler(panel):
                     res['settings'] = panel.s
                 elif p == '/api/tone':
                     panel.play_tone(body.get('hz'))
+                elif p == '/api/dsp/gains':
+                    res['gains'] = panel.set_minidsp_gains(body)
+                elif p == '/api/dsp/check':
+                    res['message'] = panel.minidsp.check()
                 elif p == '/api/library/rescan':
                     panel.scan_library()
                 elif p == '/api/library/play':
