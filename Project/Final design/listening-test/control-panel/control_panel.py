@@ -917,6 +917,8 @@ class Panel:
         while True:
             with self.lock:
                 c = self.cur
+                if cancel.is_set() or c is None:   # Stop cleared cur while this thread was between reads
+                    return False
                 end = start + c['length']
                 near = c['pos'] >= end - fade - 0.4
             if cancel.wait(0.05 if near else 0.25):
