@@ -742,7 +742,7 @@ async function poll() {
 
 // ---------------- steps (one session = three listeners at once) ----------------
 const B_ORDER = { 1: 'DLDH', 2: 'HDLD', 3: 'DHLD', 4: 'LDHD', 5: 'DHDL', 6: 'DLHD' };   // operator sheet, section 4
-const GAIN = { L: '−7.8 dB', D: '−5.8 dB', H: '−3.8 dB' };
+const GAIN = { L: '−11.6 dB', D: '−5.8 dB', H: '0 dB' };
 const CDESC = { L: 'bass −2 dB', D: 'the design', H: 'bass +2 dB' };
 const RP = { R8: '8.2 Ω', R3: '3.3 Ω' };
 const row = n => ((n - 1) % 6) + 1;
@@ -818,7 +818,7 @@ function renderSteps() {
   for (let r = 1; r <= 6; r++) { const b = B_ORDER[r].split(''), c = cOrder(r), d = dOrder(r);
     t += `<tr class="${r === row(n) ? 'me' : ''}"><td>${r}</td>${b.map(q => `<td>${q} ${GAIN[q]}</td>`).join('')}<td>${c[0]}</td><td>${c[1]}</td>${S.part_d ? `<td>${d[0]}</td><td>${d[1]}</td>` : ''}</tr>`; }
   $('ordTable').innerHTML = t + '</table>';
-  $('ordLegend').textContent = 'L = Out 1 −7.8 dB · D = −5.8 dB (design) · H = −3.8 dB · R8 = Rp 8.2 Ω · R3 = Rp 3.3 Ω' + (S.part_d ? ' · Part D open = one vent open, plugged = both plugged' : '') + ' · session 7 uses row 1, 8 row 2, and so on.';
+  $('ordLegend').textContent = 'L = Out 1 −11.6 dB · D = −5.8 dB (design) · H = 0 dB · R8 = Rp 8.2 Ω · R3 = Rp 3.3 Ω' + (S.part_d ? ' · Part D open = one vent open, plugged = both plugged' : '') + ' · session 7 uses row 1, 8 row 2, and so on.';
 }
 function setStep(k, keepAuto) { if (!keepAuto) cancelAuto(); S.step = k; renderSteps(); saveSettings({ step: k }); }
 function setSession(n) { cancelAuto(); n = Math.max(1, n | 0); S.listener = n; S.step = 0; renderSteps(); saveSettings({ listener: n, step: 0 }); }

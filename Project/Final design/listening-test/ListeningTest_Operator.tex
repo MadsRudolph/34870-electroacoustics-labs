@@ -22,7 +22,7 @@ The anechoic results say the speaker is flat to 5.5\,dB (150\,Hz--15\,kHz) once 
 The listening test answers three questions the chamber cannot:
 \begin{enumerate}[itemsep=0pt]
 \item \textbf{Part A:} how do listeners rate the final design, and does anything stand out (bass, the 1.5--3\,kHz plateau, treble)?
-\item \textbf{Part B:} is the woofer level right \emph{in this room with this amplifier}? Blind comparison of Out 1 at $-7.8$, $-5.8$ and $-3.8$\,dB.
+\item \textbf{Part B:} is the woofer level right \emph{in this room with this amplifier}? Blind comparison of Out 1 at $-11.6$, $-5.8$ and $0$\,dB (tests 1 and 2 on 18 and 26 Nov used $-7.8$, $-5.8$, $-3.8$\,dB: too close to tell apart).
 \item \textbf{Part C:} is the tweeter level right? Blind comparison of Rp $=8.2\,\Omega$ (now) and $3.3\,\Omega$ (before 12 Nov).
 \end{enumerate}
 
@@ -128,8 +128,8 @@ clicks \emph{\checkmark\ Set done}; Y plays by itself. Leave Rp at \textbf{8.2\,
 Each session takes about 35 minutes (Part A 9, Part B 15, Part C 9, intro 2) for three listeners: two sessions (6 listeners) need about 1 h 15 min. Short on time: shorten the excerpts in the panel (Tracks, End), or run Part C with only some listeners; Parts A and B matter most.
 
 \section{Sample orders}
-Part B conditions (MiniDSP Output 1 gain): \textbf{L} $=-7.8$\,dB (bass $-2$\,dB), \textbf{D} $=-5.8$\,dB (design),
-\textbf{H} $=-3.8$\,dB (bass $+2$\,dB). D is played twice as a hidden repeat: if a listener's two D ratings differ by more than 3 points,
+Part B conditions (MiniDSP Output 1 gain): \textbf{L} $=-11.6$\,dB (bass $-5.8$\,dB), \textbf{D} $=-5.8$\,dB (design),
+\textbf{H} $=0$\,dB (bass $+5.8$\,dB). D is played twice as a hidden repeat: if a listener's two D ratings differ by more than 3 points,
 that listener is guessing. Part C: \textbf{R8} $=$ Rp 8.2\,$\Omega$, \textbf{R3} $=$ Rp 3.3\,$\Omega$.
 
 \begin{center}
@@ -137,12 +137,12 @@ that listener is guessing. Part C: \textbf{R8} $=$ Rp 8.2\,$\Omega$, \textbf{R3}
 \begin{tabular}{@{}c|cccc|cc|l@{}}\toprule
 Session & \multicolumn{4}{c|}{Part B, sample 1 -- 4 (Out 1 gain)} & \multicolumn{2}{c|}{Part C} & Time / notes\\
 no. & 1 & 2 & 3 & 4 & X & Y & \\\midrule
-1 & D $-5.8$ & L $-7.8$ & D $-5.8$ & H $-3.8$ & R8 & R3 & \rule{4cm}{0.4pt}\\
-2 & H $-3.8$ & D $-5.8$ & L $-7.8$ & D $-5.8$ & R3 & R8 & \rule{4cm}{0.4pt}\\
-3 & D $-5.8$ & H $-3.8$ & L $-7.8$ & D $-5.8$ & R8 & R3 & \rule{4cm}{0.4pt}\\
-4 & L $-7.8$ & D $-5.8$ & H $-3.8$ & D $-5.8$ & R3 & R8 & \rule{4cm}{0.4pt}\\
-5 & D $-5.8$ & H $-3.8$ & D $-5.8$ & L $-7.8$ & R8 & R3 & \rule{4cm}{0.4pt}\\
-6 & D $-5.8$ & L $-7.8$ & H $-3.8$ & D $-5.8$ & R3 & R8 & \rule{4cm}{0.4pt}\\\midrule
+1 & D $-5.8$ & L $-11.6$ & D $-5.8$ & H $0$ & R8 & R3 & \rule{4cm}{0.4pt}\\
+2 & H $0$ & D $-5.8$ & L $-11.6$ & D $-5.8$ & R3 & R8 & \rule{4cm}{0.4pt}\\
+3 & D $-5.8$ & H $0$ & L $-11.6$ & D $-5.8$ & R8 & R3 & \rule{4cm}{0.4pt}\\
+4 & L $-11.6$ & D $-5.8$ & H $0$ & D $-5.8$ & R3 & R8 & \rule{4cm}{0.4pt}\\
+5 & D $-5.8$ & H $0$ & D $-5.8$ & L $-11.6$ & R8 & R3 & \rule{4cm}{0.4pt}\\
+6 & D $-5.8$ & L $-11.6$ & H $0$ & D $-5.8$ & R3 & R8 & \rule{4cm}{0.4pt}\\\midrule
 7 & \multicolumn{6}{l|}{as session 1 \quad(8 = 2, 9 = 3, \dots)} & \rule{4cm}{0.4pt}\\\bottomrule
 \end{tabular}
 \end{center}
@@ -152,7 +152,7 @@ Number the sessions 1, 2, 3, \dots\ in order, and do not show this table to anyo
 \begin{chk}
 \item Type every sheet into \texttt{listening-test/results.csv} (columns in \texttt{results\_template.csv}): one row per answer, with the condition taken from the table above.
 \item For the report: mean and spread per attribute in Part A; in Parts B and C, mean overall score and mean ``amount'' per condition.
-\item Decide: if ``bass amount'' for D averages near 0 and D scores at least as well as L and H, keep Out 1 $=-5.8$\,dB. If H wins and its bass amount is near 0, move to $-3.8$\,dB, and so on. The same rule for Rp in Part C.
+\item Decide: if ``bass amount'' for D averages near 0 and D scores at least as well as L and H, keep Out 1 $=-5.8$\,dB. If H or L wins, the right level lies between it and D: try the midpoint. The same rule for Rp in Part C.
 \item Whatever is changed: measure it in the chamber (one \texttt{S} run), so the report shows the final setting as a curve.
 \item Leave the room as found: MiniDSP configuration saved, board and plug back with the box, Rp at 8.2\,$\Omega$.
 \end{chk}

@@ -6,7 +6,8 @@
 //   GET  /results.csv?key=ADMIN_KEY  long-format CSV, same columns as ../results_template.csv (+ id, submitted)
 // The blind sample orders below must match the table in ListeningTest_Operator.pdf.
 
-const ORDER_B = { // order row -> condition of samples 1..4 (Out 1 gain: L -7.8, D -5.8, H -3.8 dB)
+const ORDER_B = { // order row -> condition of samples 1..4 (Out 1 gain: L -11.6, D -5.8, H 0 dB from test 3 on;
+                   // tests 1 and 2, 18 and 26 Nov 2026: L -7.8, D -5.8, H -3.8 dB)
   1: ['D', 'L', 'D', 'H'], 2: ['H', 'D', 'L', 'D'], 3: ['D', 'H', 'L', 'D'],
   4: ['L', 'D', 'H', 'D'], 5: ['D', 'H', 'D', 'L'], 6: ['D', 'L', 'H', 'D'],
 };
@@ -133,7 +134,7 @@ function summaryHtml(subs, key) {
 
   const aRows = Object.keys(A_ATTR).map(k => `<tr><th>${k}</th>${TRACKS.map(t => cell(stats(pick(r => r.part === 'A' && r.item === t && r.attribute === k)))).join('')}
     ${cell(stats(pick(r => r.part === 'A' && r.attribute === k)))}</tr>`).join('');
-  const bRows = ['L', 'D', 'H'].map(c => `<tr><th>${c} <span class="sd">${{ L: 'Out 1 −7.8 dB', D: '−5.8 dB (design)', H: '−3.8 dB' }[c]}</span></th>
+  const bRows = ['L', 'D', 'H'].map(c => `<tr><th>${c} <span class="sd">${{ L: 'Out 1 −11.6 dB (−7.8 before 27 Nov)', D: '−5.8 dB (design)', H: '0 dB (−3.8 before 27 Nov)' }[c]}</span></th>
     ${cell(stats(pick(r => r.part === 'B' && r.condition === c && r.attribute === 'overall')))}
     ${cell(stats(pick(r => r.part === 'B' && r.condition === c && r.attribute === 'bass_amount')))}
     <td>${R.filter(r => r.part === 'B' && r.attribute === 'best_sample' && r.condition === c).length}</td></tr>`).join('');
