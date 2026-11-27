@@ -167,6 +167,7 @@
   const app = document.getElementById('app'), backBtn = document.getElementById('back'), nextBtn = document.getElementById('next');
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const key = (part, item, attr) => `${part}_${item}_${attr}`;
+  const tuneLink = text => `<a href="/tune.html${/^\d{4}$/.test(answers.solo_code || '') ? '?code=' + answers.solo_code : ''}" style="color:var(--accent)">${esc(text)}</a>`;
 
   function scaleHtml(name, scale, title) {
     const cur = answers[name];
@@ -184,7 +185,8 @@
     const who = solo ? `<div class="card" data-name="solo_code"><p class="q">Solo code</p>
         <p class="hint">The 4-digit code on the control panel (Solo view) on the PC outside the room.</p>
         <input type="text" class="code" id="solo_code" inputmode="numeric" autocomplete="off" maxlength="4" value="${esc(answers.solo_code || '')}" aria-label="Solo code">
-        ${answers.solo_id && soloSt ? `<p class="hint" style="margin-top:8px">Connected: solo round ${esc(answers.session)}${answers.A_run === 'no' ? ', Part B only' : ''}.</p>` : ''}</div>`
+        ${answers.solo_id && soloSt ? `<p class="hint" style="margin-top:8px">Connected: solo round ${esc(answers.session)}${answers.A_run === 'no' ? ', Part B only' : ''}.</p>` : ''}
+        <p class="hint" style="margin-top:8px">After the test you can set the levels yourself on the ${tuneLink('tune page')} (not blind, so not before).</p></div>`
       : `<div class="card" data-name="session"><p class="q">Session number</p>
         <p class="hint">The test leader tells you this number. The three of you in the room share it.</p>
         <input type="number" id="session" inputmode="numeric" min="1" max="100" value="${esc(L)}" aria-label="Session number"></div>
@@ -258,9 +260,12 @@
 
   function renderReview() {
     if (sent) return `<div class="done"><div class="big">✓</div><h1>Thank you for listening!</h1>
-      <p class="sub">Your answers have been sent. You can close this page now.</p></div>`;
+      <p class="sub">Your answers have been sent. You can close this page now.</p>
+      ${isSolo() && answers.solo_code ? `<div class="card" style="text-align:left"><p class="q">Tune by ear</p><p class="hint">Now that the blind part is done, set the bass and treble levels yourself while music plays and save the setting you like.</p><p>${tuneLink('Open the tune page')}</p></div>` : ''}</div>`;
     if (isSolo()) return `<h2>Ready to send</h2><div class="card"><p>Solo round <b>${esc(answers.session)}</b>. Tap <b>Send answers</b> to finish.
-      You can still go back and change anything.</p></div><p class="err">${esc(sendError)}</p>`;
+      You can still go back and change anything.</p></div>
+      <div class="card"><p class="q">Then: tune by ear <span class="tag">optional</span></p><p class="hint">After sending, set the levels yourself while music plays: ${tuneLink('tune page')}.</p></div>
+      <p class="err">${esc(sendError)}</p>`;
     return `<h2>Ready to send</h2><div class="card"><p>Session <b>${esc(answers.session)}</b>, ${esc({ L: 'left', M: 'middle', R: 'right' }[answers.seat] || '')} seat. Tap <b>Send answers</b> to finish.
       You can still go back and change anything.</p></div><p class="err">${esc(sendError)}</p>`;
   }

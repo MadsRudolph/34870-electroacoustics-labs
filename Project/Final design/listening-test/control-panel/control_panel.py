@@ -163,19 +163,20 @@ class MiniDSPControl:
                              f'and Output 2 at 0 dB (got {g1:g} / {g2:g} dB)')
         return match[0], cls.OUTPUT2_GAIN
 
-    MANUAL_RANGE = ((-18.0, 0.0), (-6.0, 0.0))  # by-hand tuning from the phone: Out 1, Out 2, 0.5 dB steps
+    MANUAL_RANGE = ((-18.0, 0.0), (-6.0, 0.0))  # by-hand tuning from the phone: Out 1, Out 2, 0.1 dB steps
 
     @classmethod
     def validate_manual(cls, output1, output2):
-        """Gains set by hand (solo tune page): Out 1 -18..0, Out 2 -6..0 dB in 0.5 dB steps. Never above 0 dB."""
+        """Gains set by hand (solo tune page): Out 1 -18..0, Out 2 -6..0 dB in 0.1 dB steps (so the design's
+        -5.8 is reachable). Never above 0 dB."""
         try:
             g = [float(output1), float(output2)]
         except (TypeError, ValueError):
             raise ValueError('MiniDSP gains must be numbers')
         for v, (lo, hi), name in zip(g, cls.MANUAL_RANGE, ('Output 1', 'Output 2')):
-            if not math.isfinite(v) or v < lo - 1e-9 or v > hi + 1e-9 or abs(v * 2 - round(v * 2)) > 1e-6:
-                raise ValueError(f'Refused: {name} by hand must be {lo:g}..{hi:g} dB in 0.5 dB steps (got {v:g})')
-        return round(g[0] * 2) / 2, round(g[1] * 2) / 2
+            if not math.isfinite(v) or v < lo - 1e-9 or v > hi + 1e-9 or abs(v * 10 - round(v * 10)) > 1e-6:
+                raise ValueError(f'Refused: {name} by hand must be {lo:g}..{hi:g} dB in 0.1 dB steps (got {v:g})')
+        return round(g[0] * 10) / 10, round(g[1] * 10) / 10
 
     def set_manual(self, output1, output2):
         """Set both gains to hand-picked values (validated against MANUAL_RANGE, not the three test levels)."""
@@ -590,7 +591,8 @@ class SoloLink:
         with self.lock:
             prev = dict(self.state)
         try:
-            g1, g2 = self.panel.minidsp.set_manual(cmd.get('out1'), cmd.get('out2'))
+            g = self.panel.minidsp.set_manual(cmd.get('out1'), cmd.get('out2'))
+            g1, g2 = g['output1'], g['output2']
         except (MiniDSPError, ValueError) as e:
             self.gain = None
             self._set_state(seq, 'error', 'gain', 'the MiniDSP could not be set (' + str(e)[:160] + ')')

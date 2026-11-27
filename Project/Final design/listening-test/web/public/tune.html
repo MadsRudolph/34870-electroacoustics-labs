@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Tune by ear · Listening Test</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --bg: #f6f6f4; --card: #ffffff; --text: #1b1c1e; --muted: #62656b; --line: #d9dadd;
+    --accent: #1f5fbf; --accent-text: #ffffff; --chip: #eef0f3; --err: #b3261e; --ok: #1e7a3c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #131416; --card: #1c1d20; --text: #ececee; --muted: #9a9ca3; --line: #34363b;
+      --accent: #6aa3ff; --accent-text: #0b1220; --chip: #26282c; --err: #ff8a80; --ok: #6fd28f; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body { font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
+  main { max-width: 560px; margin: 0 auto; padding: 16px 16px 40px; }
+  header.top { position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 10px 16px 8px; border-bottom: 1px solid var(--line); }
+  header.top .row { max-width: 560px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  header.top .title { font-weight: 600; font-size: 15px; }
+  header.top a { color: var(--accent); font-size: 14px; }
+  h1 { font-size: 24px; margin: 8px 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 12px 0; }
+  .q { margin: 0 0 4px; font-weight: 600; }
+  .hint { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+  button { font: inherit; border-radius: 10px; padding: 12px 10px; border: 1px solid var(--line); background: var(--chip); color: var(--text);
+    cursor: pointer; touch-action: manipulation; }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  button:disabled { opacity: .5; cursor: default; }
+  input[type=text] { width: 100%; font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 9px; padding: 10px; }
+  input.code { font-size: 30px; letter-spacing: .3em; max-width: 180px; text-align: center; }
+  .st { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+  .dot.play { background: var(--accent); animation: pulse 1.2s infinite; } .dot.ok { background: var(--ok); } .dot.err { background: var(--err); }
+  @keyframes pulse { 50% { opacity: .35; } }
+  .tm { color: var(--muted); font-size: 14px; margin: 2px 0 0 18px; font-variant-numeric: tabular-nums; }
+  .out .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .out .val { font-size: 40px; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .out .val small { font-size: 18px; font-weight: 500; color: var(--muted); }
+  .out .conf { font-size: 13px; color: var(--muted); text-align: right; }
+  .out .conf.ok { color: var(--ok); } .out .conf.wait { color: var(--accent); }
+  .steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 10px 0 6px; }
+  .steps button { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; padding: 14px 4px; }
+  input[type=range] { width: 100%; margin: 10px 0 2px; accent-color: var(--accent); height: 28px; }
+  .ends { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .grid4 button.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  .row2 { display: flex; gap: 8px; margin-top: 8px; } .row2 > * { flex: 1; }
+  .err { color: var(--err); font-size: 14px; min-height: 1.2em; margin: 6px 0 0; }
+  ul.picks { list-style: none; margin: 4px 0 0; padding: 0; }
+  ul.picks li { border-top: 1px solid var(--line); padding: 8px 0; font-variant-numeric: tabular-nums; }
+  ul.picks li:first-child { border-top: 0; }
+  ul.picks .note { color: var(--muted); font-size: 14px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<header class="top"><div class="row"><span class="title">Tune by ear</span><a id="formLink" href="/">Back to the form</a></div></header>
+<main id="app" aria-live="polite"></main>
+
+<script>
+(() => {
+  'use strict';
+  // The listener sets the MiniDSP output gains by hand from the phone while music plays (solo rounds only).
+  // Phone -> /api/solo/cmd {action: gain|pick|play|stop} -> Durable Object -> control panel on the PC (minidsp over USB).
+  // The panel reports the gain back as panel.gain only for hand-set or design values, never after a blind Part B sample.
+  const DESIGN = { out1: -5.8, out2: 0 };
+  const RANGE = { out1: [-18, 0], out2: [-6, 0] };
+  const NAMES = { out1: ['Out 1 · woofer', 'Bass level'], out2: ['Out 2 · mid + tweeter', 'Mid and treble level'] };
+  const TRACKS = [['T1', 'Track 1', 'Alison Krauss'], ['T2', 'Track 2', 'Sade'], ['T3', 'Track 3', 'The Prodigy'], ['T4', 'Track 4', 'Pink Floyd']];
+  const app = document.getElementById('app');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const r1 = v => Math.round(v * 10) / 10;
+  const clamp = (v, [lo, hi]) => Math.min(hi, Math.max(lo, r1(v)));
+  const fmt = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1);
+  const mmss = x => { x = Math.max(0, Math.round(x || 0)); return Math.floor(x / 60) + ':' + String(x % 60).padStart(2, '0'); };
+
+  let code = new URLSearchParams(location.search).get('code') || '';
+  if (!code) { try { code = ((JSON.parse(localStorage.getItem('lt-draft-v1') || 'null') || {}).answers || {}).solo_code || ''; } catch (e) {} }
+  let st = null, err = '', want = null, sendTimer = null, sending = false, timer = null, wake = null, lastTrack = 'T2', note = '', saved = '';
+
+  async function call(path, opt) {
+    const r = await fetch(path, opt);
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) throw new Error(j.error || `HTTP ${r.status}`);
+    return j;
+  }
+  const post = body => call('/api/solo/cmd', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code, ...body }) });
+  const panel = () => (st && st.panel) || {};
+
+  async function poll() {
+    try { st = await call(`/api/solo/phone?code=${encodeURIComponent(code)}`); err = ''; }
+    catch (e) { err = e.message; }
+    const g = panel().gain;
+    if (!want) want = g ? { out1: g.out1, out2: g.out2 } : { ...DESIGN };    // start from what is set now
+    draw();
+  }
+  function start() {
+    if (!timer) timer = setInterval(poll, 1000);
+    keepAwake(); poll();
+  }
+  async function keepAwake() { try { if ('wakeLock' in navigator && !wake && document.visibilityState === 'visible') { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); } } catch (e) {} }
+  document.addEventListener('visibilitychange', () => { if (timer) { keepAwake(); poll(); } });
+
+  // Gains: the readout changes at once, the command goes out 250 ms after the last tap (the panel also drops superseded taps).
+  function setWant(k, v) {
+    want = { ...want, [k]: clamp(v, RANGE[k]) };
+    saved = '';
+    clearTimeout(sendTimer); sendTimer = setTimeout(sendGain, 250);
+    draw();
+  }
+  async function sendGain() {
+    if (sending) { sendTimer = setTimeout(sendGain, 150); return; }
+    sending = true;
+    try { st = await post({ action: 'gain', out1: want.out1, out2: want.out2 }); err = ''; }
+    catch (e) { err = e.message; }
+    sending = false; draw();
+  }
+  const confirmed = () => { const g = panel().gain; return !!(g && want && Math.abs(g.out1 - want.out1) < 0.05 && Math.abs(g.out2 - want.out2) < 0.05); };
+
+  function outCard(k) {
+    const [lo, hi] = RANGE[k], v = want[k], g = panel().gain, conf = confirmed();
+    const cls = conf ? 'ok' : 'wait';
+    const txt = conf ? '✓ set on the MiniDSP' : g ? `sending … (now ${fmt(g[k])} dB)` : 'sending …';
+    return `<div class="card out"><div class="head"><div><p class="q">${NAMES[k][0]}</p><p class="hint">${NAMES[k][1]}${v === DESIGN[k] ? ' · design' : ''}</p></div>
+        <div class="val">${fmt(v)} <small>dB</small></div></div>
+      <div class="conf ${cls}" data-conf="${k}">${esc(txt)}</div>
+      <div class="steps">${[-1, -0.5, 0.5, 1].map(d => `<button type="button" data-step="${k}" data-d="${d}" ${v + d < lo - 1e-9 || v + d > hi + 1e-9 ? 'disabled' : ''}>${d > 0 ? '+' : '−'}${Math.abs(d)}</button>`).join('')}</div>
+      <input type="range" data-range="${k}" min="${lo}" max="${hi}" step="0.1" value="${v}" aria-label="${NAMES[k][0]} in dB">
+      <div class="ends"><span>${fmt(lo)} dB</span><span>${fmt(hi)} dB</span></div></div>`;
+  }
+
+  function nowPlaying() {
+    const p = panel();
+    if (err) return ['err', 'No connection: ' + err, ''];
+    if (st && !st.panel_online) return ['err', 'The PC is not answering. Is the control panel running?', ''];
+    if (p.state === 'playing') return ['play', 'Playing', (p.track ? `Track ${p.track}` : '') + (p.length ? ` · ${mmss(p.elapsed)} / ${mmss(p.length)}` : '')];
+    if (p.state === 'setting') return ['play', 'Starting …', ''];
+    if (p.state === 'error') return ['err', 'The PC reports a problem: ' + (p.msg || 'unknown'), ''];
+    if (p.state === 'done') return ['ok', 'Finished. Pick a track to play again.', ''];
+    return ['', 'Nothing playing. Pick a track.', ''];
+  }
+
+  function draw() {
+    if (!st && !err) { app.innerHTML = '<p class="sub">Connecting …</p>'; return; }
+    if (!st) { drawCode(); return; }
+    const [dot, txt, tm] = nowPlaying(), p = panel();
+    const playing = ['playing', 'setting'].includes(p.state);
+    const picks = (st.picks || []).slice().reverse();
+    const html = `<h1>Tune by ear</h1>
+      <p class="sub">Solo round ${esc(st.n)}. Set the levels while the music plays. The changes are heard at once. Not blind: do this <b>after</b> the rated parts.</p>
+      <div class="card"><div class="st"><span class="dot ${dot}"></span><span>${esc(txt)}</span></div>${tm ? `<div class="tm">${esc(tm)}</div>` : ''}
+        <div class="grid4" style="margin-top:10px">${TRACKS.map(([id, n, who]) => `<button type="button" data-play="${id}" class="${playing && p.item === id ? 'on' : ''}" title="${esc(who)}">${n}</button>`).join('')}</div>
+        <div class="row2"><button type="button" data-stop ${playing ? '' : 'disabled'}>Stop</button></div></div>
+      ${outCard('out1')}${outCard('out2')}
+      <div class="card"><div class="row2"><button type="button" data-design ${want.out1 === DESIGN.out1 && want.out2 === DESIGN.out2 ? 'disabled' : ''}>Back to the design (${fmt(DESIGN.out1)} / ${fmt(DESIGN.out2)} dB)</button></div></div>
+      <div class="card"><p class="q">Save as my pick</p><p class="hint">Saves Out 1 ${fmt(want.out1)} dB, Out 2 ${fmt(want.out2)} dB${p.track ? ` (with track ${p.track})` : ''} for the results. Add a note if you like.</p>
+        <input type="text" id="note" maxlength="300" placeholder="e.g. tighter bass on track 3" value="${esc(note)}">
+        <div class="row2"><button type="button" class="primary" data-pick ${confirmed() ? '' : 'disabled'}>Save as my pick</button></div>
+        <p class="err" style="color:var(--ok)">${esc(saved)}</p>
+        ${picks.length ? `<p class="q" style="margin-top:8px">Saved picks</p><ul class="picks">${picks.map(k => `<li>Out 1 <b>${fmt(k.out1)}</b> · Out 2 <b>${fmt(k.out2)}</b> dB${k.track ? ' · ' + esc(k.track) : ''}
+          <span class="note">· ${esc((k.t || '').slice(11, 16))} UTC</span>${k.note ? `<div class="note">${esc(k.note)}</div>` : ''}</li>`).join('')}</ul>` : ''}</div>
+      <p class="err">${esc(err)}</p>`;
+    // Don't rebuild while a finger is on the slider or the note has focus: only update the live parts.
+    const active = document.activeElement;
+    if (app.dataset.h === html) return;
+    if (active && (active.type === 'range' || active.id === 'note') && app.contains(active)) { updateLive(); return; }
+    app.dataset.h = html; app.innerHTML = html;
+  }
+  function updateLive() {
+    for (const k of ['out1', 'out2']) {
+      const c = app.querySelector(`[data-conf="${k}"]`), g = panel().gain, conf = confirmed();
+      if (c) { c.className = 'conf ' + (conf ? 'ok' : 'wait'); c.textContent = conf ? '✓ set on the MiniDSP' : g ? `sending … (now ${fmt(g[k])} dB)` : 'sending …'; }
+      const val = app.querySelector(`[data-range="${k}"]`)?.closest('.out')?.querySelector('.val');
+      if (val) val.innerHTML = `${fmt(want[k])} <small>dB</small>`;
+    }
+  }
+
+  function drawCode(msg) {
+    app.innerHTML = `<h1>Tune by ear</h1><p class="sub">For a solo round: set the speaker's levels from this phone while music plays.</p>
+      <div class="card"><p class="q">Solo code</p><p class="hint">The 4-digit code on the control panel (Solo view) on the PC.</p>
+        <input type="text" class="code" id="code" inputmode="numeric" autocomplete="off" maxlength="4" value="${esc(code)}" aria-label="Solo code">
+        <div class="row2"><button type="button" class="primary" data-connect>Connect</button></div>
+        <p class="err">${esc(msg || err)}</p></div>`;
+  }
+
+  app.addEventListener('click', async e => {
+    const b = e.target.closest('button'); if (!b || b.disabled) return;
+    if (b.hasAttribute('data-connect')) {
+      code = (document.getElementById('code').value || '').replace(/\D/g, '').slice(0, 4);
+      if (!/^\d{4}$/.test(code)) { drawCode('Type the 4 digits.'); return; }
+      history.replaceState(null, '', `?code=${code}`); document.getElementById('formLink').href = '/';
+      st = null; err = ''; want = null; start(); return;
+    }
+    if (b.dataset.step) { setWant(b.dataset.step, want[b.dataset.step] + Number(b.dataset.d)); return; }
+    if (b.hasAttribute('data-design')) { want = { ...DESIGN }; saved = ''; clearTimeout(sendTimer); sendTimer = setTimeout(sendGain, 0); draw(); return; }
+    if (b.dataset.play) {
+      lastTrack = b.dataset.play;
+      try { st = await post({ action: 'play', item: b.dataset.play }); err = ''; } catch (x) { err = x.message; }
+      draw(); return;
+    }
+    if (b.hasAttribute('data-stop')) {
+      try { st = await post({ action: 'stop', item: '' }); err = ''; } catch (x) { err = x.message; }
+      draw(); return;
+    }
+    if (b.hasAttribute('data-pick')) {
+      const p = panel(), track = p.track ? 'T' + p.track : lastTrack;
+      b.disabled = true;
+      try {
+        await post({ action: 'pick', out1: want.out1, out2: want.out2, track, note });
+        saved = `Saved: Out 1 ${fmt(want.out1)} dB, Out 2 ${fmt(want.out2)} dB.`; note = ''; err = '';
+      } catch (x) { err = x.message; }
+      await poll(); return;
+    }
+  });
+  app.addEventListener('input', e => {
+    const t = e.target;
+    if (t.dataset.range) { want = { ...want, [t.dataset.range]: clamp(Number(t.value), RANGE[t.dataset.range]) }; saved = ''; updateLive(); clearTimeout(sendTimer); sendTimer = setTimeout(sendGain, 250); }
+    else if (t.id === 'note') note = t.value;
+    else if (t.id === 'code') t.value = t.value.replace(/\D/g, '').slice(0, 4);
+  });
+  app.addEventListener('change', e => { if (e.target.dataset.range) { app.dataset.h = ''; e.target.blur(); draw(); } });
+
+  if (/^\d{4}$/.test(code)) start(); else drawCode();
+})();
+</script>
+</body>
+</html>

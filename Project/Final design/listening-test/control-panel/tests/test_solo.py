@@ -19,6 +19,10 @@ class FakeDsp:
         self.calls.append((g1, g2))
         return dict(output1=g1, output2=g2)
 
+    def set_manual(self, g1, g2):                   # the real range check, then record like set_gains
+        g1, g2 = cp.MiniDSPControl.validate_manual(g1, g2)
+        return self.set_gains(g1, g2)
+
     def exe(self):
         return '/usr/bin/minidsp'
 
@@ -154,6 +158,92 @@ class TestBlind(SoloTestCase):
         self.panel.s['minidsp_auto'] = False
         with self.assertRaises(RuntimeError):
             self.solo.start()
+
+
+class TestTune(SoloTestCase):
+    """The tune page: the listener sets Out 1 / Out 2 by hand from the phone and plays T1..T4."""
+
+    def gain(self, seq, out1, out2):
+        self.solo.handled = seq
+        self.solo._do({'seq': seq, 'action': 'gain', 'item': '', 'out1': out1, 'out2': out2})
+
+    def test_manual_range(self):
+        ok = cp.MiniDSPControl.validate_manual
+        self.assertEqual(ok(-18, -6), (-18.0, -6.0))
+        self.assertEqual(ok(0, 0), (0.0, 0.0))
+        self.assertEqual(ok('-7.5', -0.5), (-7.5, -0.5))
+        self.assertEqual(ok(-5.8, 0), (-5.8, 0.0))             # the design is reachable
+        for bad in ((0.5, 0), (-18.5, 0), (0.3, 0), (-5.85, 0), (0, 0.5), (0, -6.5), (float('nan'), 0), ('x', 0), (None, 0)):
+            with self.assertRaises(ValueError, msg=bad):
+                ok(*bad)
+
+    def test_refused_gain_sends_nothing(self):
+        self.gain(1, 0.5, 0)
+        self.assertEqual(self.panel.minidsp.calls, [])
+        self.assertEqual(self.solo.state['state'], 'error')
+        self.assertIsNone(self.solo.state['gain'])
+
+    def test_gain_is_set_and_reported(self):
+        self.gain(1, -7.5, -1)
+        self.assertEqual(self.panel.minidsp.calls, [(-7.5, -1.0)])
+        self.assertEqual(self.solo.state['state'], 'gain_set')
+        self.assertEqual(self.solo.state['gain'], dict(out1=-7.5, out2=-1.0, source='manual'))
+        self.assertEqual(self.panel.stops, 0)
+
+    def test_live_gain_while_playing_keeps_playing(self):
+        self.run_cmd(1, 'play', 'T2')
+        self.solo.state['started'] -= 2
+        self.solo._watch()
+        stops = self.panel.stops
+        self.gain(2, -9, 0)
+        self.assertEqual(self.panel.stops, stops)               # the music is not stopped
+        st = self.solo.state
+        self.assertEqual((st['state'], st['item'], st['seq']), ('playing', 'T2', 2))
+        self.assertEqual(st['label'], 'Solo · T2')
+        self.assertEqual(st['gain']['out1'], -9.0)
+        self.solo._watch()                                     # and the watcher still follows that playback
+        self.assertEqual(self.solo.state['state'], 'playing')
+
+    def test_gain_hidden_after_a_b_item(self):
+        self.gain(1, -3, 0)
+        self.run_cmd(2, 'play', 'B1')
+        self.assertIsNone(self.solo.state['gain'])
+        self.solo.state['started'] -= 2
+        self.panel.chain, self.panel.mode, self.panel.finished_at = None, None, time.monotonic()
+        self.solo._watch()
+        self.assertEqual(self.solo.state['state'], 'done')
+        self.assertIsNone(self.solo.state['gain'])
+
+    def test_part_a_reports_the_design(self):
+        self.run_cmd(1, 'play', 'A1')
+        self.assertEqual(self.solo.state['gain'], dict(out1=-5.8, out2=0.0, source='design'))
+
+    def test_tune_play_after_a_b_item_resets_to_design(self):
+        self.run_cmd(1, 'play', 'B3')                          # B3 = L in ROUND's order
+        self.run_cmd(2, 'play', 'T4')
+        self.assertEqual(self.panel.minidsp.calls, [(-11.6, 0.0), (-5.8, 0.0)])
+        self.assertEqual(self.panel.played[-1][:3], ([3], 'Solo · T4', None))
+        self.assertEqual(self.panel.played[-1][3], -5.8)       # the gain in force when it started
+        self.assertEqual(self.solo.state['gain']['source'], 'design')
+
+    def test_tune_play_keeps_a_manual_gain(self):
+        self.gain(1, -4, -2)
+        self.run_cmd(2, 'play', 'T1')
+        self.assertEqual(self.panel.minidsp.calls, [(-4.0, -2.0)])  # no extra set before the play
+        self.assertEqual(self.solo.state['gain']['out1'], -4.0)
+
+    def test_rapid_gain_taps_only_apply_the_last(self):
+        self.solo.handled = 3                                  # three taps arrived before any was carried out
+        for seq, g in ((1, -1), (2, -2), (3, -3)):
+            self.solo._do({'seq': seq, 'action': 'gain', 'out1': g, 'out2': 0})
+        self.assertEqual(self.panel.minidsp.calls, [(-3.0, 0.0)])
+
+    def test_status_after_tune_never_contains_the_order(self):
+        self.run_cmd(1, 'play', 'B1')
+        self.gain(2, -6, 0)
+        st = json.dumps(self.solo.status())
+        self.assertNotIn('order', st)
+        self.assertNotIn('HDLD', st)
 
 
 if __name__ == '__main__':

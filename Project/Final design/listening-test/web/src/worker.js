@@ -12,7 +12,7 @@
 //   GET  /api/solo/phone?code= phone: the round's plan and the panel's state (never the order)
 //   POST /api/solo/cmd          phone: {code, action: play|stop, item: A1..A4|B1..B4|T1..T4}
 //                               tune page (/tune.html): {code, action: gain, out1, out2}  |  {code, action: pick, out1, out2, track, note}
-// T1..T4 play a track without touching the gains; "gain" sets them by hand (Out 1 -18..0, Out 2 -6..0 dB, 0.5 dB steps).
+// T1..T4 play a track without touching the gains; "gain" sets them by hand (Out 1 -18..0, Out 2 -6..0 dB, 0.1 dB steps).
 // The panel reports a gain to the phone only when it was set by hand or is the design, never after a blind sample.
 // The blind sample orders below must match the table in ListeningTest_Operator.pdf.
 
@@ -71,7 +71,7 @@ async function solo(req, env, url) {
 
 const SOLO_ITEMS = ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4', 'T1', 'T2', 'T3', 'T4'];
 const GAIN_RANGE = { out1: [-18, 0], out2: [-6, 0] };          // the panel checks the same limits again
-const okGain = (v, [lo, hi]) => typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi && Math.abs(v * 2 - Math.round(v * 2)) < 1e-9;
+const okGain = (v, [lo, hi]) => typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi && Math.abs(v * 10 - Math.round(v * 10)) < 1e-6;
 function randInt(n) { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; }
 function shuffled(xs) { const a = [...xs]; for (let i = a.length - 1; i > 0; i--) { const j = randInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
@@ -122,7 +122,7 @@ export class SoloRoom {
       if (!['play', 'stop', 'gain', 'pick'].includes(body.action)) return json({ ok: false, error: 'action' }, 400);
       if (body.action === 'play' && (!SOLO_ITEMS.includes(item) || (!r.partA && item[0] === 'A'))) return json({ ok: false, error: 'item' }, 400);
       if (['gain', 'pick'].includes(body.action) && !(okGain(body.out1, GAIN_RANGE.out1) && okGain(body.out2, GAIN_RANGE.out2)))
-        return json({ ok: false, error: 'Out 1 must be -18..0 dB and Out 2 -6..0 dB, in 0.5 dB steps' }, 400);
+        return json({ ok: false, error: 'Out 1 must be -18..0 dB and Out 2 -6..0 dB, in 0.1 dB steps' }, 400);
       if (body.action === 'pick') {                                // a setting the listener chose by ear: kept for the results
         const pick = { round: r.id, n: r.n, out1: body.out1, out2: body.out2, track: String(body.track || '').slice(0, 4),
           note: String(body.note || '').slice(0, 300), t: new Date(now).toISOString() };

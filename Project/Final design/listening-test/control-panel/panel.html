@@ -875,7 +875,7 @@ async function pollSolo() {
   try { SOLO = await api('/api/solo'); renderSolo(); } catch (e) {}
   setTimeout(pollSolo, view === 'solo' || SOLO?.active ? 1000 : 4000);
 }
-const ITEM_NAME = { A1: 'Part A · track 1', A2: 'Part A · track 2', A3: 'Part A · track 3', A4: 'Part A · track 4', B1: 'Part B · sample 1', B2: 'Part B · sample 2', B3: 'Part B · sample 3', B4: 'Part B · sample 4' };
+const ITEM_NAME = { A1: 'Part A · track 1', A2: 'Part A · track 2', A3: 'Part A · track 3', A4: 'Part A · track 4', B1: 'Part B · sample 1', B2: 'Part B · sample 2', B3: 'Part B · sample 3', B4: 'Part B · sample 4', T1: 'Tune · track 1', T2: 'Tune · track 2', T3: 'Tune · track 3', T4: 'Tune · track 4', gain: 'Tune · gain set by hand' };
 function renderSolo() {
   const x = SOLO; if (!x) return;
   $('soloIdle').style.display = x.active ? 'none' : '';

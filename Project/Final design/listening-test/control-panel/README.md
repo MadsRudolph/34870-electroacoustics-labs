@@ -1,8 +1,9 @@
 # Listening-test control panel
 
-> **MiniDSP automation: setup on the PC in the listening room (status 26-Nov-2026).**
-> The 2x4 HD gain automation is written and unit-tested (`python3 -m unittest discover -s tests`,
-> 35 tests) but **never run against a real MiniDSP**. On that PC:
+> **MiniDSP automation: setup on the PC in the listening room (status 27-Nov-2026).**
+> The 2x4 HD gain automation is unit-tested (`python3 -m unittest discover -s tests`, 47 tests)
+> and the CLI steps of the first hardware check **passed on the real box** from the laptop on
+> 27-Nov-2026 (results under **First hardware check**). On a new PC:
 > 1. `bash minidsp/setup_minidsp.sh` installs minidsp-rs v0.1.12 into `~/.local/bin` (no sudo).
 > 2. `bash minidsp/setup_minidsp.sh --udev` installs the USB rule (sudo), then replug the MiniDSP.
 > 3. Work through **First hardware check** below with the amplifier off (step 7 loads the crossover
@@ -190,6 +191,34 @@ Amplifier **off** (or volume fully down) for steps 1–5.
 
 If any step fails, untick the switch and run the test the old manual way (below).
 
+#### Result on the real hardware (laptop, 27-Nov-2026, amplifier off)
+
+Steps 1–3 run from the laptop with minidsp-rs 0.1.12. The udev rule was installed **before** the first
+try, so whether the box also works without it is not known. With the rule the device node is
+`crw-rw-rw-` (`/dev/bus/usb/003/004`), and every command ran without `sudo`.
+
+```
+$ lsusb | grep 2752
+Bus 003 Device 004: ID 2752:0011 miniDSP miniDSP 2x4HD
+
+$ minidsp probe
+0: Found 2x4HD with serial 905335 at usb:3-2%3A1.4?vid=2752&pid=0011 [hw_id: 10, dsp_version: 100]
+
+$ minidsp --usb 2752:0011
+MasterStatus { preset: 0, source: Analog, volume: Gain(-0.0), mute: false, dirac: false }
+Input levels: -59.6, -59.5
+Output levels: -57.0, -100.9, -59.5, -101.2
+
+$ minidsp --usb 2752:0011 output 0 gain -- -5.8     # exit 0, no output
+$ minidsp --usb 2752:0011 output 1 gain -- 0        # exit 0, no output
+```
+
+**Timing:** setting both outputs (two CLI calls in a row) took **0.11–0.12 s** in three tries, so the
+solo round's fixed 2.5 s lead (`SoloLink.LEAD`) has plenty of margin and was left unchanged.
+
+Still open: whether the gains survive a MiniDSP power cycle. It does not matter for a session, because the
+panel sends both gains before every sample and puts the design back between parts.
+
 ### How it runs during a session
 
 - **Switch off (default):** nothing is sent; exactly the old manual way (set Out 1 by hand, then
@@ -236,6 +265,14 @@ swapped by hand outside the room, which cannot be done blind alone).
    listening page starts its excerpt by itself; **Play again** repeats it, **Stop** ends it. Next
    works once the excerpt has finished or been stopped. The screen is kept awake while the round runs.
 4. After sending, start another round for a second, independent order if you want more data.
+5. **Tune by ear** (optional, after the rated parts, not blind): the form's last pages link to
+   **listening.madsrudolph.dev/tune.html** (`?code=` filled in). Track 1–4 play buttons and Stop; Out 1
+   (−18..0 dB) and Out 2 (−6..0 dB) with −1 / −0.5 / +0.5 / +1 buttons and a slider, 0.1 dB steps; "Back
+   to the design" (−5.8 / 0). A change is sent 0.25 s after the last tap and is set **while the music
+   plays**; the readout says "✓ set on the MiniDSP" once the panel confirms it. **Save as my pick** (with
+   a note) stores the setting; picks show on the results page and in the CSV as part `tune`. The panel
+   checks the range again (`MiniDSPControl.validate_manual`). After a blind Part B sample the phone is
+   never told the level, and a tune play puts the design back first, so the tune page cannot reveal it.
 
 How it works: the phone talks to the Worker (`web/src/worker.js`, Durable Object `SoloRoom`), and the
 panel polls it every 0.7 s with the admin key from `../web/.admin-key`. When a round starts, the server
