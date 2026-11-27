@@ -133,6 +133,9 @@ details.disc > summary:hover { color: var(--text); }
 .setval .v.none { color: var(--muted); font: 500 22px Inter, system-ui, sans-serif; letter-spacing: -.01em; }
 .setval .sep { color: var(--faint); margin: 0 4px; }
 .badge { font: 600 12px var(--mono); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border2); color: var(--text); align-self: center; }
+.soloreq { margin: 6px 0 16px; padding-left: 20px; line-height: 1.5; } .soloreq li { margin: 6px 0; }
+#soloStart { background: var(--accent); color: #062a26; border-color: var(--accent); font-weight: 650; padding: 10px 18px; }
+#soloLink, #soloNow { align-items: center; }
 .setnote { color: var(--muted); font-size: 13.5px; margin-top: 8px; display: flex; gap: 10px; align-items: flex-start; max-width: 720px; }
 .setnote .dot { margin-top: 6px; }
 .playval .v { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
@@ -353,6 +356,7 @@ li.ok .what { color: var(--muted); }
     <nav id="nav">
       <button data-v="setup"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg><span class="lab">Setup</span></button>
       <button data-v="steps"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.3" fill="currentColor"/><circle cx="4.5" cy="12" r="1.3" fill="currentColor"/><circle cx="4.5" cy="18" r="1.3" fill="currentColor"/></svg><span class="lab">Steps</span></button>
+      <button data-v="solo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg><span class="lab">Solo</span></button>
       <button data-v="tracks"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg><span class="lab">Tracks</span></button>
       <button data-v="lib"><svg width="18" height="18"><use href="#i-disc"/></svg><span class="lab">Library</span></button>
       <button data-v="players"><svg width="18" height="18"><use href="#i-wave"/></svg><span class="lab">Players</span></button>
@@ -407,6 +411,31 @@ li.ok .what { color: var(--muted); }
         <p class="sub" id="ordLegend"></p></details>
     </section>
 
+    <!-- SOLO -->
+    <section class="view" id="v-solo">
+      <div class="vhead"><h1>Solo round</h1><span class="sub">One listener in the room drives this panel from the phone form</span><span class="sp"></span>
+        <button class="btn ghost" id="soloEnd" style="display:none">End round</button></div>
+      <div class="card hero" id="soloIdle">
+        <h2>Before you go in</h2>
+        <ul class="soloreq">
+          <li><b>MiniDSP over USB works:</b> Output view → Apply test gains automatically ticked → Check connection → Set design now. <span id="soloDsp"></span></li>
+          <li><b>Setup checklist done</b> (filters, electrical check, level taped). Rp 8.2 Ω, one vent open: Part C and D are not run solo.</li>
+          <li><b>The PC stays awake:</b> no suspend or screen lock, charger in. Internet on (the phone reaches the PC through listening.madsrudolph.dev). <span id="soloNet"></span></li>
+        </ul>
+        <label class="switch"><input type="checkbox" id="soloPartA" checked> Include Part A (4 tracks, the design)</label>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center"><button class="btn ok" id="soloStart">Start solo round</button><span class="sub" id="soloProb"></span></div>
+        <p class="sub" style="margin-top:12px">Part B gets a fresh random order of D, D, L, H, drawn by the server. Only this panel process knows it, and it never shows it: it sets Out 1 over USB before each sample (both outputs every time, and every sample starts 2.5 s after the tap, changed or not). The results page decodes the round afterwards (listener <span class="mono">&lt;n&gt;S</span>). Run a second round for a second, independent order.</p>
+      </div>
+      <div class="card hero" id="soloLive" style="display:none">
+        <div class="grp" id="soloRound"></div>
+        <div style="display:flex;align-items:baseline;gap:18px;flex-wrap:wrap"><div><div class="sub">Code for the phone</div><div class="mono" id="soloCode" style="font-size:64px;font-weight:700;letter-spacing:.12em;line-height:1.1"></div></div>
+          <div class="sub" style="max-width:420px">On the phone: <b>listening.madsrudolph.dev</b> → "Solo: my phone runs the PC" → this code. Each listening page starts its excerpt by itself.</div></div>
+        <div class="setnote" id="soloLink" style="margin-top:12px"></div>
+        <div class="setnote" id="soloNow"></div>
+        <div id="soloHist" class="sub mono" style="margin-top:10px"></div>
+      </div>
+    </section>
+
     <!-- TRACKS -->
     <section class="view" id="v-tracks">
       <div class="vhead"><h1>Test tracks</h1><span class="sp"></span><span class="sub">Saved as you type <span id="saveState" class="faint"></span></span></div>
@@ -458,7 +487,8 @@ li.ok .what { color: var(--muted); }
         <div class="orow"><div class="l">MiniDSP gains<small>USB control through the open-source minidsp-rs CLI</small></div>
           <div><label class="switch"><input type="checkbox" id="dspAuto"> Apply test gains automatically</label>
             <div class="sub" id="dspStatus" style="margin-top:8px"></div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn" id="dspCheck">Check connection</button><button class="btn ghost" id="dspDesign">Set design now (Out 1 −5.8 / Out 2 0 dB)</button></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn" id="dspCheck">Check connection</button><button class="btn ghost" id="dspDesign">Set design now (Out 1 −5.8 / Out 2 0 dB)</button><button class="btn ghost" id="dspFilters">Load System D filters</button></div>
+            <div class="sub faint" style="margin-top:6px">Load System D filters writes the crossover from <code>data/dsp/MiniDSP_*.txt</code> (2 biquads per output), bypasses PEQ / FIR / compressor and crossover group 2, sets invert off, delay 0, unmute, routes Inputs 1+2 → Outputs 1+2 and ends at the design gains. Sample rate (96 kHz) and saving a preset are not covered: check those in the setup.</div>
             <div class="sub" style="margin-top:8px">2x4 HD on USB to this PC. Before each guided step plays, the panel sets Output 1 to that step's level (L −11.6, D −5.8, H 0 dB) and Output 2 to 0 dB. It never touches the crossover, routing or anything else. If the gain cannot be set, the step does not play. Off = the old manual way (set Out 1 by hand, ✓ Set done).</div></div></div>
         <div class="orow"><div class="l">System output<small>PipeWire default. Spotify and browsers always play here.</small></div>
           <div><div class="big" id="sinkInfo"></div><div class="sub" id="sinkSub" style="margin-top:4px"></div></div></div>
@@ -839,6 +869,51 @@ $('lNum').onchange = () => setSession(+$('lNum').value);
 $('lNext').onclick = () => { if (confirm(`Start session ${S.listener + 1}? Check the design settings are back first.`)) setSession(S.listener + 1); };
 $('cues').onchange = async () => { S.cues = $('cues').checked; await saveSettings({ cues: S.cues }); };
 $('partD').onchange = async () => { S.part_d = $('partD').checked; await saveSettings({ part_d: S.part_d }); renderSteps(); };
+// ---------------- solo round (the listener's phone drives the panel) ----------------
+let SOLO = null;
+async function pollSolo() {
+  try { SOLO = await api('/api/solo'); renderSolo(); } catch (e) {}
+  setTimeout(pollSolo, view === 'solo' || SOLO?.active ? 1000 : 4000);
+}
+const ITEM_NAME = { A1: 'Part A · track 1', A2: 'Part A · track 2', A3: 'Part A · track 3', A4: 'Part A · track 4', B1: 'Part B · sample 1', B2: 'Part B · sample 2', B3: 'Part B · sample 3', B4: 'Part B · sample 4' };
+function renderSolo() {
+  const x = SOLO; if (!x) return;
+  $('soloIdle').style.display = x.active ? 'none' : '';
+  $('soloLive').style.display = x.active ? '' : 'none';
+  $('soloEnd').style.display = x.active ? '' : 'none';
+  const d = ST?.minidsp || {};
+  $('soloDsp').innerHTML = d.null_audio ? '<span class="faint">(test mode: simulated)</span>'
+    : x.problem ? `<span style="color:var(--err)">${esc(x.problem)}</span>`
+    : d.last_error ? `<span style="color:var(--err)">Last error: ${esc(d.last_error)}</span>`
+    : d.last_gains ? '<span style="color:var(--ok)">Last set OK.</span>' : '<span class="faint">Not set yet this run.</span>';
+  $('soloNet').innerHTML = x.key ? '' : '<span style="color:var(--err)">Admin key missing (web/.admin-key).</span>';
+  $('soloStart').disabled = !!x.problem || !x.key;
+  $('soloProb').textContent = x.problem || '';
+  if (!x.active) return;
+  $('soloRound').textContent = `Solo round ${x.n}${x.partA ? '' : ' · Part B only'}`;
+  $('soloCode').textContent = x.code;
+  const ph = x.phone_age;
+  $('soloLink').innerHTML = `<span class="dot ${x.online ? 'ok' : 'err'}"></span><span>${x.online ? 'Server reached' : 'Server not reached: ' + esc(x.error || '…')}</span>`
+    + `<span class="faint">·</span><span class="dot ${ph != null && ph < 6 ? 'ok' : 'warn'}"></span><span>${ph == null ? 'Phone not connected yet' : ph < 6 ? 'Phone connected' : 'Phone last seen ' + Math.round(ph) + ' s ago'}</span>`;
+  const s = x.state || {};
+  const what = s.item ? ITEM_NAME[s.item] || s.item : '';
+  $('soloNow').innerHTML = s.state === 'error' ? `<span class="dot err"></span><span style="color:var(--err)">${esc(what)}: ${esc(s.msg)}</span>`
+    : s.state === 'playing' || s.state === 'setting' ? `<span class="dot warn"></span><span>${esc(what)} · ${s.state === 'setting' ? 'setting the MiniDSP' : 'playing'}</span>`
+    : s.item ? `<span class="dot ok"></span><span>${esc(what)} · ${esc(s.state)}</span>` : '<span class="faint">Waiting for the phone.</span>';
+  $('soloHist').innerHTML = (x.history || []).map(h => `${esc(h.t)}  ${esc(ITEM_NAME[h.item] || h.item)}  ${esc(h.state)}`).join('<br>');
+}
+$('soloStart').onclick = async () => {
+  $('soloStart').disabled = true;
+  try { const r = await api('/api/solo/start', { partA: $('soloPartA').checked }); toast(`Solo round ${r.solo.n} started. Code ${r.solo.code}.`, true); }
+  catch (e) {} finally { SOLO = await api('/api/solo').catch(() => SOLO); renderSolo(); }
+};
+$('soloEnd').onclick = async () => {
+  const b = $('soloEnd');
+  if (!b.dataset.arm) { b.dataset.arm = 1; b.textContent = 'Click again to end'; setTimeout(() => { delete b.dataset.arm; b.textContent = 'End round'; }, 3000); return; }
+  delete b.dataset.arm; b.textContent = 'End round';
+  await api('/api/solo/end', {}).catch(() => {}); SOLO = await api('/api/solo').catch(() => SOLO); renderSolo();
+};
+
 // ---------------- MiniDSP gains over USB (minidsp-rs) ----------------
 // With "Apply test gains automatically" on, every guided step that plays first sets its Out 1 / Out 2
 // gains; if that fails, the step does NOT play. Steps without music (Prep, After Part B/C/D, Finish)
@@ -1078,12 +1153,23 @@ function renderMiniDsp() {
   else h = `<span class="dot ${d.last_error ? 'err' : g ? 'ok' : 'warn'}"></span>minidsp CLI found · ${esc(last)}.`;
   if (d.last_error) h += `<br><span style="color:var(--err)">Last error: ${esc(d.last_error)}</span>`;
   if (d.check) h += `<br><span class="faint">Connection check: ${esc(d.check)}</span>`;
+  if (d.filters) h += `<br><span class="faint">Filters: ${esc(d.filters)}</span>`;
   if ($('dspStatus').dataset.h !== h) { $('dspStatus').dataset.h = h; $('dspStatus').innerHTML = h; }
-  $('dspCheck').disabled = $('dspDesign').disabled = DSP_BUSY;
+  $('dspCheck').disabled = $('dspDesign').disabled = $('dspFilters').disabled = DSP_BUSY;
 }
 $('dspCheck').onclick = async () => {
   DSP_BUSY = true; renderMiniDsp();
   try { const r = await api('/api/dsp/check', {}); toast(r.message || 'MiniDSP found.', true); } catch (e) {}
+  finally { DSP_BUSY = false; renderMiniDsp(); }
+};
+$('dspFilters').onclick = async () => {
+  if (!confirm('Load the System D crossover into the MiniDSP 2x4 HD?\n\nTurn the amplifier down first. This overwrites the crossover, PEQ, FIR, compressor and routing on Outputs 1 and 2 and ends at Out 1 −5.8 dB / Out 2 0 dB.')) return;
+  cancelAuto(); api('/api/stop', {});
+  DSP_BUSY = true; renderMiniDsp();
+  try {
+    const r = await api('/api/dsp/filters', {});
+    toast(r.filters?.simulated ? 'Filters load simulated (test mode): nothing sent.' : 'System D filters loaded. Check with a quick listen at low volume.', true);
+  } catch (e) {}
   finally { DSP_BUSY = false; renderMiniDsp(); }
 };
 $('dspDesign').onclick = async () => {
@@ -1112,6 +1198,7 @@ document.addEventListener('keydown', e => {
   show(view);
   pollPlayers();
   poll();
+  pollSolo();
 })();
 </script>
 </body>

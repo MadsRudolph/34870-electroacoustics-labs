@@ -16,7 +16,7 @@ controlled over D-Bus (MPRIS) with `busctl`. Settings live in panel_settings.jso
 Only the Python standard library is used, plus mpv, ffmpeg, busctl and pactl (and optionally the minidsp
 CLI from minidsp-rs, which sets the MiniDSP 2x4 HD output gains over USB; see README).
 """
-import argparse, ctypes, json, math, os, re, shutil, signal, socket, subprocess, sys, threading, time, webbrowser
+import argparse, ctypes, json, math, os, re, shutil, signal, socket, subprocess, sys, threading, time, urllib.error, urllib.request, webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -115,15 +115,20 @@ class MiniDSPError(RuntimeError):
 class MiniDSPControl:
     """Sets the two output gains of the MiniDSP 2x4 HD over USB with the open-source minidsp-rs CLI.
 
-    Only output gains are ever written: Output 1 (woofer) to one of the three listening-test levels,
-    Output 2 (mid + tweeter) to 0 dB. Crossover, routing, PEQ etc. are never touched. In silent test
-    mode (--test) nothing is sent: the commands are only logged and remembered as "simulated".
+    set_gains() writes only the output gains: Output 1 (woofer) to one of the three listening-test
+    levels, Output 2 (mid + tweeter) to 0 dB. load_filters() is a separate, explicit operator action
+    that writes the System D crossover from data/dsp/MiniDSP_*.txt (the same files the operator
+    pastes into the plugin's Xover -> Advanced page) plus the operator-sheet settings around it.
+    In silent test mode (--test) nothing is sent: the commands are only logged and remembered as
+    "simulated".
     minidsp-rs cannot read gains back from the device, so last_gains is what this panel last sent.
     """
     USB_ID = '2752:0011'                       # miniDSP vendor id : 2x4 HD product id
     OUTPUT1_GAINS = (-11.6, -5.8, 0.0)          # L, D (design), H
     OUTPUT2_GAIN = 0.0
     TIMEOUT = 10
+    DSP_DIR = HERE.parent.parent / 'data' / 'dsp'
+    FILTER_FILES = {0: 'MiniDSP_woofer_out1.txt', 1: 'MiniDSP_midtw_out2.txt'}   # output index -> file
 
     def __init__(self, null_audio=False, exe_name='minidsp'):
         self.null_audio = null_audio
@@ -133,6 +138,7 @@ class MiniDSPControl:
         self.last_error = ''
         self.last_check = ''
         self.simulated = False
+        self.last_filters = ''      # short description once a full filter load succeeded
 
     def exe(self):
         return shutil.which(self.exe_name)
@@ -140,7 +146,7 @@ class MiniDSPControl:
     def status(self, enabled):
         return dict(enabled=bool(enabled), available=self.exe() is not None, null_audio=self.null_audio,
                     last_gains=self.last_gains, simulated=self.simulated, last_error=self.last_error,
-                    check=self.last_check, busy=self.lock.locked())
+                    check=self.last_check, filters=self.last_filters, busy=self.lock.locked())
 
     @classmethod
     def validate(cls, output1, output2):
@@ -157,6 +163,25 @@ class MiniDSPControl:
                              f'and Output 2 at 0 dB (got {g1:g} / {g2:g} dB)')
         return match[0], cls.OUTPUT2_GAIN
 
+    MANUAL_RANGE = ((-18.0, 0.0), (-6.0, 0.0))  # by-hand tuning from the phone: Out 1, Out 2, 0.5 dB steps
+
+    @classmethod
+    def validate_manual(cls, output1, output2):
+        """Gains set by hand (solo tune page): Out 1 -18..0, Out 2 -6..0 dB in 0.5 dB steps. Never above 0 dB."""
+        try:
+            g = [float(output1), float(output2)]
+        except (TypeError, ValueError):
+            raise ValueError('MiniDSP gains must be numbers')
+        for v, (lo, hi), name in zip(g, cls.MANUAL_RANGE, ('Output 1', 'Output 2')):
+            if not math.isfinite(v) or v < lo - 1e-9 or v > hi + 1e-9 or abs(v * 2 - round(v * 2)) > 1e-6:
+                raise ValueError(f'Refused: {name} by hand must be {lo:g}..{hi:g} dB in 0.5 dB steps (got {v:g})')
+        return round(g[0] * 2) / 2, round(g[1] * 2) / 2
+
+    def set_manual(self, output1, output2):
+        """Set both gains to hand-picked values (validated against MANUAL_RANGE, not the three test levels)."""
+        g1, g2 = self.validate_manual(output1, output2)
+        return self._send(g1, g2)
+
     def gain_command(self, exe, index, gain):
         # `--` before the value, or the CLI reads a negative gain such as -5.8 as an option.
         return [exe, '--usb', self.USB_ID, 'output', str(index), 'gain', '--', f'{gain:g}']
@@ -171,12 +196,17 @@ class MiniDSPControl:
         if r.returncode != 0:
             detail = (r.stderr or r.stdout or '').strip().splitlines()
             detail = detail[-1] if detail else f'exit code {r.returncode}'
+            if 'No devices found' in detail:
+                detail += ' (the 2x4 HD is not on USB: cable, power, `lsusb | grep 2752`)'
             raise MiniDSPError(f'{what} failed: {detail}')
         return r.stdout
 
     def set_gains(self, output1, output2):
         """Set Output 1 then Output 2. Raises MiniDSPError/ValueError; on any failure the gains are unknown."""
         g1, g2 = self.validate(output1, output2)
+        return self._send(g1, g2)
+
+    def _send(self, g1, g2):
         if self.null_audio:
             with self.lock:
                 log(f'MiniDSP (simulated, --test): Out 1 {g1:g} dB, Out 2 {g2:g} dB')
@@ -198,6 +228,102 @@ class MiniDSPControl:
             self.last_gains, self.last_error = dict(output1=g1, output2=g2), ''
             log(f'MiniDSP set: Out 1 {g1:g} dB, Out 2 {g2:g} dB')
             return self.last_gains
+
+    @staticmethod
+    def parse_filter_file(path):
+        """Read a miniDSP 'Advanced' biquad file (biquad1, b0 = ..., ...). Returns [(b0, b1, b2, a1, a2), ...].
+
+        The coefficients are in the miniDSP sign convention (a1, a2 as the plugin wants them);
+        minidsp-rs passes them to the device unchanged, so they are not altered here."""
+        text = Path(path).read_text(encoding='utf-8')
+        out, cur = [], None
+        for raw in text.replace(',', '\n').splitlines():
+            line = raw.strip()
+            if not line:
+                continue
+            if re.fullmatch(r'biquad\d+', line):
+                cur = {}
+                out.append(cur)
+                continue
+            m = re.fullmatch(r'(b0|b1|b2|a1|a2)\s*=\s*(\S+)', line)
+            if not m or cur is None or m.group(1) in cur:
+                raise ValueError(f'{Path(path).name}: unexpected line "{line}"')
+            v = float(m.group(2))
+            if not math.isfinite(v):
+                raise ValueError(f'{Path(path).name}: {m.group(1)} is not a finite number')
+            cur[m.group(1)] = v
+        bqs = []
+        for i, c in enumerate(out):
+            if sorted(c) != ['a1', 'a2', 'b0', 'b1', 'b2']:
+                raise ValueError(f'{Path(path).name}: biquad {i + 1} is incomplete')
+            bqs.append(tuple(c[k] for k in ('b0', 'b1', 'b2', 'a1', 'a2')))
+        if len(bqs) != 2:                     # System D: exactly two biquads per output (an LR4 / 2x BW2)
+            raise ValueError(f'{Path(path).name}: expected exactly 2 biquads, found {len(bqs)}')
+        for i, (b0, b1, b2, a1, a2) in enumerate(bqs):     # stable: poles of z^2 - a1 z - a2 inside the unit circle
+            if not (abs(a2) < 1 and abs(a1) < 1 - a2):
+                raise ValueError(f'{Path(path).name}: biquad {i + 1} would be unstable in the miniDSP convention')
+        return bqs
+
+    def filter_commands(self, exe, design=(-5.8, 0.0)):
+        """Every CLI call for a full System D load, in order (see ListeningTest_Operator.tex, Set up)."""
+        base = [exe, '--usb', self.USB_ID]
+        cmds = []
+        for o, name in self.FILTER_FILES.items():
+            bqs = self.parse_filter_file(self.DSP_DIR / name)
+            tag = f'Output {o + 1}'
+            cmds.append((base + ['output', str(o), 'crossover', 'all', 'all', 'clear'], f'{tag}: clear crossover'))
+            for i, bq in enumerate(bqs):
+                cmds.append((base + ['output', str(o), 'crossover', '0', str(i), 'set', '--'] + [repr(float(c)) for c in bq],
+                             f'{tag}: crossover biquad {i + 1} from {name}'))
+            cmds += [
+                (base + ['output', str(o), 'crossover', '0', 'all', 'bypass', 'off'], f'{tag}: crossover group 1 on'),
+                (base + ['output', str(o), 'crossover', '1', 'all', 'bypass', 'on'], f'{tag}: crossover group 2 bypassed'),
+                (base + ['output', str(o), 'peq', 'all', 'bypass', 'on'], f'{tag}: PEQ bypassed'),
+                (base + ['output', str(o), 'fir', 'bypass', 'on'], f'{tag}: FIR bypassed'),
+                (base + ['output', str(o), 'compressor', '--bypass', 'on'], f'{tag}: compressor bypassed'),
+                (base + ['output', str(o), 'invert', 'off'], f'{tag}: invert off'),
+                (base + ['output', str(o), 'delay', '0'], f'{tag}: delay 0'),
+                (base + ['output', str(o), 'mute', 'off'], f'{tag}: unmute'),
+            ]
+        for i in (0, 1):                      # Input 1 and Input 2 -> Output 1 and Output 2 (Spotify is stereo)
+            for o in (0, 1):
+                cmds.append((base + ['input', str(i), 'routing', str(o), 'enable', 'on'],
+                             f'routing Input {i + 1} -> Output {o + 1}'))
+        for o, g in enumerate(design):
+            cmds.append((self.gain_command(exe, o, g), f'Output {o + 1} gain {g:g} dB'))
+        return cmds
+
+    def load_filters(self):
+        """Write the System D crossover and the operator-sheet settings, ending at the design gains.
+
+        Raises ValueError (bad filter file, nothing sent) or MiniDSPError (device/CLI; the box is then
+        in an unknown, partly loaded state)."""
+        if self.null_audio:
+            cmds = self.filter_commands('minidsp')     # still parses and checks the files
+            with self.lock:
+                for _, what in cmds:
+                    log(f'MiniDSP (simulated, --test): {what}')
+                self.last_gains, self.simulated, self.last_error = dict(output1=-5.8, output2=0.0), True, ''
+                self.last_filters = 'System D filters loaded (simulated)' + time.strftime(' %H:%M:%S')
+            return dict(steps=len(cmds), simulated=True)
+        exe = self.exe()
+        if not exe:
+            self.last_error = 'minidsp CLI not found: install minidsp-rs (see README) and restart the panel'
+            raise MiniDSPError(self.last_error)
+        cmds = self.filter_commands(exe)               # ValueError here: nothing has been sent
+        with self.lock:
+            self.last_gains, self.simulated, self.last_filters = None, False, ''
+            for n, (cmd, what) in enumerate(cmds, 1):
+                try:
+                    self._run(cmd, f'MiniDSP {what}')
+                except MiniDSPError as e:
+                    self.last_error = f'{e} (step {n} of {len(cmds)}: the MiniDSP is only partly loaded, do not play)'
+                    log(self.last_error)
+                    raise MiniDSPError(self.last_error) from None
+            self.last_gains, self.last_error = dict(output1=-5.8, output2=0.0), ''
+            self.last_filters = f'System D filters loaded ({len(cmds)} commands)' + time.strftime(' %H:%M:%S')
+            log(self.last_filters)
+        return dict(steps=len(cmds), simulated=False)
 
     def check(self):
         """Read-only: ask the 2x4 HD for its status summary. Returns a short message or raises."""
@@ -226,6 +352,310 @@ class MiniDSPControl:
 # ----------------------------------------------------------------------------------------------------
 # Settings and loudness cache (JSON files next to the script)
 # ----------------------------------------------------------------------------------------------------
+class SoloLink:
+    """A solo round: one listener in the room drives this panel from the phone form.
+
+    The phone talks to listening.madsrudolph.dev (a Durable Object, /api/solo/*); this class polls it about
+    every 0.7 s with the admin key, reports what plays, and carries out the phone's commands: "play A1..A4"
+    (the design) or "play B1..B4" (Out 1 from the round's random order, which the server drew and only this
+    process knows), and "stop". Before every play it sets BOTH MiniDSP gains and then waits until a fixed
+    time has passed, so a sample whose setting did not change starts exactly as late as one that did.
+    The order is never sent to the page; the results page decodes it after the round.
+    """
+    BASE = 'https://listening.madsrudolph.dev'
+    KEY_FILE = HERE.parent / 'web' / '.admin-key'
+    POLL = 0.7
+    LEAD = 2.5                  # seconds from the phone's tap to the voice cue, the same for every sample
+    GAIN = {'L': -11.6, 'D': -5.8, 'H': 0.0}
+
+    def __init__(self, panel, base=None):
+        self.panel = panel
+        self.base = base or os.environ.get('LISTENING_BASE', self.BASE)
+        self.lock = threading.Lock()
+        self.round = None                       # the server's round, incl. 'order' (never sent to the page)
+        self.handled = 0                        # last command seq carried out
+        self.state = dict(seq=0, state='idle', item=None, msg='')
+        self.error = ''
+        self.phone_age = None
+        self.last_ok = 0.0
+        self.history = []                       # [{item, t, state}] without conditions, for the operator
+        self.thread = None
+        self.stop_evt = threading.Event()
+        self.do_lock = threading.Lock()         # one command at a time: an old tap can never set a gain late
+        self.gain = None                        # what the phone may see: {out1, out2, source: manual|design}, None = hidden/unknown
+
+    def key(self):
+        try:
+            return self.KEY_FILE.read_text().strip()
+        except OSError:
+            return ''
+
+    def _req(self, path, body=None, timeout=6):
+        k = self.key()
+        if not k:
+            raise RuntimeError(f'admin key missing ({self.KEY_FILE})')
+        data = json.dumps(body or {}).encode()
+        req = urllib.request.Request(f'{self.base}{path}?key={k}', data=data, method='POST',
+                                     headers={'content-type': 'application/json', 'user-agent': 'listening-panel'})
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return json.loads(r.read() or b'{}')
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f'server answered {e.code}') from None
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            raise RuntimeError(f'no connection to {self.base} ({getattr(e, "reason", e)})') from None
+
+    # ---------- operator actions ----------
+    def ready_problem(self):
+        p = self.panel
+        if p.null_audio:
+            return ''
+        if not p.s.get('minidsp_auto', False):
+            return 'Turn on "Apply test gains automatically" (Output view) first: the solo round sets Out 1 over USB.'
+        if not p.minidsp.exe():
+            return 'minidsp CLI not found (see README).'
+        return ''
+
+    def start(self, part_a=True):
+        prob = self.ready_problem()
+        if prob:
+            raise RuntimeError(prob)
+        j = self._req('/api/solo/new', {'partA': bool(part_a)})
+        with self.lock:
+            self.round, self.handled = j['round'], j['cmd'].get('seq', 0)
+            self.state = dict(seq=self.handled, state='idle', item=None, msg='')
+            self.history, self.error, self.phone_age = [], '', None
+        log(f'Solo round {self.round["n"]} started (code {self.round["code"]}, Part A {"on" if part_a else "off"})')
+        self._design()
+        self._ensure_thread()
+        return self.round
+
+    def end(self):
+        try:
+            self._req('/api/solo/end')
+        except RuntimeError as e:
+            log('solo end:', e)
+        with self.lock:
+            r, self.round = self.round, None
+        if r:
+            log(f'Solo round {r["n"]} ended')
+        self.panel.stop()
+        self._design()
+
+    def resume(self):
+        """At start-up: re-attach to a round that is still open on the server (panel restarted mid-round)."""
+        try:
+            j = self._req('/api/solo/panel', {'state': self.state})
+        except RuntimeError:
+            return
+        r = j.get('round')
+        if r and not r.get('ended'):
+            with self.lock:
+                self.round, self.handled = r, j['cmd'].get('seq', 0)    # never replay an old tap
+                self.state['seq'] = self.handled
+            log(f'Solo round {r["n"]} is still open: re-attached (code {r["code"]})')
+            self._ensure_thread()
+
+    def _design(self):
+        if self.panel.s.get('minidsp_auto', False) or self.panel.null_audio:
+            try:
+                self.panel.minidsp.set_gains(-5.8, 0.0)
+            except (MiniDSPError, ValueError) as e:
+                log('solo: design gains not set:', e)
+
+    def status(self):
+        with self.lock:
+            r = self.round
+            return dict(active=bool(r), n=r and r['n'], code=r and r['code'], partA=r and r['partA'],
+                        state=dict(self.state), error=self.error, phone_age=self.phone_age,
+                        online=time.monotonic() - self.last_ok < 5, history=list(self.history[-20:]),
+                        problem=self.ready_problem(), key=bool(self.key()))
+
+    # ---------- the loop ----------
+    def _ensure_thread(self):
+        if self.thread and self.thread.is_alive():
+            return
+        self.thread = threading.Thread(target=self._loop, daemon=True)
+        self.thread.start()
+
+    def _loop(self):
+        while not self.stop_evt.is_set():
+            with self.lock:
+                active = self.round is not None
+            if not active:
+                return
+            self._watch()
+            try:
+                with self.lock:
+                    st = dict(self.state)
+                j = self._req('/api/solo/panel', {'state': st})
+                with self.lock:
+                    self.error, self.last_ok, self.phone_age = '', time.monotonic(), j.get('phone_age')
+                    r = j.get('round')
+                    if not r or r.get('ended') or (self.round and r['id'] != self.round['id']):
+                        log('Solo round closed on the server')
+                        self.round = None
+                        return
+                    cmd = j.get('cmd') or {}
+                    new = cmd.get('seq', 0) > self.handled
+                    if new:
+                        self.handled = cmd['seq']
+                if new:
+                    threading.Thread(target=self._do, args=(cmd,), daemon=True).start()
+            except RuntimeError as e:
+                with self.lock:
+                    self.error = str(e)
+            self.stop_evt.wait(self.POLL)
+
+    def _set_state(self, seq, state, item=None, msg='', **extra):
+        with self.lock:
+            if seq < self.state.get('seq', 0):
+                return                               # a newer command took over
+            self.state = dict(seq=seq, state=state, item=item, msg=msg, gain=self.gain, **extra)
+            if state in ('playing', 'done', 'stopped', 'error') and item:
+                h = self.history
+                if h and h[-1]['seq'] == seq:
+                    h[-1].update(state=state)
+                else:
+                    h.append(dict(seq=seq, item=item, t=time.strftime('%H:%M:%S'), state=state))
+
+    def plan(self, item):
+        """item -> (tracks, cue, Out 1 gain). Raises ValueError for anything else."""
+        if not re.fullmatch(r'[ABT][1-4]', str(item or '')):
+            raise ValueError(f'unknown item {item!r}')
+        k = int(item[1])
+        if item[0] == 'T':                                  # tune page: any track, the gains stay as they are
+            return [k - 1], None, None
+        if item[0] == 'A':
+            if not self.round.get('partA', True):
+                raise ValueError('Part A is off in this round')
+            return [k - 1], f'a{k}', self.GAIN['D']
+        return [1, 2], f'b{k}', self.GAIN[self.round['order'][k - 1]]
+
+    def _do(self, cmd):
+        with self.do_lock:
+            with self.lock:
+                if cmd['seq'] != self.handled:
+                    return                               # superseded by a newer tap before it started
+            self._do_one(cmd)
+
+    def _do_one(self, cmd):
+        seq, action, item = cmd['seq'], cmd.get('action'), cmd.get('item')
+        p = self.panel
+        if action == 'stop':
+            p.stop()
+            with self.lock:
+                cur = dict(self.state)
+            self._set_state(seq, 'stopped', cur.get('item') or item)
+            return
+        if action == 'gain':
+            return self._gain(cmd)
+        if action != 'play':
+            return
+        t0 = time.monotonic()
+        try:
+            with self.lock:
+                tracks, cue, g1 = self.plan(item)
+            if g1 is None:
+                return self._play_tune(seq, item, tracks)
+        except ValueError as e:
+            self._set_state(seq, 'error', item, str(e))
+            return
+        self._set_state(seq, 'setting', item)
+        p.stop()                                         # never set a gain while something plays
+        try:
+            p.minidsp.set_gains(g1, 0.0)                 # always both outputs: same timing for every sample
+        except (MiniDSPError, ValueError) as e:
+            self.gain = None
+            self._set_state(seq, 'error', item, 'the MiniDSP could not be set (' + str(e)[:160] + ')')
+            return
+        # Part A is the design and may be shown; a Part B level never reaches the phone.
+        self.gain = dict(out1=-5.8, out2=0.0, source='design') if item[0] == 'A' else None
+        left = self.LEAD - (time.monotonic() - t0)
+        if left > 0:
+            time.sleep(left)
+        else:
+            log(f'solo: setting the MiniDSP took {self.LEAD - left:.1f} s, more than the fixed {self.LEAD} s lead')
+        with self.lock:
+            if self.handled != seq or self.round is None:
+                return                                    # a newer tap arrived meanwhile
+        label = f'Solo · {item}'
+        use_cue = p.s.get('cues', True) is not False
+        p.play_tracks(tracks, label=label, cue=cue if use_cue else None)
+        self._set_state(seq, 'playing', item, label=label, started=time.monotonic())
+
+    def _gain(self, cmd):
+        """Set by hand from the tune page, also while music plays (no stop: that is the point of tuning by ear)."""
+        seq = cmd['seq']
+        with self.lock:
+            prev = dict(self.state)
+        try:
+            g1, g2 = self.panel.minidsp.set_manual(cmd.get('out1'), cmd.get('out2'))
+        except (MiniDSPError, ValueError) as e:
+            self.gain = None
+            self._set_state(seq, 'error', 'gain', 'the MiniDSP could not be set (' + str(e)[:160] + ')')
+            return
+        self.gain = dict(out1=g1, out2=g2, source='manual')
+        log(f'Solo: gains set by hand from the phone: Out 1 {g1:g} dB, Out 2 {g2:g} dB')
+        with self.lock:
+            self.history.append(dict(seq=seq, item=f'by hand: Out 1 {g1:g} / Out 2 {g2:g} dB', t=time.strftime('%H:%M:%S'), state='set'))
+        if prev.get('state') == 'playing':               # keep reporting the music that is still playing
+            keep = {k: prev[k] for k in ('label', 'started', 'track', 'elapsed', 'length') if k in prev}
+            self._set_state(seq, 'playing', prev.get('item'), **keep)
+        else:
+            self._set_state(seq, 'gain_set', 'gain')
+
+    def _play_tune(self, seq, item, tracks):
+        """Tune page: play one track at the gains that are set now. After a blind sample (gain unknown to the
+        phone) the design goes back first, so a tune play never runs at a hidden Part B level."""
+        p = self.panel
+        self._set_state(seq, 'setting', item)
+        p.stop()
+        if self.gain is None:
+            try:
+                p.minidsp.set_gains(-5.8, 0.0)
+            except (MiniDSPError, ValueError) as e:
+                self._set_state(seq, 'error', item, 'the MiniDSP could not be set (' + str(e)[:160] + ')')
+                return
+            self.gain = dict(out1=-5.8, out2=0.0, source='design')
+        with self.lock:
+            if self.handled != seq or self.round is None:
+                return
+        label = f'Solo · {item}'
+        p.play_tracks(tracks, label=label)
+        self._set_state(seq, 'playing', item, label=label, started=time.monotonic())
+
+    def _watch(self):
+        """Turn the panel's playback into the state the phone sees (playing, done, stopped, error)."""
+        with self.lock:
+            st = dict(self.state)
+        if st.get('state') != 'playing':
+            return
+        p = self.panel
+        with p.lock:
+            chain, mode, finished, msg = p.chain, p.mode, p.finished_at, p.message
+        ours = chain is not None and chain.get('name') == st.get('label')
+        extra = {k: st[k] for k in ('label', 'started') if k in st}
+        if ours:
+            n = p.status()['now']
+            track = None
+            if n.get('track') is not None:
+                track = int(n['track']) + 1
+            self._set_state(st['seq'], 'playing', st['item'], track=track,
+                            elapsed=round(n.get('elapsed') or 0, 1), length=round(n.get('length') or 0, 1), **extra)
+        elif time.monotonic() - st.get('started', 0) < 1.0:
+            return                                        # the play thread has not set the chain yet
+        elif mode is None and msg:
+            self._set_state(st['seq'], 'error', st['item'], msg[:200])
+        elif mode is None and finished and finished >= st.get('started', 0):
+            self._set_state(st['seq'], 'done', st['item'])
+        else:
+            self._set_state(st['seq'], 'stopped', st['item'])
+
+    def close(self):
+        self.stop_evt.set()
+
+
 class Store:
     def __init__(self, settings_path, cache_path):
         self.path, self.cache_path = Path(settings_path), Path(cache_path)
@@ -605,12 +1035,14 @@ class Panel:
         self.lib = {'root': None, 'artists': [], 'scanned': 0}
         self.lib_gain_note = ''
         self.minidsp = MiniDSPControl(null_audio)
+        self.solo = SoloLink(self)
         self.mpv = Mpv(null_audio, self.s.get('audio_device', 'auto'), self._mpv_event)
         self.null_audio = null_audio
         self.scan_library()
         self._check_device()
         threading.Thread(target=self._measure_all, daemon=True).start()
         threading.Thread(target=self._poll_loop, daemon=True).start()
+        threading.Thread(target=self.solo.resume, daemon=True).start()
 
     # ---------- library ----------
     def library_root(self):
@@ -1381,6 +1813,7 @@ class Panel:
         return self.minidsp.set_gains(body.get('output1'), body.get('output2'))
 
     def close(self):
+        self.solo.close()
         with self.lock:
             try:
                 self._stop_now()
@@ -1464,6 +1897,8 @@ def make_handler(panel):
                                                custom=panel.s.get('library_dir', '')))
                 if p == '/api/players':
                     return self.send(200, panel.players_cache)
+                if p == '/api/solo':
+                    return self.send(200, panel.solo.status())
                 if p == '/api/devices':
                     return self.send(200, dict(devices=panel.devices(), selected=panel.s.get('audio_device', 'auto')))
                 return self.send(404, {'error': 'not found'})
@@ -1508,6 +1943,13 @@ def make_handler(panel):
                     res['gains'] = panel.set_minidsp_gains(body)
                 elif p == '/api/dsp/check':
                     res['message'] = panel.minidsp.check()
+                elif p == '/api/solo/start':
+                    r = panel.solo.start(body.get('partA', True))
+                    res['solo'] = dict(n=r['n'], code=r['code'])
+                elif p == '/api/solo/end':
+                    panel.solo.end()
+                elif p == '/api/dsp/filters':
+                    res['filters'] = panel.minidsp.load_filters()
                 elif p == '/api/library/rescan':
                     panel.scan_library()
                 elif p == '/api/library/play':

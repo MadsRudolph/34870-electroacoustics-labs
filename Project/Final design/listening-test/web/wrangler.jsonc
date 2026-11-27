@@ -5,6 +5,8 @@
   "main": "src/worker.js",
   "compatibility_date": "2026-09-01",
   "assets": { "directory": "./public", "binding": "ASSETS" },
+  "durable_objects": { "bindings": [{ "name": "SOLO", "class_name": "SoloRoom" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["SoloRoom"] }],
   "kv_namespaces": [{ "binding": "RESP", "id": "8e504430930a408388aee87b02f2c9d4" }],
   "routes": [{ "pattern": "listening.madsrudolph.dev", "custom_domain": true }]
 }

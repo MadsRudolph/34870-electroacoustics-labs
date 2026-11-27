@@ -68,6 +68,17 @@
   .done { text-align: center; padding-top: 40px; }
   .done .big { font-size: 48px; color: var(--ok); }
   .tag { display: inline-block; font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; }
+  .solo { position: sticky; top: 58px; z-index: 1; }
+  .solo .st { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .solo .st .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+  .solo .st .dot.play { background: var(--accent); animation: pulse 1.2s infinite; }
+  .solo .st .dot.ok { background: var(--ok); } .solo .st .dot.err { background: var(--err); }
+  .solo .tm { color: var(--muted); font-size: 14px; margin: 2px 0 10px 18px; font-variant-numeric: tabular-nums; }
+  .solo .pbar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin: 0 0 10px; }
+  .solo .pbar > div { height: 100%; background: var(--accent); width: 0; }
+  .solo .btns { display: flex; gap: 8px; } .solo .btns button { flex: 1; padding: 11px 10px; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  input.code { font-size: 30px; letter-spacing: .3em; max-width: 180px; text-align: center; }
   @media (max-width: 360px) { .opt span { font-size: 12.5px; } .scale.n11 .opt span { font-size: 13px; } }
 </style>
 </head>
@@ -120,20 +131,22 @@
   // ---------- steps ----------
   const steps = [];
   steps.push({ id: 'intro', where: 'Start', render: renderIntro, check: checkIntro });
-  TRACKS.forEach(([key, name, what], i) => steps.push({ id: 'A-' + key, where: `Part A · ${i + 1}/4`,
+  const isSolo = () => answers.mode === 'solo';
+  const skipA = () => isSolo() && answers.A_run === 'no';
+  TRACKS.forEach(([key, name, what], i) => steps.push({ id: 'A-' + key, where: `Part A · ${i + 1}/4`, item: 'A' + (i + 1), skip: skipA,
     render: () => renderScales(`Part A · ${name}`, `${what[0].toUpperCase() + what.slice(1)}. Rate the loudspeaker as it is.`, 'A', key, PART_A_ITEMS),
     check: () => checkScales('A', key, PART_A_ITEMS) }));
-  steps.push({ id: 'A-note', where: 'Part A', render: () => renderText('Part A', 'Anything that stood out?',
+  steps.push({ id: 'A-note', where: 'Part A', skip: skipA, render: () => renderText('Part A', 'Anything that stood out?',
     'A sound that seemed wrong, too loud or missing. Optional.', 'A_note'), check: () => true });
   steps.push({ id: 'B-intro', where: 'Part B', render: renderBIntro, check: () => true });
-  [1, 2, 3, 4].forEach(k => steps.push({ id: 'B-' + k, where: `Part B · ${k}/4`,
+  [1, 2, 3, 4].forEach(k => steps.push({ id: 'B-' + k, where: `Part B · ${k}/4`, item: 'B' + k,
     render: () => renderScales(`Part B · Sample ${k}`, 'Track 2, then track 3. Judge this sample on its own.', 'B', 'sample' + k, PART_B_ITEMS, 'B_comment_sample' + k),
     check: () => checkScales('B', 'sample' + k, PART_B_ITEMS) }));
   steps.push({ id: 'B-best', where: 'Part B', render: () => renderChoice('Part B', 'Which sample did you like best?',
     'B_best', ['1', '2', '3', '4', 'no difference'], ['Sample 1', 'Sample 2', 'Sample 3', 'Sample 4', 'No difference']),
     check: () => checkChoice('B_best') });
   steps.push({ id: 'C-run', where: 'Part C', render: () => renderChoice('Part C', 'Is Part C being run for you?',
-    'C_run', ['yes', 'no'], ['Yes', 'No, skip it'], 'The test leader will tell you.'), check: () => checkChoice('C_run') });
+    'C_run', ['yes', 'no'], ['Yes', 'No, skip it'], 'The test leader will tell you.'), check: () => checkChoice('C_run'), skip: isSolo });
   ['X', 'Y'].forEach(s => steps.push({ id: 'C-' + s, where: 'Part C', skip: () => answers.C_run === 'no',
     render: () => renderScales(`Part C · Sample ${s}`, 'Track 4, then track 2. Judge this sample on its own.', 'C', s, PART_C_ITEMS),
     check: () => checkScales('C', s, PART_C_ITEMS) }));
@@ -167,30 +180,44 @@
 
   function renderIntro() {
     const L = answers.session ?? '';
-    return `<h1>Listening test</h1>
-      <p class="sub">One loudspeaker, music excerpts of about 1&frac12; minutes. About 35 minutes in all.</p>
-      <div class="card" data-name="session"><p class="q">Session number</p>
+    const solo = isSolo();
+    const who = solo ? `<div class="card" data-name="solo_code"><p class="q">Solo code</p>
+        <p class="hint">The 4-digit code on the control panel (Solo view) on the PC outside the room.</p>
+        <input type="text" class="code" id="solo_code" inputmode="numeric" autocomplete="off" maxlength="4" value="${esc(answers.solo_code || '')}" aria-label="Solo code">
+        ${answers.solo_id && soloSt ? `<p class="hint" style="margin-top:8px">Connected: solo round ${esc(answers.session)}${answers.A_run === 'no' ? ', Part B only' : ''}.</p>` : ''}</div>`
+      : `<div class="card" data-name="session"><p class="q">Session number</p>
         <p class="hint">The test leader tells you this number. The three of you in the room share it.</p>
         <input type="number" id="session" inputmode="numeric" min="1" max="100" value="${esc(L)}" aria-label="Session number"></div>
-      ${choiceCard('seat', 'Which seat are you in?', ['L', 'M', 'R'], ['Left', 'Middle', 'Right'], 'Seen from your chair, facing the loudspeaker.')}
+      ${choiceCard('seat', 'Which seat are you in?', ['L', 'M', 'R'], ['Left', 'Middle', 'Right'], 'Seen from your chair, facing the loudspeaker.')}`;
+    return `<h1>Listening test</h1>
+      <p class="sub">One loudspeaker, music excerpts of about 1&frac12; minutes. About ${solo ? '15–25' : '35'} minutes in all.</p>
+      ${choiceCard('mode', 'How are you listening?', ['group', 'solo'], ['With a test leader', 'Solo: my phone runs the PC'])}
+      ${who}
       ${choiceCard('hearing', 'Do you have any known hearing problems?', ['no', 'yes'], ['No', 'Yes'])}
       ${answers.hearing === 'yes' ? `<div class="card"><p class="q">Which?</p><input type="text" id="hearing_note" maxlength="300" value="${esc(answers.hearing_note || '')}"></div>` : ''}
       ${choiceCard('experience', 'Listening experience', ['none', 'music', 'audio'], ['None', 'I play music', 'I work with audio or study acoustics'])}
       ${choiceCard('group_member', 'Have you worked on this loudspeaker?', ['no', 'yes'], ['No', 'Yes'])}
       <div class="card"><p class="q">Instructions</p><ul class="tight">
         <li>Stay in your seat, keep your head still and face the loudspeaker.</li>
-        <li>Please don't talk, react or look at the others' answers: rate on your own.</li>
-        <li>You do <b>not</b> know which settings are used, and nobody in the room does either.</li>
+        ${solo ? `<li>Each listening page starts its excerpt on the PC by itself. <b>Play again</b> repeats it, <b>Stop</b> ends it early. Next works once the excerpt has finished or been stopped.</li>
+        <li>In Part B the PC sets the speaker over USB before every sample, in a random order that only the PC knows. Every sample takes the same time to start, whether or not the setting changed.</li>`
+        : `<li>Please don't talk, react or look at the others' answers: rate on your own.</li>`}
+        <li>You do <b>not</b> know which settings are used${solo ? '' : ', and nobody in the room does either'}.</li>
         <li>There are no right answers. Rate what <i>you</i> hear; if unsure, make your best guess.</li>
-        <li>Each excerpt is played once. Ask the test leader if you need to hear it again.</li>
+        ${solo ? '' : `<li>Each excerpt is played once. Ask the test leader if you need to hear it again.</li>`}
         <li><b>Amount</b> scales: middle = just right. <b>1–5</b>: 5 is best. <b>Overall 0–10</b>: 10 = as good as you can imagine.</li>
       </ul></div>`;
   }
-  function checkIntro() {
-    const n = Number(answers.session);
-    const ok = Number.isInteger(n) && n >= 1 && n <= 100;
-    mark('session', !ok);
-    const a = ['seat', 'hearing', 'experience', 'group_member'].map(k => { const m = answers[k] == null; mark(k, m); return m; });
+  async function checkIntro() {
+    if (answers.mode == null) { mark('mode', true); return false; }
+    let ok;
+    if (isSolo()) ok = await soloConnect();
+    else {
+      const n = Number(answers.session);
+      ok = Number.isInteger(n) && n >= 1 && n <= 100;
+      mark('session', !ok);
+    }
+    const a = [...(isSolo() ? [] : ['seat']), 'hearing', 'experience', 'group_member'].map(k => { const m = answers[k] == null; mark(k, m); return m; });
     return ok && !a.some(Boolean);
   }
 
@@ -207,7 +234,7 @@
   const checkChoice = name => { const m = answers[name] == null; mark(name, m); return !m; };
 
   function renderScales(head, sub, part, item, items, commentKey) {
-    return `<h2>${esc(head)}</h2><p class="sub">${esc(sub)}</p>` +
+    return `<h2>${esc(head)}</h2><p class="sub">${esc(sub)}</p>` + (isSolo() ? '<div class="card solo" id="soloBox"></div>' : '') +
       items.map(([attr, title, sc]) => scaleHtml(key(part, item, attr), sc, title)).join('') +
       (commentKey ? `<div class="card"><p class="q">Short comment <span class="tag">optional</span></p>
         <textarea id="${commentKey}" maxlength="500">${esc(answers[commentKey] || '')}</textarea></div>` : '');
@@ -232,6 +259,8 @@
   function renderReview() {
     if (sent) return `<div class="done"><div class="big">✓</div><h1>Thank you for listening!</h1>
       <p class="sub">Your answers have been sent. You can close this page now.</p></div>`;
+    if (isSolo()) return `<h2>Ready to send</h2><div class="card"><p>Solo round <b>${esc(answers.session)}</b>. Tap <b>Send answers</b> to finish.
+      You can still go back and change anything.</p></div><p class="err">${esc(sendError)}</p>`;
     return `<h2>Ready to send</h2><div class="card"><p>Session <b>${esc(answers.session)}</b>, ${esc({ L: 'left', M: 'middle', R: 'right' }[answers.seat] || '')} seat. Tap <b>Send answers</b> to finish.
       You can still go back and change anything.</p></div><p class="err">${esc(sendError)}</p>`;
   }
@@ -254,6 +283,7 @@
     document.getElementById('nav').style.display = sent ? 'none' : '';
     nextBtn.disabled = sending;
     window.scrollTo(0, 0);
+    soloEnter();
   }
   app.addEventListener('change', e => {
     const t = e.target;
@@ -261,13 +291,14 @@
       const v = t.value, num = Number(v);
       answers[t.name] = (v !== '' && !Number.isNaN(num) && /^-?\d+$/.test(v)) ? num : v;
       const fs = t.closest('fieldset'); if (fs) fs.classList.remove('missing');
-      if (t.name === 'hearing') { save(); render(); return; }
+      if (t.name === 'hearing' || t.name === 'mode') { save(); render(); return; }
     }
     save();
   });
   app.addEventListener('input', e => {
     const t = e.target;
     if (t.id === 'session') answers.session = t.value === '' ? null : Number(t.value);
+    else if (t.id === 'solo_code') answers.solo_code = t.value.replace(/\D/g, '').slice(0, 4);
     else if (t.tagName === 'TEXTAREA' || t.type === 'text') answers[t.id] = t.value;
     save();
   });
@@ -283,7 +314,14 @@
     if (s.submit) {
       await send(); return;
     }
-    if (!s.check()) { document.getElementById('steperr').textContent = 'Please answer the questions marked in red.'; return; }
+    nextBtn.disabled = true;
+    const ok = await s.check();
+    nextBtn.disabled = false;
+    if (!ok) { const e = document.getElementById('steperr'); if (e && !e.textContent) e.textContent = 'Please answer the questions marked in red.'; return; }
+    if (isSolo() && s.item && !soloHeard(s.item)) {
+      document.getElementById('steperr').textContent = soloPlayingThis(s.item) ? 'Still playing. Tap Stop if you have heard enough.' : 'Listen to this excerpt first (tap Play).';
+      return;
+    }
     go(1);
   });
 
@@ -295,13 +333,107 @@
       const r = await fetch('/api/submit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j.ok) throw new Error(j.error || `HTTP ${r.status}`);
-      sent = true; sendError = ''; clear();
+      sent = true; sendError = ''; clear(); stopSoloPoll();
     } catch (e) {
       sendError = `Could not send (${e.message}). Check the connection and tap Send again; your answers are kept.`;
     } finally {
       sending = false; render();
     }
   }
+
+  // ---------- solo: the phone drives the control panel on the PC (through /api/solo, a Durable Object) ----------
+  let soloSt = null, soloTimer = null, soloLastErr = '', wake = null, lastSeen = { seq: 0, state: '' };
+  const SOLO_LABEL = { A1: 'Track 1', A2: 'Track 2', A3: 'Track 3', A4: 'Track 4', B1: 'Track 2 → track 3', B2: 'Track 2 → track 3', B3: 'Track 2 → track 3', B4: 'Track 2 → track 3' };
+  const curItem = () => (steps[idx] && isSolo() && !sent ? steps[idx].item : null);
+  const soloHeard = item => !!answers['solo_heard_' + item];
+  const pnl = () => (soloSt && soloSt.panel) || {};
+  const soloPlayingThis = item => { const p = pnl(); return p.item === item && ['setting', 'playing'].includes(p.state); };
+
+  async function soloFetch(path, opt) {
+    const r = await fetch(path, opt);
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) throw new Error(j.error || `HTTP ${r.status}`);
+    return j;
+  }
+  async function soloConnect() {
+    const code = answers.solo_code || '';
+    mark('solo_code', false);
+    if (!/^\d{4}$/.test(code)) { mark('solo_code', true); return false; }
+    try {
+      const j = await soloFetch(`/api/solo/phone?code=${code}`);
+      if (answers.solo_id && answers.solo_id !== j.id) {      // a new round on the PC: old ratings belong to the old one
+        Object.keys(answers).forEach(k => { if (/^(A_|B_|C_|solo_heard_|solo_plays_)/.test(k)) delete answers[k]; });
+      }
+      Object.assign(answers, { solo_id: j.id, session: j.n, seat: 'S', A_run: j.partA ? 'yes' : 'no', C_run: 'no' });
+      soloSt = j; save(); startSoloPoll(); return true;
+    } catch (e) {
+      mark('solo_code', true);
+      const el = document.getElementById('steperr'); if (el) el.textContent = 'Could not connect: ' + e.message;
+      return false;
+    }
+  }
+  function startSoloPoll() { if (!soloTimer) soloTimer = setInterval(soloPoll, 1000); keepAwake(); }
+  function stopSoloPoll() { clearInterval(soloTimer); soloTimer = null; if (wake) { wake.release().catch(() => {}); wake = null; } }
+  async function keepAwake() { try { if ('wakeLock' in navigator && !wake && document.visibilityState === 'visible') { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); } } catch (e) {} }
+  document.addEventListener('visibilitychange', () => { if (soloTimer) { keepAwake(); soloPoll(); } });
+
+  async function soloPoll() {
+    if (!answers.solo_code) return;
+    try { soloSt = await soloFetch(`/api/solo/phone?code=${answers.solo_code}`); soloLastErr = ''; }
+    catch (e) { soloLastErr = e.message; }
+    const p = pnl();
+    if (p.item && ['done', 'stopped'].includes(p.state) && p.seq === (soloSt.cmd || {}).seq && !soloHeard(p.item)) {
+      answers['solo_heard_' + p.item] = 1; save();
+    }
+    if (p.state === 'done' && (lastSeen.seq !== p.seq || lastSeen.state !== 'done') && p.item === curItem() && navigator.vibrate) navigator.vibrate(150);
+    lastSeen = { seq: p.seq, state: p.state };
+    renderSoloBox();
+  }
+  async function soloCmd(action, item) {
+    try {
+      soloSt = await soloFetch('/api/solo/cmd', { method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ code: answers.solo_code, action, item }) });
+      if (action === 'play') { answers['solo_plays_' + item] = (answers['solo_plays_' + item] || 0) + 1; save(); }
+      soloLastErr = '';
+    } catch (e) { soloLastErr = e.message; }
+    renderSoloBox();
+  }
+  function soloEnter() {                                  // a listening page starts its excerpt once, by itself
+    const item = curItem();
+    if (!item) return;
+    startSoloPoll();
+    if (!answers['solo_plays_' + item] && !soloPlayingThis(item)) soloCmd('play', item);
+    else renderSoloBox();
+  }
+  function renderSoloBox() {
+    const box = document.getElementById('soloBox'), item = curItem();
+    if (!box || !item) return;
+    const p = pnl(), mine = p.item === item && soloSt && p.seq === soloSt.cmd.seq;
+    const pending = soloSt && soloSt.cmd.item === item && soloSt.cmd.action === 'play' && p.seq !== soloSt.cmd.seq;
+    let dot = '', st, tm = '';
+    if (soloLastErr) { dot = 'err'; st = 'No connection: ' + soloLastErr; }
+    else if (soloSt && !soloSt.panel_online) { dot = 'err'; st = 'The PC is not answering. Is the control panel running?'; }
+    else if (pending) { dot = 'play'; st = 'Starting …'; }
+    else if (mine && p.state === 'setting') { dot = 'play'; st = 'Starting …'; }
+    else if (mine && p.state === 'playing') { dot = 'play'; st = 'Playing'; if (p.track) tm = `Track ${p.track}` + (p.length ? ` · ${mmss(p.elapsed)} / ${mmss(p.length)}` : ''); }
+    else if (mine && p.state === 'done') { dot = 'ok'; st = 'Finished. Rate it now.'; }
+    else if (mine && p.state === 'stopped') { dot = 'ok'; st = 'Stopped.'; }
+    else if (mine && p.state === 'error') { dot = 'err'; st = 'The PC reports a problem: ' + (p.msg || 'unknown'); }
+    else st = soloHeard(item) ? 'Heard. Tap Play again to repeat it.' : 'Not played yet';
+    const busy = pending || (mine && ['setting', 'playing'].includes(p.state));
+    const pct = mine && p.state === 'playing' && p.length ? Math.min(100, 100 * p.elapsed / p.length) : (mine && p.state === 'done' ? 100 : 0);
+    const h = `<div class="st"><span class="dot ${dot}"></span><span>${esc(st)}</span></div><div class="tm">${esc(SOLO_LABEL[item])}${tm ? ' · ' + esc(tm) : ''}</div>
+      <div class="pbar"><div style="width:${pct}%"></div></div>
+      <div class="btns"><button type="button" data-solo="play">${soloHeard(item) || busy ? 'Play again' : 'Play'}</button><button type="button" data-solo="stop" ${busy ? '' : 'disabled'}>Stop</button></div>`;
+    if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
+  }
+  const mmss = x => { x = Math.max(0, Math.round(x || 0)); return Math.floor(x / 60) + ':' + String(x % 60).padStart(2, '0'); };
+  app.addEventListener('click', e => {
+    const b = e.target.closest('[data-solo]'); const item = curItem();
+    if (!b || !item) return;
+    soloCmd(b.dataset.solo, item);
+  });
+  if (isSolo() && answers.solo_id) startSoloPoll();
 
   render();
 })();

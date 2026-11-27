@@ -2,10 +2,11 @@
 
 > **MiniDSP automation: setup on the PC in the listening room (status 26-Nov-2026).**
 > The 2x4 HD gain automation is written and unit-tested (`python3 -m unittest discover -s tests`,
-> 27 tests) but **never run against a real MiniDSP**. On that PC:
+> 35 tests) but **never run against a real MiniDSP**. On that PC:
 > 1. `bash minidsp/setup_minidsp.sh` installs minidsp-rs v0.1.12 into `~/.local/bin` (no sudo).
 > 2. `bash minidsp/setup_minidsp.sh --udev` installs the USB rule (sudo), then replug the MiniDSP.
-> 3. Work through **First hardware check** below with the amplifier off, then tick
+> 3. Work through **First hardware check** below with the amplifier off (step 7 loads the crossover
+>    without the official software), then tick
 >    "MiniDSP automation" in the panel's Output view (the switch is saved per PC, default off).
 > Open points to confirm on the hardware are listed under **MiniDSP troubleshooting**.
 
@@ -175,6 +176,17 @@ Amplifier **off** (or volume fully down) for steps 1–5.
    Go to "After Part B": the panel puts the design back.
 6. Amplifier on at a low level, play track 2 at L (−11.6) and at H (0 dB): the bass level should
    clearly change. Finish with **Set design now**.
+7. **Load System D filters** (only if you want the panel to write the crossover instead of the
+   official plugin; amp down first). It writes, per output, the two crossover biquads from
+   `Project/Final design/data/dsp/MiniDSP_woofer_out1.txt` / `MiniDSP_midtw_out2.txt`, bypasses
+   crossover group 2, PEQ, FIR and compressor, sets invert off, delay 0, unmute, routes Inputs 1+2 →
+   Outputs 1+2 and ends at −5.8 / 0 dB (28 commands, about as many seconds at worst). The files are
+   in the miniDSP sign convention (a1 ≈ +1.97); minidsp-rs sends coefficients to the box unchanged
+   (checked in its source, `BiquadFilter::set_coefficients`), so they go in as they are.
+   **Check it acoustically** before the session: woofer only (mid/tweeter off on the switchboard)
+   should sound like a low-pass at 325 Hz, mid/tweeter only like the high-pass. Not covered by the
+   button: the 96 kHz sample rate and saving a preset. If any command fails the box is partly
+   loaded: do not play; press the button again or load the filters in the plugin.
 
 If any step fails, untick the switch and run the test the old manual way (below).
 
@@ -209,6 +221,33 @@ If any step fails, untick the switch and run the test the old manual way (below)
 - **The plugin on another PC shows other values**: minidsp-rs writes to the box, but an already
   open plugin does not refresh. Its docs say the program cannot read settings back, so the panel
   shows what it last **sent**.
+
+## Solo round (one listener, nobody outside)
+
+For a test on your own: the PC, MiniDSP and amplifier stay outside, you sit inside with your phone,
+and the phone drives the panel. Part A (optional) and Part B run; **Part C is not run solo** (Rp is
+swapped by hand outside the room, which cannot be done blind alone).
+
+1. Usual setup (Setup view), then Output view: **Apply test gains automatically** on, **Check
+   connection**, **Set design now**. The solo round refuses to start without the MiniDSP switch on.
+2. PC: no suspend or screen lock, charger in, internet on. Solo view → tick or untick *Include Part
+   A* → **Start solo round**. A 4-digit code appears.
+3. In the room, phone: **listening.madsrudolph.dev** → "Solo: my phone runs the PC" → the code. Each
+   listening page starts its excerpt by itself; **Play again** repeats it, **Stop** ends it. Next
+   works once the excerpt has finished or been stopped. The screen is kept awake while the round runs.
+4. After sending, start another round for a second, independent order if you want more data.
+
+How it works: the phone talks to the Worker (`web/src/worker.js`, Durable Object `SoloRoom`), and the
+panel polls it every 0.7 s with the admin key from `../web/.admin-key`. When a round starts, the server
+draws a random order of D, D, L, H. Only the panel process gets it: it never goes to the page or the
+phone, and the panel shows only the sample names. Before **every** play the panel sets both outputs
+over USB and waits until 2.5 s have passed since the tap, so a sample whose level did not change starts
+exactly as late as one that did. An older tap that a newer one overtook is dropped and never sets a
+gain. If the panel restarts mid-round it attaches to the open round again. The results page shows solo
+listeners as `<n>S` with their decoded order (`solo DLHD` …); `times_played` rows in the CSV count replays.
+
+Tests: `tests/test_solo.py` (no network, no hardware). `LISTENING_BASE=http://localhost:8787` points
+the panel at a local `wrangler dev` instead of the live site.
 
 ## Troubleshooting
 
